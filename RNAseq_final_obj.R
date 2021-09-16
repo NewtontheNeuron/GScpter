@@ -18,38 +18,58 @@ library(ggproto)
 library(Cairo)
 
 # Setting the genes to be investigated
+# >>>> input required >>>>
 features <- c("rna_Grin1", "rna_Grin2a", "rna_Grin2b", "rna_Grin2c", "rna_Grin2d", "rna_Grin3a", "rna_Grin3b")
-features_Jess <- c('rna_Grin1')
 
-# Extract the dotplot information from Seurat into an object
+# Extract the dotplot information from Seurat into an object.
+# The dotplot information involves the average expression and
+# the percent expressed.
 b <- DotPlot(clean_neuron_object, features = features)
 
 # Start and define the data frame that will contain the results.
+# This step ensures that the values from the dot plot can be 
+# Stored in the data frame in the correct place with the correct
+# character type.
 ClusterPoolResults <- data.frame(avg.exp=numeric(), pct.exp=numeric(), features.plot=character(), id=character(), avg.exp.scaled=numeric())
 ClusterPoolResults$features.plot <- as.character(ClusterPoolResults$features.plot)
 ClusterPoolResults$id <- as.character(ClusterPoolResults$id)
 
 # The list of clusters that are included in each group
+# I could add the functionality in the future to compare an 'n'
+# amount of clusterpools.
+# >>>> input required >>>>
 ClusterPool1 <- c('Excit-5', 'Excit-6', 'Excit-20', 'Excit-21', 'Excit-22', 'Excit-23', 'Excit-24', 'Excit-25', 'Excit-26', 'Excit-27', 'Excit-29', 'Excit-30', 'Excit-31', 'Excit-32', 'Excit-34', 'Excit-35', 'Excit-36')
 ClusterPool2 <- c('Inhib-3', 'Inhib-6', 'Inhib-8', 'Inhib-12', 'Inhib-14', 'Inhib-15', 'Inhib-16', 'Inhib-18', 'Inhib-19', 'Inhib-20', 'Inhib-21')
 ClusterPoolAll <- c(ClusterPool1, ClusterPool2)
 
-# Filtering the data set based on the clusters
-ListByCluster <- b$data[b$data$id %in% ClusterPool1,]
-ListByCluster <- b$data[b$data$id %in% ClusterPool2,]
+# Include a way to label clusterpool1 and 2 for example
+# Excitatory vs. Inhibitory. Place them in the order they
+# appear above. For instance the cluster pool 1 name should
+# come first.
+# >>>> input required >>>>
+clusterpool_names <- c('Excitatory', 'Inhibitory')
+
+# Set project name
+# >>>> input required >>>>
+project_name <- 'DDH'
+
+# Filtering the data set based on the clusters into
+# 2 clusterpools and a clusterpool containing all of
+# the clusters and their average expression and percent
+# expressed data.
+ListByCluster1 <- b$data[b$data$id %in% ClusterPool1,]
+ListByCluster2 <- b$data[b$data$id %in% ClusterPool2,]
 ListbyClusterAll <- b$data[b$data$id %in% ClusterPoolAll,]
 
-# Function to remove the rna_ label on most genes in the Levine Dataset
-Make_Label <- function(string){
-  str_remove(string, "rna_")
-}
+# Remove the 'rna_' label on most genes in the Levine Dataset
+# Clean the features into presentable labels without the 'rna_' tag.
+clean_label_list <- str_remove(features, 'rna_')
 
-#Function for pooling the means and re-scaling avg.exp
+# -------------------------------------------------------------------
+# Function for pooling the average expression and percent 
+# expressed from the dotplot data. The function also re-scales avg.exp
+# using a z-score system similar to Seurat's z-score system.
 PoolnShare <- function(cp1, cp2, id1, id2){
-  #Defining the new labels
-  Make_Label <- function(string){
-    str_remove(string, "rna_")
-  }
   
   #Defining the full Data Table, it will clear every time
   ClusterPoolResults <- data.frame(avg.exp=numeric(), pct.exp=numeric(), features.plot=character(), id=character(), avg.exp.scaled=numeric(), features.label=character())
@@ -68,7 +88,8 @@ PoolnShare <- function(cp1, cp2, id1, id2){
   PoolAll <- function (cluster, identity){
     for(i in features){
       ListByGene <- cluster[str_detect(row.names(cluster), i), ]
-      NewListItem <- data.frame(colMeans(ListByGene[1]), colMeans(ListByGene[2]), Col3=i, Col4=identity, colMeans(ListByGene[5]), Col6=Make_Label(i))
+      NewListItem <- data.frame(colMeans(ListByGene[1]), colMeans(ListByGene[2]), Col3=i, 
+      Col4=identity, colMeans(ListByGene[5]), Col6=clean_label_list[match(i, clean_label_list)])
       NewListItem$Col3 <- as.character(NewListItem$Col3)
       NewListItem$Col4 <- as.character(NewListItem$Col4)
       NewListItem$Col6 <- as.character(NewListItem$Col6)
@@ -91,9 +112,20 @@ PoolnShare <- function(cp1, cp2, id1, id2){
     data.frame(avg.exp.re.scaled = (ClusterPoolResults[, 1] - colMeans(ClusterPoolResults[1]))/sd(ClusterPoolResults$avg.exp))
   return(ClusterPoolResults)
 }
-ClusterPoolResults <- PoolnShare(ClusterPool1, ClusterPool2, "Excitatory", "Inhibitory")
-#Checking if the clusterpool was generated correctly
-#PoolnShare(ClusterPool1, ClusterPool2, "Excitatory", "Inhibitory") == ClusterPoolResults
+
+# Running the pool and share function
+ClusterPoolResults <- PoolnShare(ClusterPool1, ClusterPool2, clusterpool_names[1], clusterpool_names[2])
+
+# Function for saving images with specific folder,
+# filename, and date. If the folder for the project name
+# doesnot exist you will have to make it.
+save_image <- function(base_filename, width=NULL, height=NULL){
+  dir.create(project_name)
+  ggsave(filename = sprintf("%s/%s%s%s.png", project_name, base_filename, project_name, str(format(Sys.Date(), "%b_%d%_%Y"))), plot = Plot,  
+  device = "png", type = "cairo", width = width, height = height)
+}
+
+# Plot the pooled dotplot
 Gene <- ClusterPoolResults$features.label
 Cluster <- ClusterPoolResults$id
 AvgExpScaled <- ClusterPoolResults$avg.exp.re.scaled
@@ -101,38 +133,26 @@ markers <- Gene %>% unique()
 
 Plot <- ClusterPoolResults %>% filter(features.label %in% markers) %>% 
   mutate(`% Expressing` = ClusterPoolResults$pct.exp) %>% 
-  #filter(AvgExpScaled > 1, `% Expressing` > 1) %>% 
   ggplot(aes(y=Gene, x = Cluster, color = AvgExpScaled, size = `% Expressing`)) + #geom_dotplot(dotsize=1.5) + 
   geom_point() + 
   scale_size(range = c(0, 20)) +
-  #scale_size_area(max_size = 10) +
   scale_color_viridis_c(option = "plasma") + 
   cowplot::theme_cowplot() + 
-  #theme(axis.line  = element_blank()) +
   theme(axis.title = element_text(size=20,face="bold"), legend.key.size=unit(1, "line")) +
   theme(axis.text.x = element_text(angle = 0, vjust = 0.5, hjust=0.5, size=15)) +
   theme(axis.text.y = element_text(angle = 0, vjust = 0.5, hjust=0.5, size=15)) #+
-  #theme(axis.ticks = element_blank()) #+
-Plot #+
-  #annotate("segment", x = 1.25, xend = 1.75, y = "rna_Grin3b", yend = "rna_Grin3b",
-           #colour = "black") +
-  #annotate("text", label="*", x = 1.5, y = 7.05, size = 6, color = "black") + 
-  #annotate("text", label="+", x = 1.5, y = 6.90, size = 4.4, color = "black")
+Plot
 
-# Adding Significance Bars
-for(i in features) {
-  Gene <- i
-  return(0)
-}
+# Save the image
+# You will have to resize the Rstudio box
+# or set the prefered width and height
+# >>>> input required >>>>
+save_image('PooledDotPlot')
 
-#Saving Immages
-ggsave(filename = "DDH/BarPlotDDH.png", plot = Plot,  device = "png", type = "cairo") #, width = 0.1875, height = 27, limitsize = FALSE)
-sf <- Plot$data
-#scale_color_gradientn(colours = viridis::viridis(20), limits = c(0,4), oob = scales::squish, name = 'log2 (count + 1)')
-
-  
-#Ploting ClusterPoolAll
-ListbyClusterAll[, ncol(ListbyClusterAll) + 1] <- data.frame(features.label = Make_Label(ListbyClusterAll$features.plot))
+# --------------------------------------------------
+# Ploting all the relevant clusters form the data by
+# using ClusterPoolAll
+ListbyClusterAll[, ncol(ListbyClusterAll) + 1] <- data.frame(features.label = clean_label_list)
 Gene <- ListbyClusterAll$features.label
 Cluster <- ListbyClusterAll$id
 AvgExpScaled <- ListbyClusterAll$avg.exp.scaled
@@ -140,25 +160,24 @@ markers <- Gene %>% unique()
 
 Plot <- ListbyClusterAll %>% filter(features.label %in% markers) %>% 
   mutate(`% Expressing` = ListbyClusterAll$pct.exp) %>% 
-  #filter(AvgExpScaled > 1, `% Expressing` > 1) %>% 
   ggplot(aes(y=Gene, x = Cluster, color = AvgExpScaled, size = `% Expressing`)) + #geom_dotplot(dotsize=1.5) + 
   geom_point() + 
   scale_size(range = c(0, 25)) +
-  #old raange was to 20
-  #scale_size_area(max_size = 10) +
   scale_color_viridis_c(option = "plasma") + 
   cowplot::theme_cowplot() + 
-  #theme(text = element_text(family = "serif")) +
-  #theme(axis.line  = element_blank()) +
   theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1, size = 25), axis.title = element_text(size = 25, face="bold"), legend.key.size = unit(2.1, "line"), legend.text = element_text(size = 17), legend.title = element_text(size = 20)) +
   theme(axis.text.y = element_text(angle = 0, vjust = 0.5, hjust=1, size = 25))
 Plot
 
-#>>>>
-#Within Cluster Bar graphs
-#>>>>
-ListByCluster1 <- b$data[b$data$id %in% ClusterPool1,]
-ListByCluster2 <- b$data[b$data$id %in% ClusterPool2,]
+# Save the image
+# You will have to resize the Rstudio box
+# or set the prefered width and height
+# >>>> input required >>>>
+save_image('DotPlot')
+
+# -----------------------------------------------
+# Bargraphs for the average expression and percent
+# expressed data, and also for both clusterpools
 SE <- function (x) {
   sd(x)/sqrt(length(x))
 }
@@ -291,7 +310,6 @@ Plot_4_Bar <- function (avg1, pct1, avg2, pct2, c1, c2){
       source$pct.exp
     }
   }
-  features_label <- c("Grin1", "Grin2a", "Grin2b", "Grin2c", "Grin2d", "Grin3a", "Grin3b")
   avg.lab <- "Average Expression"
   pct.lab <- "%Expressed"
   Plot_details <- function (a,b,c,d,e,method){
@@ -305,7 +323,7 @@ Plot_4_Bar <- function (avg1, pct1, avg2, pct2, c1, c2){
       scale_y_continuous(expand = c(0,0), limits = c(0, NA)) + 
       labs(x="Gene", y=e) +
       cowplot::theme_cowplot() + 
-      scale_x_discrete(labels=features_label) +
+      scale_x_discrete(labels=clean_label_list) +
       theme(axis.title = element_text(size=20,face="bold")) +
       theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1, size=20)) +
       theme(axis.text.y = element_text(angle = 0, vjust = 0.5, hjust=1, size=20)) +
@@ -327,3 +345,9 @@ Plot_4_Bar <- function (avg1, pct1, avg2, pct2, c1, c2){
 }
 Plot <- Plot_4_Bar(AvgExpPar(ListByCluster1), PctExpPar(ListByCluster1), AvgExpPar(ListByCluster2), PctExpPar(ListByCluster2), ListByCluster1, ListByCluster2)
 Plot
+
+# Save the image
+# You will have to resize the Rstudio box
+# or set the prefered width and height
+# >>>> input required >>>>
+save_image('BarPlot')
