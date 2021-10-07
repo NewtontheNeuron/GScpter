@@ -17,6 +17,29 @@ library(viridisLite)
 library(ggproto)
 library(Cairo)
 
+# Function for adding the file to the workspace and saving the workspace.
+# This is only necessary outside Rstudio. Rstudio
+# does the same thing. The first function adds new
+# data into the working environment (workspace).
+# The next function saves the data to the .RData file.
+# The third function loads the .RData file.
+# You do not need to add new data and save it twice.
+# Most of the time you will only need load_data(), the third function.
+# >>>> input required >>>>
+newdata <- function(){
+  filename <- file.choose()
+  clean_neuron_object <- readRDS(filename)
+}
+savedata <- function(){
+  save(clean_neuron_object, file = '.RData')
+}
+load_data <- function(){
+  load(file = '.RData')
+}
+newdata() # Do this once
+savedata() # Do this once
+load_data()
+
 # Setting the genes to be investigated
 # >>>> input required >>>>
 features <- c("rna_Grin1", "rna_Grin2a", "rna_Grin2b", "rna_Grin2c", "rna_Grin2d", "rna_Grin3a", "rna_Grin3b")
@@ -40,6 +63,9 @@ ClusterPoolResults$id <- as.character(ClusterPoolResults$id)
 # >>>> input required >>>>
 ClusterPool1 <- c('Excit-5', 'Excit-6', 'Excit-20', 'Excit-21', 'Excit-22', 'Excit-23', 'Excit-24', 'Excit-25', 'Excit-26', 'Excit-27', 'Excit-29', 'Excit-30', 'Excit-31', 'Excit-32', 'Excit-34', 'Excit-35', 'Excit-36')
 ClusterPool2 <- c('Inhib-3', 'Inhib-6', 'Inhib-8', 'Inhib-12', 'Inhib-14', 'Inhib-15', 'Inhib-16', 'Inhib-18', 'Inhib-19', 'Inhib-20', 'Inhib-21')
+ClusterPool3 <- c()
+ClusterPool4 <- c()
+# First I make the rest of the code take other thngs
 ClusterPoolAll <- c(ClusterPool1, ClusterPool2)
 
 # Include a way to label clusterpool1 and 2 for example
@@ -48,6 +74,7 @@ ClusterPoolAll <- c(ClusterPool1, ClusterPool2)
 # come first.
 # >>>> input required >>>>
 clusterpool_names <- c('Excitatory', 'Inhibitory')
+clusterpool_subgroup <- c('DDH', 'SDH')
 
 # Set project name
 # >>>> input required >>>>
@@ -78,8 +105,8 @@ PoolnShare <- function(cp1, cp2, id1, id2){
   ClusterPoolResults$features.label <- as.character(ClusterPoolResults$features.label)
   
   #Separates the data based on the cluster pools
-  ListByCluster1 <- b$data[b$data$id %in% cp1,]
-  ListByCluster2 <- b$data[b$data$id %in% cp2,]
+  #ListByCluster1 <- b$data[b$data$id %in% cp1,]
+  #ListByCluster2 <- b$data[b$data$id %in% cp2,]
   
   #For repeating function
   PoolAllRepeat <- 1
@@ -104,6 +131,7 @@ PoolnShare <- function(cp1, cp2, id1, id2){
   }
   
   #Running the function PoolAll, (If there were extra pools put them here before the 'Rescale' bellow)
+  # Turn this into a for loop
   PoolAll(ListByCluster1, id1)
   PoolAll(ListByCluster2, id2)
   
