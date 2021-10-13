@@ -1,20 +1,17 @@
 # Specify the libraries that are used.
 
 library(Seurat)
-library(SeuratData)
 library(ggplot2)
 library(patchwork)
 library(tidyverse)
 library(ggdendro)
 library(cowplot)
-library(ggtree)
 library(patchwork)
 library(dplyr)
 library(stringr)
 library(data.table)
 library(tibble)
 library(viridisLite)
-library(ggproto)
 library(Cairo)
 
 # Function for adding the file to the workspace and saving the workspace.
@@ -53,9 +50,10 @@ b <- DotPlot(clean_neuron_object, features = features)
 # This step ensures that the values from the dot plot can be 
 # Stored in the data frame in the correct place with the correct
 # character type.
-ClusterPoolResults <- data.frame(avg.exp=numeric(), pct.exp=numeric(), features.plot=character(), id=character(), avg.exp.scaled=numeric())
-ClusterPoolResults$features.plot <- as.character(ClusterPoolResults$features.plot)
-ClusterPoolResults$id <- as.character(ClusterPoolResults$id)
+##ClusterPoolResults <- data.frame(avg.exp=numeric(), pct.exp=numeric(), features.plot=character(), id=character(), avg.exp.scaled=numeric(), features.label=character())
+##ClusterPoolResults$features.plot <- as.character(ClusterPoolResults$features.plot)
+##ClusterPoolResults$id <- as.character(ClusterPoolResults$id)
+##ClusterPoolResults$features.label <- as.character(ClusterPoolResults$features.label)
 
 # The list of clusters that are included in each group
 # I could add the functionality in the future to compare an 'n'
@@ -63,8 +61,8 @@ ClusterPoolResults$id <- as.character(ClusterPoolResults$id)
 # >>>> input required >>>>
 ClusterPool1 <- c('Excit-5', 'Excit-6', 'Excit-20', 'Excit-21', 'Excit-22', 'Excit-23', 'Excit-24', 'Excit-25', 'Excit-26', 'Excit-27', 'Excit-29', 'Excit-30', 'Excit-31', 'Excit-32', 'Excit-34', 'Excit-35', 'Excit-36')
 ClusterPool2 <- c('Inhib-3', 'Inhib-6', 'Inhib-8', 'Inhib-12', 'Inhib-14', 'Inhib-15', 'Inhib-16', 'Inhib-18', 'Inhib-19', 'Inhib-20', 'Inhib-21')
-ClusterPool3 <- c()
-ClusterPool4 <- c()
+ClusterPool1 <- c("Excit-01", "Excit-02", "Excit-03", "Excit-08", "Excit-09", "Excit-10", "Excit-12", "Excit-14", "Excit-15", "Excit-16", "Excit-18", "Excit-04", "Excit-05", "Excit-13", "Excit-19")
+ClusterPool2 <- c("Inhib-01", "Inhib-02", "Inhib-03", "Inhib-04", "Inhib-05", "Inhib-06", "Inhib-07", "Inhib-09", "Inhib-10","Inhib-11","Inhib-12", "Inhib-13")
 # First I make the rest of the code take other thngs
 ClusterPoolAll <- c(ClusterPool1, ClusterPool2)
 
@@ -78,7 +76,7 @@ clusterpool_subgroup <- c('DDH', 'SDH')
 
 # Set project name
 # >>>> input required >>>>
-project_name <- 'DDH'
+project_name <- 'SDH'
 
 # Filtering the data set based on the clusters into
 # 2 clusterpools and a clusterpool containing all of
@@ -116,7 +114,7 @@ PoolnShare <- function(cp1, cp2, id1, id2){
     for(i in features){
       ListByGene <- cluster[str_detect(row.names(cluster), i), ]
       NewListItem <- data.frame(colMeans(ListByGene[1]), colMeans(ListByGene[2]), Col3=i, 
-      Col4=identity, colMeans(ListByGene[5]), Col6=clean_label_list[match(i, clean_label_list)])
+      Col4=identity, colMeans(ListByGene[5]), Col6=clean_label_list[match(str_remove(i, 'rna_'), clean_label_list)])
       NewListItem$Col3 <- as.character(NewListItem$Col3)
       NewListItem$Col4 <- as.character(NewListItem$Col4)
       NewListItem$Col6 <- as.character(NewListItem$Col6)
