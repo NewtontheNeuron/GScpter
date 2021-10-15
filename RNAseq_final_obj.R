@@ -153,7 +153,6 @@ PoolnShare <- function(cp1, cp2, id1, id2){
 # Running the pool and share function
 ClusterPoolResults <- PoolnShare(ClusterPool1, ClusterPool2, clusterpool_names[1], clusterpool_names[2])
 
-
 # Function for saving images with specific folder,
 # filename, and date. If the folder for the project name
 # does not exist you will have to make it.
