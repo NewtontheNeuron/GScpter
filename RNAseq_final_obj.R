@@ -23,11 +23,11 @@ library(Cairo)
 # You do not need to add new data and save it twice.
 # Most of the time you will only need load_data(), the third function.
 # >>>> input required >>>>
-using_RStudio <- toupper(readline(prompt = "Have you loaded the data before? Y/N "))
+loadedBefore <- toupper(readline(prompt = "Have you loaded the data before? Y/N "))
 
-while (using_RStudio != "Y" & using_RStudio != "N"){
+while (loadedBefore != "Y" & loadedBefore != "N"){
   print("Please enter either 'Y' or 'N'")
-  using_RStudio <- readline(prompt = "HAve you loaded the data before? Y/N ")
+  loadedBefore <- readline(prompt = "HAve you loaded the data before? Y/N ")
 }
 
 newdata <- function(){
@@ -42,7 +42,7 @@ load_data <- function(){
 }
 
 
-if (using_RStudio == "N"){
+if (loadedBefore == "N"){
   newdata() # Do this once
   savedata() # Do this once
 }
@@ -74,7 +74,7 @@ ClusterPool1 <- c('Excit-5', 'Excit-6', 'Excit-20', 'Excit-21', 'Excit-22', 'Exc
 ClusterPool2 <- c('Inhib-3', 'Inhib-6', 'Inhib-8', 'Inhib-12', 'Inhib-14', 'Inhib-15', 'Inhib-16', 'Inhib-18', 'Inhib-19', 'Inhib-20', 'Inhib-21')
 ClusterPool3 <- c()
 ClusterPool4 <- c()
-# First I make the rest of the code take other thngs
+# First I make the rest of the code take other things
 ClusterPoolAll <- c(ClusterPool1, ClusterPool2)
 
 # Include a way to label clusterpool1 and 2 for example
@@ -87,7 +87,7 @@ clusterpool_subgroup <- c('DDH', 'SDH')
 
 # Set project name
 # >>>> input required >>>>
-project_name <- readline(prompt = "Set your project name (use DDH for now): ")
+project_name <- readline(prompt = "Set your project name with no spaces (use DDH for now): ")
 
 # Filtering the data set based on the clusters into
 # 2 clusterpools and a clusterpool containing all of
@@ -153,14 +153,37 @@ PoolnShare <- function(cp1, cp2, id1, id2){
 # Running the pool and share function
 ClusterPoolResults <- PoolnShare(ClusterPool1, ClusterPool2, clusterpool_names[1], clusterpool_names[2])
 
+#function to set the width and height of plot saved as an image into global values
+#Parameters: 
+#   listOfClusters : vector of names of clusters
+#   listOfGenes: a vector of names of genes used.
+setHeightWidthImage <- function(listOfClusters, listOfGenes){
+  numClusters <- length(listOfClusters) / length(listOfGenes)
+  numGenes <- length(listOfGenes)
+  
+  if (numClusters > 0 && numClusters <= 5){
+    plot_width <<- (numClusters * 210) + 1000
+  } else if (numClusters > 5){
+    plot_width <<- (numClusters * 160) + 1000
+  }
+  plot_height <<- (numGenes * 250) + 150
+  
+  
+  message(sprintf("number of Clusters: %2.f", numClusters))
+  message(sprintf("plot height (in px): %2.f", plot_width))
+  
+  message(sprintf("number of genes formatted: %2.f", numGenes))
+  message(sprintf("plot width (in px) %2.f", plot_height))
+}
+
 # Function for saving images with specific folder,
 # filename, and date. If the folder for the project name
 # does not exist you will have to make it.
-save_image <- function(base_filename, set_height = 2500, set_width = 1500){
-  dir.create(project_name)
+save_image <- function(base_filename, width, height){
+  dir.create(project_name, showWarnings = FALSE)
   curr_date <- format(Sys.Date(),"%b_%d%_%Y" )
   filename <- sprintf("%s/%s%s%s.png", project_name, base_filename, project_name, curr_date)
-  ggsave(filename, plot = Plot, device = "png", height = set_height, width = set_width, units = "px", type = "cairo")
+  ggsave(filename, plot = Plot, device = "png", height = height, width = width, units = "px", type = "cairo")
 }
 
 # Plot the pooled dotplot
@@ -186,7 +209,8 @@ Plot
 # You will have to resize the Rstudio box
 # or set the prefered width and height
 # >>>> input required >>>>
-save_image('PooledDotPlot')
+setHeightWidthImage(Cluster, features)
+save_image('PooledDotPlot', plot_width, plot_height)
 
 # --------------------------------------------------
 # Ploting all the relevant clusters form the data by
@@ -197,24 +221,26 @@ Cluster <- ListbyClusterAll$id
 AvgExpScaled <- ListbyClusterAll$avg.exp.scaled
 markers <- Gene %>% unique()
 
-Plot <- ListbyClusterAll %>% filter(features.label %in% markers) %>% 
-  mutate(`% Expressing` = ListbyClusterAll$pct.exp) %>% 
-  ggplot(aes(y=Gene, x = Cluster, color = AvgExpScaled, size = `% Expressing`)) +
-  geom_point() + 
-  scale_size(range = c(0, 25)) +
-  scale_color_viridis_c(option = "plasma") + 
-  cowplot::theme_cowplot() + 
-  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1, size = 25), 
-          axis.title = element_text(size = 25, face="bold"), legend.key.size = unit(2.1, "line"), 
-          legend.text = element_text(size = 17), legend.title = element_text(size = 20)) +
-  theme(axis.text.y = element_text(angle = 0, vjust = 0.5, hjust=1, size = 25))
+Plot <- ListbyClusterAll %>% 
+  filter(features.label %in% markers) %>% 
+    mutate(`% Expressing` = ListbyClusterAll$pct.exp) %>% 
+    ggplot(aes(y=Gene, x = Cluster, color = AvgExpScaled, size = `% Expressing`)) +
+    geom_point() + 
+    scale_size(range = c(0, 25)) +
+    scale_color_viridis_c(option = "plasma") + 
+    cowplot::theme_cowplot() + 
+    theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1, size = 25), 
+            axis.title = element_text(size = 25, face="bold"), legend.key.size = unit(2.1, "line"), 
+            legend.text = element_text(size = 17), legend.title = element_text(size = 20)) +
+    theme(axis.text.y = element_text(angle = 0, vjust = 0.5, hjust=1, size = 25))
 Plot
 
 # Save the image
 # You will have to resize the Rstudio box
 # or set the prefered width and height
 # >>>> input required >>>>
-save_image('DotPlot')
+setHeightWidthImage(Cluster, features)
+save_image('DotPlot', plot_width, plot_height)
 
 # -----------------------------------------------
 # Bargraphs for the average expression and percent
@@ -223,10 +249,14 @@ SE <- function (x) {
   sd(x)/sqrt(length(x))
 }
 AvgExpPar <- function (x) {
-  x %>% group_by(features.plot) %>% summarise(std.err = SE(avg.exp), avg.exp = mean(avg.exp), lower = avg.exp - std.err, upper = avg.exp + std.err)
+  x %>% 
+    group_by(features.plot) %>% 
+    summarise(std.err = SE(avg.exp), avg.exp = mean(avg.exp), lower = avg.exp - std.err, upper = avg.exp + std.err)
 }
 PctExpPar <- function (x) {
-  x %>% group_by(features.plot) %>% summarise(std.err = SE(pct.exp), pct.exp = mean(pct.exp), lower = pct.exp - std.err, upper = pct.exp + std.err)
+  x %>% 
+    group_by(features.plot) %>% 
+    summarise(std.err = SE(pct.exp), pct.exp = mean(pct.exp), lower = pct.exp - std.err, upper = pct.exp + std.err)
 }
 
 Plot_4_Bar <- function (avg1, pct1, avg2, pct2, c1, c2){
@@ -391,5 +421,6 @@ Plot
 # You will have to resize the Rstudio box
 # or set the prefered width and height
 # >>>> input required >>>>
-save_image('BarPlot')
+
+save_image('BarPlot', 4000, 4000)
 
