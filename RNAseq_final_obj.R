@@ -62,19 +62,22 @@ b <- DotPlot(clean_neuron_object, features = features)
 # This step ensures that the values from the dot plot can be 
 # Stored in the data frame in the correct place with the correct
 # character type.
-ClusterPoolResults <- data.frame(avg.exp=numeric(), pct.exp=numeric(), features.plot=character(), id=character(), avg.exp.scaled=numeric())
-ClusterPoolResults$features.plot <- as.character(ClusterPoolResults$features.plot)
-ClusterPoolResults$id <- as.character(ClusterPoolResults$id)
+##ClusterPoolResults <- data.frame(avg.exp=numeric(), pct.exp=numeric(), features.plot=character(), id=character(), avg.exp.scaled=numeric(), features.label=character())
+##ClusterPoolResults$features.plot <- as.character(ClusterPoolResults$features.plot)
+##ClusterPoolResults$id <- as.character(ClusterPoolResults$id)
+##ClusterPoolResults$features.label <- as.character(ClusterPoolResults$features.label)
 
 # The list of clusters that are included in each group
 # I could add the functionality in the future to compare an 'n'
 # amount of clusterpools.
 # >>>> input required >>>>
+#DDH
 ClusterPool1 <- c('Excit-5', 'Excit-6', 'Excit-20', 'Excit-21', 'Excit-22', 'Excit-23', 'Excit-24', 'Excit-25', 'Excit-26', 'Excit-27', 'Excit-29', 'Excit-30', 'Excit-31', 'Excit-32', 'Excit-34', 'Excit-35', 'Excit-36')
 ClusterPool2 <- c('Inhib-3', 'Inhib-6', 'Inhib-8', 'Inhib-12', 'Inhib-14', 'Inhib-15', 'Inhib-16', 'Inhib-18', 'Inhib-19', 'Inhib-20', 'Inhib-21')
-ClusterPool3 <- c()
-ClusterPool4 <- c()
-# First I make the rest of the code take other things
+#SDH
+ClusterPool1 <- c("Excit-01", "Excit-02", "Excit-03", "Excit-08", "Excit-09", "Excit-10", "Excit-12", "Excit-14", "Excit-15", "Excit-16", "Excit-18", "Excit-04", "Excit-05", "Excit-13", "Excit-19")
+ClusterPool2 <- c("Inhib-01", "Inhib-02", "Inhib-03", "Inhib-04", "Inhib-05", "Inhib-06", "Inhib-07", "Inhib-09", "Inhib-10","Inhib-11","Inhib-12", "Inhib-13")
+# First I make the rest of the code take other thngs
 ClusterPoolAll <- c(ClusterPool1, ClusterPool2)
 
 # Include a way to label clusterpool1 and 2 for example
@@ -139,7 +142,7 @@ PoolnShare <- function(cp1, cp2, id1, id2){
     PoolAllRepeat <<- PoolAllRepeat + 1
   }
   
-  #Running the function PoolAll, (If there were extra pools put them here before the 'Rescale' bellow)
+  # Running the function PoolAll, (If there were extra pools put them here before the 'Rescale' bellow)
   # Turn this into a for loop
   PoolAll(ListByCluster1, id1)
   PoolAll(ListByCluster2, id2)
@@ -421,6 +424,4 @@ Plot
 # You will have to resize the Rstudio box
 # or set the prefered width and height
 # >>>> input required >>>>
-
-save_image('BarPlot', 4000, 4000)
-
+save_image('BarPlot')
