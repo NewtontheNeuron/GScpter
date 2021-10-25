@@ -23,9 +23,16 @@ library(Cairo)
 # You do not need to add new data and save it twice.
 # Most of the time you will only need load_data(), the third function.
 # >>>> input required >>>>
+using_RStudio <- toupper(readline(prompt = "Have you loaded the data before? Y/N "))
+
+while (using_RStudio != "Y" & using_RStudio != "N"){
+  print("Please enter either 'Y' or 'N'")
+  using_RStudio <- readline(prompt = "HAve you loaded the data before? Y/N ")
+}
+
 newdata <- function(){
   filename <- file.choose()
-  clean_neuron_object <- readRDS(filename)
+  clean_neuron_object <<- readRDS(filename)
 }
 savedata <- function(){
   save(clean_neuron_object, file = '.RData')
@@ -33,8 +40,13 @@ savedata <- function(){
 load_data <- function(){
   load(file = '.RData')
 }
-newdata() # Do this once
-savedata() # Do this once
+
+
+if (using_RStudio == "N"){
+  newdata() # Do this once
+  savedata() # Do this once
+}
+
 load_data()
 
 # Setting the genes to be investigated
@@ -76,7 +88,7 @@ clusterpool_subgroup <- c('DDH', 'SDH')
 
 # Set project name
 # >>>> input required >>>>
-project_name <- 'SDH'
+project_name <- readline(prompt = "Set your project name (use DDH for now): ")
 
 # Filtering the data set based on the clusters into
 # 2 clusterpools and a clusterpool containing all of
@@ -114,7 +126,7 @@ PoolnShare <- function(cp1, cp2, id1, id2){
     for(i in features){
       ListByGene <- cluster[str_detect(row.names(cluster), i), ]
       NewListItem <- data.frame(colMeans(ListByGene[1]), colMeans(ListByGene[2]), Col3=i, 
-      Col4=identity, colMeans(ListByGene[5]), Col6=clean_label_list[match(str_remove(i, 'rna_'), clean_label_list)])
+        Col4=identity, colMeans(ListByGene[5]), Col6=clean_label_list[match(str_remove(i, 'rna_'), clean_label_list)])
       NewListItem$Col3 <- as.character(NewListItem$Col3)
       NewListItem$Col4 <- as.character(NewListItem$Col4)
       NewListItem$Col6 <- as.character(NewListItem$Col6)
@@ -144,11 +156,12 @@ ClusterPoolResults <- PoolnShare(ClusterPool1, ClusterPool2, clusterpool_names[1
 
 # Function for saving images with specific folder,
 # filename, and date. If the folder for the project name
-# doesnot exist you will have to make it.
-save_image <- function(base_filename, width=NULL, height=NULL){
+# does not exist you will have to make it.
+save_image <- function(base_filename, set_height = 2500, set_width = 1500){
   dir.create(project_name)
-  ggsave(filename = sprintf("%s/%s%s%s.png", project_name, base_filename, project_name, str(format(Sys.Date(), "%b_%d%_%Y"))), plot = Plot,  
-  device = "png", type = "cairo", width = width, height = height)
+  curr_date <- format(Sys.Date(),"%b_%d%_%Y" )
+  filename <- sprintf("%s/%s%s%s.png", project_name, base_filename, project_name, curr_date)
+  ggsave(filename, plot = Plot, device = "png", height = set_height, width = set_width, units = "px", type = "cairo")
 }
 
 # Plot the pooled dotplot
@@ -157,16 +170,17 @@ Cluster <- ClusterPoolResults$id
 AvgExpScaled <- ClusterPoolResults$avg.exp.re.scaled
 markers <- Gene %>% unique()
 
-Plot <- ClusterPoolResults %>% filter(features.label %in% markers) %>% 
-  mutate(`% Expressing` = ClusterPoolResults$pct.exp) %>% 
-  ggplot(aes(y=Gene, x = Cluster, color = AvgExpScaled, size = `% Expressing`)) + #geom_dotplot(dotsize=1.5) + 
-  geom_point() + 
-  scale_size(range = c(0, 20)) +
-  scale_color_viridis_c(option = "plasma") + 
-  cowplot::theme_cowplot() + 
-  theme(axis.title = element_text(size=20,face="bold"), legend.key.size=unit(1, "line")) +
-  theme(axis.text.x = element_text(angle = 0, vjust = 0.5, hjust=0.5, size=15)) +
-  theme(axis.text.y = element_text(angle = 0, vjust = 0.5, hjust=0.5, size=15)) #+
+Plot <- ClusterPoolResults %>% 
+  filter(features.label %in% markers) %>% 
+    mutate(`% Expressing` = ClusterPoolResults$pct.exp) %>% 
+      ggplot(aes(y=Gene, x = Cluster, color = AvgExpScaled, size = `% Expressing`)) + 
+        geom_point() + 
+        scale_size(range = c(0, 20)) +
+        scale_color_viridis_c(option = "plasma") + 
+        cowplot::theme_cowplot() + 
+        theme(axis.title = element_text(size=20,face="bold"), legend.key.size=unit(1, "line")) +
+        theme(axis.text.x = element_text(angle = 0, vjust = 0.5, hjust=0.5, size=15)) +
+        theme(axis.text.y = element_text(angle = 0, vjust = 0.5, hjust=0.5, size=15))
 Plot
 
 # Save the image
@@ -186,12 +200,14 @@ markers <- Gene %>% unique()
 
 Plot <- ListbyClusterAll %>% filter(features.label %in% markers) %>% 
   mutate(`% Expressing` = ListbyClusterAll$pct.exp) %>% 
-  ggplot(aes(y=Gene, x = Cluster, color = AvgExpScaled, size = `% Expressing`)) + #geom_dotplot(dotsize=1.5) + 
+  ggplot(aes(y=Gene, x = Cluster, color = AvgExpScaled, size = `% Expressing`)) +
   geom_point() + 
   scale_size(range = c(0, 25)) +
   scale_color_viridis_c(option = "plasma") + 
   cowplot::theme_cowplot() + 
-  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1, size = 25), axis.title = element_text(size = 25, face="bold"), legend.key.size = unit(2.1, "line"), legend.text = element_text(size = 17), legend.title = element_text(size = 20)) +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1, size = 25), 
+          axis.title = element_text(size = 25, face="bold"), legend.key.size = unit(2.1, "line"), 
+          legend.text = element_text(size = 17), legend.title = element_text(size = 20)) +
   theme(axis.text.y = element_text(angle = 0, vjust = 0.5, hjust=1, size = 25))
 Plot
 
@@ -358,7 +374,7 @@ Plot_4_Bar <- function (avg1, pct1, avg2, pct2, c1, c2){
   #Use 1 function to run,correct and draw t tests. Use 5% less of the larget value to plcae the anova pvalue. Export the post hocs as a table.
   Plot_1 <- Plot_details(avg1, c1, exp.def(c1, "avg"), exp.def(avg1, "avg"), avg.lab, "avg") 
   #Plot_1 <- highest_mean(c1, "avg", Plot_1, Loop_Cell(Run_ANOVA(c1, "avg")))
-  Plot_2 <- Plot_details(avg2, c2, exp.def(c2, "avg"), exp.def(avg2, "avg"), avg.lab, "avg") 
+  Plot_2 <- Plot_details(avg2, c2, exp.def(c2, "avg"), exp.def(avg2, "avg"), avg.lab, "avg")
   Plot_2 <- Plot_Bween(Plot_2, Bween_pool("avg"), "avg", c2)
   #Plot_2 <- highest_mean(c2, "avg", Plot_2, Loop_Cell(Run_ANOVA(c2, "avg")))
   Plot_3 <- Plot_details(pct1, c1, exp.def(c1, "pct"), exp.def(pct1, "pct"), pct.lab, "pct")
