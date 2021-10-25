@@ -140,7 +140,7 @@ PoolnShare <- function(cp1, cp2, id1, id2){
     PoolAllRepeat <<- PoolAllRepeat + 1
   }
   
-  #Running the function PoolAll, (If there were extra pools put them here before the 'Rescale' bellow)
+  # Running the function PoolAll, (If there were extra pools put them here before the 'Rescale' bellow)
   # Turn this into a for loop
   PoolAll(ListByCluster1, id1)
   PoolAll(ListByCluster2, id2)
