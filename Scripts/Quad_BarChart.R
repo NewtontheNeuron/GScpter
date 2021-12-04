@@ -163,4 +163,4 @@ Plot_4_Bar <- function (avg1, pct1, avg2, pct2, c1, c2){
 Plot <- Plot_4_Bar(AvgExpPar(ListByCluster1), PctExpPar(ListByCluster1), AvgExpPar(ListByCluster2), PctExpPar(ListByCluster2), ListByCluster1, ListByCluster2)
 Plot
 
-save_image('PooledDotPlot',Plot, width = 5000, height = 4000)
+save_image('Quad_BarPlot',Plot, width = 5000, height = 4000)
