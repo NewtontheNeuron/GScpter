@@ -1,3 +1,0 @@
-# New library
-library(yaml)
-
