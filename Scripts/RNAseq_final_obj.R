@@ -23,12 +23,6 @@ library(Cairo)
 # You do not need to add new data and save it twice.
 # Most of the time you will only need load_data(), the third function.
 # >>>> input required >>>>
-loadedBefore <- toupper(readline(prompt = "Have you loaded the data before? Y/N "))
-
-while (loadedBefore != "Y" & loadedBefore != "N"){
-  print("Please enter either 'Y' or 'N'")
-  loadedBefore <- readline(prompt = "HAve you loaded the data before? Y/N ")
-}
 
 newdata <- function(){
   filename <- file.choose()
@@ -42,10 +36,8 @@ load_data <- function(){
 }
 
 
-if (loadedBefore == "N"){
-  newdata() # Do this once
-  savedata() # Do this once
-}
+newdata() # Do this once
+savedata() # Do this once
 
 load_data()
 
@@ -62,10 +54,10 @@ b <- DotPlot(clean_neuron_object, features = features)
 # This step ensures that the values from the dot plot can be 
 # Stored in the data frame in the correct place with the correct
 # character type.
-##ClusterPoolResults <- data.frame(avg.exp=numeric(), pct.exp=numeric(), features.plot=character(), id=character(), avg.exp.scaled=numeric(), features.label=character())
-##ClusterPoolResults$features.plot <- as.character(ClusterPoolResults$features.plot)
-##ClusterPoolResults$id <- as.character(ClusterPoolResults$id)
-##ClusterPoolResults$features.label <- as.character(ClusterPoolResults$features.label)
+ClusterPoolResults <- data.frame(avg.exp=numeric(), pct.exp=numeric(), features.plot=character(), id=character(), avg.exp.scaled=numeric(), features.label=character())
+ClusterPoolResults$features.plot <- as.character(ClusterPoolResults$features.plot)
+ClusterPoolResults$id <- as.character(ClusterPoolResults$id)
+ClusterPoolResults$features.label <- as.character(ClusterPoolResults$features.label)
 
 # The list of clusters that are included in each group
 # I could add the functionality in the future to compare an 'n'
@@ -115,11 +107,7 @@ PoolnShare <- function(cp1, cp2, id1, id2){
   ClusterPoolResults$features.plot <- as.character(ClusterPoolResults$features.plot)
   ClusterPoolResults$id <- as.character(ClusterPoolResults$id)
   ClusterPoolResults$features.label <- as.character(ClusterPoolResults$features.label)
-  
-  #Separates the data based on the cluster pools
-  #ListByCluster1 <- b$data[b$data$id %in% cp1,]
-  #ListByCluster2 <- b$data[b$data$id %in% cp2,]
-  
+
   #For repeating function
   PoolAllRepeat <- 1
 
@@ -216,7 +204,7 @@ setHeightWidthImage(Cluster, features)
 save_image('PooledDotPlot', plot_width, plot_height)
 
 # --------------------------------------------------
-# Ploting all the relevant clusters form the data by
+# Plotting all the relevant clusters form the data by
 # using ClusterPoolAll
 ListbyClusterAll[, ncol(ListbyClusterAll) + 1] <- data.frame(features.label = clean_label_list)
 Gene <- ListbyClusterAll$features.label
