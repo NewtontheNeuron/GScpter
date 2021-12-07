@@ -44,7 +44,7 @@ load_data <- function(){
 
 if (using_RStudio == "N"){
   newdata() # Do this once
-  savedata() # Do this once
+  #savedata() # Do this once
 }
 
 load_data()
@@ -73,10 +73,10 @@ b <- DotPlot(clean_neuron_object, features = features)
 # >>>> input required >>>>
 ClusterPool1 <- c('Excit-5', 'Excit-6', 'Excit-20', 'Excit-21', 'Excit-22', 'Excit-23', 'Excit-24', 'Excit-25', 'Excit-26', 'Excit-27', 'Excit-29', 'Excit-30', 'Excit-31', 'Excit-32', 'Excit-34', 'Excit-35', 'Excit-36')
 ClusterPool2 <- c('Inhib-3', 'Inhib-6', 'Inhib-8', 'Inhib-12', 'Inhib-14', 'Inhib-15', 'Inhib-16', 'Inhib-18', 'Inhib-19', 'Inhib-20', 'Inhib-21')
-ClusterPool1 <- c("Excit-01", "Excit-02", "Excit-03", "Excit-08", "Excit-09", "Excit-10", "Excit-12", "Excit-14", "Excit-15", "Excit-16", "Excit-18", "Excit-04", "Excit-05", "Excit-13", "Excit-19")
-ClusterPool2 <- c("Inhib-01", "Inhib-02", "Inhib-03", "Inhib-04", "Inhib-05", "Inhib-06", "Inhib-07", "Inhib-09", "Inhib-10","Inhib-11","Inhib-12", "Inhib-13")
+ClusterPool3 <- c("Excit-01", "Excit-02", "Excit-03", "Excit-08", "Excit-09", "Excit-10", "Excit-12", "Excit-14", "Excit-15", "Excit-16", "Excit-18", "Excit-04", "Excit-05", "Excit-13", "Excit-19")
+ClusterPool4 <- c("Inhib-01", "Inhib-02", "Inhib-03", "Inhib-04", "Inhib-05", "Inhib-06", "Inhib-07", "Inhib-09", "Inhib-10","Inhib-11","Inhib-12", "Inhib-13")
 # First I make the rest of the code take other thngs
-ClusterPoolAll <- c(ClusterPool1, ClusterPool2)
+ClusterPoolAll <- c(ClusterPool1, ClusterPool2, ClusterPool3, ClusterPool4)
 
 # Include a way to label clusterpool1 and 2 for example
 # Excitatory vs. Inhibitory. Place them in the order they
@@ -96,6 +96,8 @@ project_name <- readline(prompt = "Set your project name (use DDH for now): ")
 # expressed data.
 ListByCluster1 <- b$data[b$data$id %in% ClusterPool1,]
 ListByCluster2 <- b$data[b$data$id %in% ClusterPool2,]
+ListByCluster3 <- b$data[b$data$id %in% ClusterPool3,]
+ListByCluster4 <- b$data[b$data$id %in% ClusterPool4,]
 ListbyClusterAll <- b$data[b$data$id %in% ClusterPoolAll,]
 
 # Remove the 'rna_' label on most genes in the Levine Dataset
@@ -106,13 +108,14 @@ clean_label_list <- str_remove(features, 'rna_')
 # Function for pooling the average expression and percent 
 # expressed from the dotplot data. The function also re-scales avg.exp
 # using a z-score system similar to Seurat's z-score system.
-PoolnShare <- function(cp1, cp2, id1, id2){
+PoolnShare <- function(id1, id2, subgr1, subgr2, subgr3, subgr4){
   
   #Defining the full Data Table, it will clear every time
-  ClusterPoolResults <- data.frame(avg.exp=numeric(), pct.exp=numeric(), features.plot=character(), id=character(), avg.exp.scaled=numeric(), features.label=character())
+  ClusterPoolResults <- data.frame(avg.exp=numeric(), pct.exp=numeric(), features.plot=character(), id=character(), avg.exp.scaled=numeric(), features.label=character(), subgr=character())
   ClusterPoolResults$features.plot <- as.character(ClusterPoolResults$features.plot)
   ClusterPoolResults$id <- as.character(ClusterPoolResults$id)
   ClusterPoolResults$features.label <- as.character(ClusterPoolResults$features.label)
+  ClusterPoolResults$subgr <- as.character(ClusterPoolResults$subgr)
   
   #Separates the data based on the cluster pools
   #ListByCluster1 <- b$data[b$data$id %in% cp1,]
@@ -122,15 +125,17 @@ PoolnShare <- function(cp1, cp2, id1, id2){
   PoolAllRepeat <- 1
 
   #Average, Scale and save
-  PoolAll <- function (cluster, identity){
+  PoolAll <- function (cluster, identity, subgr){
     for(i in features){
       ListByGene <- cluster[str_detect(row.names(cluster), i), ]
       NewListItem <- data.frame(colMeans(ListByGene[1]), colMeans(ListByGene[2]), Col3=i, 
-        Col4=identity, colMeans(ListByGene[5]), Col6=clean_label_list[match(str_remove(i, 'rna_'), clean_label_list)])
+        Col4=identity, colMeans(ListByGene[5]), Col6=clean_label_list[match(str_remove(i, 'rna_'), clean_label_list, Col8=subgr)])
       NewListItem$Col3 <- as.character(NewListItem$Col3)
       NewListItem$Col4 <- as.character(NewListItem$Col4)
       NewListItem$Col6 <- as.character(NewListItem$Col6)
+      NewListItem$Col8 <- as.character(NewListItem$Col8)
       ClusterPoolResults[nrow(ClusterPoolResults) + 1, ] <<- NewListItem
+      # The purpose of this 
       if(PoolAllRepeat == 1){
         row.names(ClusterPoolResults)[nrow(ClusterPoolResults)] <<- i
       } else {
@@ -142,8 +147,10 @@ PoolnShare <- function(cp1, cp2, id1, id2){
   
   # Running the function PoolAll, (If there were extra pools put them here before the 'Rescale' bellow)
   # Turn this into a for loop
-  PoolAll(ListByCluster1, id1)
-  PoolAll(ListByCluster2, id2)
+  PoolAll(ListByCluster1, id1, subgr1)
+  PoolAll(ListByCluster2, id2, subgr2)
+  PoolAll(ListByCluster3, id1, subgr3)
+  PoolAll(ListByCluster4, id2, subgr4)
   
   #Rescaling average expression based on z scores of the full new dataset
   ClusterPoolResults[, ncol(ClusterPoolResults) + 1] <- 
@@ -152,7 +159,7 @@ PoolnShare <- function(cp1, cp2, id1, id2){
 }
 
 # Running the pool and share function
-ClusterPoolResults <- PoolnShare(ClusterPool1, ClusterPool2, clusterpool_names[1], clusterpool_names[2])
+ClusterPoolResults <- PoolnShare(clusterpool_names[1], clusterpool_names[2], clusterpool_subgroup[1], clusterpool_subgroup[2], clusterpool_subgroup[1], clusterpool_subgroup[2])
 
 # Function for saving images with specific folder,
 # filename, and date. If the folder for the project name
