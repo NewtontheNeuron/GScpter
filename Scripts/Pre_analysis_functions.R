@@ -38,12 +38,20 @@ load_data <- function(){
       print("Loading data into R... this might take a while.")
       filename <- file.choose()
       clean_neuron_object <<- readRDS(filename)
-      save(clean_neuron_object, file = '.RData')
+      save(clean_neuron_object, file = '../.RData')
     } 
     
     #was loadfile function
-    load(file = '.RData')
-    print("RDS file loaded!")
+    # This is good but when newdata and savedata were run then
+    # we do not need to run load because it would already have clean_neuron_object from
+    # above.
+    if (loadedBefore == "Y"){
+      load(file = '../.RData') # We could also place .RData in the Data folder
+      # We also need some form of error handling when the file does not exist so that it prompts
+      # user the .RData file does not exist please ensure that it is in the correct folder or
+      # do you wish to exit
+      print("RDS file loaded!") 
+    }
   }
   
   print("Good to go!")
@@ -71,7 +79,7 @@ ClusterPoolResults$features.label <- as.character(ClusterPoolResults$features.la
 
 #Get named clusterpools
 #TODO: remove hard coded inhibitory/excitatory and DDH.
-clusterpool_names <- c("inhibitory", "excitatory")
+clusterpool_names <- c("inhibitory", "excitatory") # input required
 ClusterPoolAll <- c()
 
 for (name in clusterpool_names){
