@@ -84,7 +84,7 @@ ClusterPoolAll <- c(ClusterPool1, ClusterPool2, ClusterPool3, ClusterPool4)
 # come first.
 # >>>> input required >>>>
 clusterpool_names <- c('Excitatory', 'Inhibitory')
-clusterpool_subgroup <- c('DDH', 'SDH')
+clusterpool_subgroup <- c('SDH', 'DDH', 'SDH', 'DDH')
 
 # Set project name
 # >>>> input required >>>>
@@ -129,11 +129,11 @@ PoolnShare <- function(id1, id2, subgr1, subgr2, subgr3, subgr4){
     for(i in features){
       ListByGene <- cluster[str_detect(row.names(cluster), i), ]
       NewListItem <- data.frame(colMeans(ListByGene[1]), colMeans(ListByGene[2]), Col3=i, 
-        Col4=identity, colMeans(ListByGene[5]), Col6=clean_label_list[match(str_remove(i, 'rna_'), clean_label_list, Col8=subgr)])
+        Col4=identity, colMeans(ListByGene[5]), Col6=clean_label_list[match(str_remove(i, 'rna_'), clean_label_list, SubGroup=subgr)])
       NewListItem$Col3 <- as.character(NewListItem$Col3)
       NewListItem$Col4 <- as.character(NewListItem$Col4)
       NewListItem$Col6 <- as.character(NewListItem$Col6)
-      NewListItem$Col8 <- as.character(NewListItem$Col8)
+      NewListItem$SubGroup <- as.character(NewListItem$SubGroup)
       ClusterPoolResults[nrow(ClusterPoolResults) + 1, ] <<- NewListItem
       # The purpose of this 
       if(PoolAllRepeat == 1){
@@ -159,7 +159,7 @@ PoolnShare <- function(id1, id2, subgr1, subgr2, subgr3, subgr4){
 }
 
 # Running the pool and share function
-ClusterPoolResults <- PoolnShare(clusterpool_names[1], clusterpool_names[2], clusterpool_subgroup[1], clusterpool_subgroup[2], clusterpool_subgroup[1], clusterpool_subgroup[2])
+ClusterPoolResults <- PoolnShare(clusterpool_names[1], clusterpool_names[2], clusterpool_subgroup[1], clusterpool_subgroup[2], clusterpool_subgroup[3], clusterpool_subgroup[4])
 
 # Function for saving images with specific folder,
 # filename, and date. If the folder for the project name
