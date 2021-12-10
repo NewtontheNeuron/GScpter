@@ -68,15 +68,25 @@ ClusterPoolResults <<- data.frame(avg.exp=numeric(), pct.exp=numeric(), features
 ClusterPoolResults$features.plot <- as.character(ClusterPoolResults$features.plot)
 ClusterPoolResults$id <- as.character(ClusterPoolResults$id)
 ClusterPoolResults$features.label <- as.character(ClusterPoolResults$features.label)
+ClusterPoolResults$SubGroup <- as.character(ClusterPoolResults$SubGroup)
 
 #Get named clusterpools
 #TODO: remove hard coded inhibitory/excitatory and DDH.
 clusterpool_names <- c("inhibitory", "excitatory")
+clusterpool_subgroup <- c("SDH", "DDH")
 ClusterPoolAll <- c()
+ListByCluster <- list()
 
+index <- 0
 for (name in clusterpool_names){
-  Clusterpool <- returnClusterpoolGenes(name, "DDH")
-  ClusterPoolAll <- c(ClusterPoolAll, Clusterpool)
+  for (subgroup in clusterpool_subgroup){
+    Clusterpool <- returnClusterpoolGenes(name, subgroup)
+    ClusterPoolAll <- c(ClusterPoolAll, Clusterpool)
+    ListByCluster.append(b$data[b$data$id %in% Clusterpool,])
+    typeof(ListByCluster[index])
+    index <- index + 1
+  }
+
 }
 
 # Filtering the data set based on the clusters into
@@ -86,38 +96,37 @@ for (name in clusterpool_names){
 
 ListbyClusterAll <- b$data[b$data$id %in% ClusterPoolAll,]
 
-#ListByCluster1 <- ListbyClusterAll %>%
-#    filter(grepl("Excit-", id)) %>%
-#    as_tibble()
-
-ListByCluster1 <- b$data[b$data$id %in% grep("Excit-", ClusterPoolAll, value = TRUE),]
-ListByCluster2 <- b$data[b$data$id %in% grep("Inhib-", ClusterPoolAll, value = TRUE),]
+#ListByCluster[1] <- b$data[b$data$id %in% grep("Excit-", ClusterPoolAll, value = TRUE),]
+#ListByCluster[2] <- b$data[b$data$id %in% grep("Inhib-", ClusterPoolAll, value = TRUE),]
+#change ListByCluster to a dictionary type object ListByCluster[1]
 
 # Remove the 'rna_' label on most genes in the Levine Dataset
 # Clean the features into presentable labels without the 'rna_' tag.
 clean_label_list <- str_remove(features, 'rna_')
 #------
 
-PoolnShare <- function(cp1, cp2, id1, id2){
+PoolnShare <- function(id1, id2, subgr1, subgr2, subgr3, subgr4){
   
   #Defining the full Data Table, it will clear every time
   ClusterPoolResults <<- data.frame(avg.exp=numeric(), pct.exp=numeric(), features.plot=character(), id=character(), avg.exp.scaled=numeric(), features.label=character())
   ClusterPoolResults$features.plot <- as.character(ClusterPoolResults$features.plot)
   ClusterPoolResults$id <- as.character(ClusterPoolResults$id)
   ClusterPoolResults$features.label <- as.character(ClusterPoolResults$features.label)
+  ClusterPoolResults$SubGroup <- as.character(ClusterPoolResults$SubGroup)
   
   #For repeating function
   PoolAllRepeat <- 1
   
   #Average, Scale and save
-  PoolAll <- function (cluster, identity){
+  PoolAll <- function (cluster, identity, subgr){
     for(i in features){
       ListByGene <- cluster[str_detect(row.names(cluster), i), ]
       NewListItem <- data.frame(colMeans(ListByGene[1]), colMeans(ListByGene[2]), Col3=i, 
-        Col4=identity, colMeans(ListByGene[5]), Col6=clean_label_list[match(str_remove(i, 'rna_'), clean_label_list)])
+        Col4=identity, colMeans(ListByGene[5]), Col6=clean_label_list[match(str_remove(i, 'rna_'), clean_label_list)], SubGroup= subgr)
       NewListItem$Col3 <- as.character(NewListItem$Col3)
       NewListItem$Col4 <- as.character(NewListItem$Col4)
       NewListItem$Col6 <- as.character(NewListItem$Col6)
+      NewListItem$SubGroup <- as.character(NewListItem$SubGroup)
       ClusterPoolResults[nrow(ClusterPoolResults) + 1, ] <<- NewListItem
       if(PoolAllRepeat == 1){
         row.names(ClusterPoolResults)[nrow(ClusterPoolResults)] <<- i
@@ -130,8 +139,10 @@ PoolnShare <- function(cp1, cp2, id1, id2){
   
   # Running the function PoolAll, (If there were extra pools put them here before the 'Rescale' bellow)
   # Turn this into a for loop
-  PoolAll(ListByCluster1, id1)
-  PoolAll(ListByCluster2, id2)
+  PoolAll(ListByCluster[0], id1, subgr1)
+  PoolAll(ListByCluster[1], id2, subgr2)
+  PoolAll(ListByCluster[2], id1, subgr3)
+  PoolAll(ListByCluster[3], id2, subgr4)
   
   #Rescaling average expression based on z scores of the full new dataset
   ClusterPoolResults[, ncol(ClusterPoolResults) + 1] <- 
@@ -151,9 +162,7 @@ PoolnShare <- function(cp1, cp2, id1, id2){
 ClusterPool1 <- returnClusterpoolGenes(clusterpool_names[1], "DDH")
 ClusterPool2 <- returnClusterpoolGenes(clusterpool_names[2], "DDH")
 
-ClusterPoolResults <- PoolnShare(ClusterPool1, ClusterPool2 , clusterpool_names[1], clusterpool_names[2])
-
-#str(ClusterPoolResults)
+ClusterPoolResults <- PoolnShare(clusterpool_names[1], clusterpool_names[2], clusterpool_subgroup[1], clusterpool_names[2], clusterpool_subgroup[1], clusterpool_subgroup[2])
 
 #function to set the width and height of plot saved as an image into global values
 #Parameters: 

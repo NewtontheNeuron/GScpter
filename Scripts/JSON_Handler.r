@@ -1,4 +1,3 @@
-##
 library(rstudioapi)
 library(rjson)
 
@@ -15,6 +14,8 @@ returnFeatures <- function(){
 
 #return list of genes to look at according to specification from JSON object.
 #TODO: Add error handling (i.e. what happens when the cell that was called doesn't exist.)
+returnClusterpoolGenes("excitatory", "DDH")
+
 returnClusterpoolGenes <- function(Type, Name){
     listOfGenes <- Data[["clusterpools"]][[Type]][[Name]]
     return(listOfGenes)
