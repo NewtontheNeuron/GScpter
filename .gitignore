@@ -1,7 +1,5 @@
 *.code-workspace
-.Rproj.user
 .Rhistory
 .RData
 .Ruserdata
-.RDataTmp
-DDH/
+.Rproj.user/
