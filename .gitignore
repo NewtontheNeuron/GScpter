@@ -1,5 +1,4 @@
 *.code-workspace
-.Rproj.user
 .Rhistory
 .RData
 .Ruserdata
@@ -7,3 +6,4 @@
 DDH/
 Data/.DS_Store
 data.json
+.Rproj.user/

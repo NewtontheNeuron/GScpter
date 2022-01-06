@@ -18,12 +18,12 @@ Plot_4_Bar <- function (avg1, pct1, avg2, pct2, c1, c2){
     GeneStatResults$name <- as.character(GeneStatResults$name)
     for (i in features){
       ListbyGene <- ListbyClusterAll[str_detect(row.names(ListbyClusterAll), i), ]
-      ListByCluster1 <- ListbyGene[ListbyGene$id %in% ClusterPool1,]
-      ListByCluster2 <- ListbyGene[ListbyGene$id %in% ClusterPool2,]
+      ListByCluster[[1]] <- ListbyGene[ListbyGene$id %in% ClusterPool1,]
+      ListByCluster[[2]] <- ListbyGene[ListbyGene$id %in% ClusterPool2,]
       if (method == "avg"){
-        ClusterStatResults <- t.test(ListByCluster1$avg.exp, ListByCluster2$avg.exp)
+        ClusterStatResults <- t.test(ListByCluster[[1]]$avg.exp, ListByCluster[[2]]$avg.exp)
       } else if (method == "pct"){
-        ClusterStatResults <- t.test(ListByCluster1$pct.exp, ListByCluster2$pct.exp)
+        ClusterStatResults <- t.test(ListByCluster[[1]]$pct.exp, ListByCluster[[2]]$pct.exp)
       }
       ClusterStatResults <- append(ClusterStatResults, i, after = length(ClusterStatResults))
       x <- ClusterStatResults[[11]]
@@ -160,7 +160,7 @@ Plot_4_Bar <- function (avg1, pct1, avg2, pct2, c1, c2){
   Plot <- Plot_1 + Plot_2 + Plot_3 + Plot_4
   return(Plot)
 }
-Plot <- Plot_4_Bar(AvgExpPar(ListByCluster1), PctExpPar(ListByCluster1), AvgExpPar(ListByCluster2), PctExpPar(ListByCluster2), ListByCluster1, ListByCluster2)
+Plot <- Plot_4_Bar(AvgExpPar(ListByCluster[[1]]), PctExpPar(ListByCluster[[1]]), AvgExpPar(ListByCluster[[2]]), PctExpPar(ListByCluster[[2]]), ListByCluster[[1]], ListByCluster[[2]])
 Plot
 
 save_image('Quad_BarPlot',Plot, width = 5000, height = 4000)

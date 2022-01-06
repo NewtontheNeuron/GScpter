@@ -24,7 +24,7 @@ setwd(dirname(getActiveDocumentContext()$path))
 source("JSON_Handler.R")
 
 load_data <- function(){
-  RStudio <- toupper(readline(prompt = "Are you using RStudio to run this? "))
+  RStudio <- toupper(readline(prompt = "Are you using RStudio to run this? Y/N "))
   if (RStudio != "Y"){
     loadedBefore <- toupper(readline(prompt = "Have you loaded the RDS data before? Y/N "))
     
@@ -68,44 +68,34 @@ project_name <- returnProjectName()
 # the percent expressed.
 b <- DotPlot(clean_neuron_object, features = features)
 
-# Start and define the data frame that will contain the results.
-# This step ensures that the values from the dot plot can be 
-# Stored in the data frame in the correct place with the correct
-# character type.
-ClusterPoolResults <<- data.frame(avg.exp=numeric(), pct.exp=numeric(), features.plot=character(), id=character(), avg.exp.scaled=numeric(), features.label=character())
-ClusterPoolResults$features.plot <- as.character(ClusterPoolResults$features.plot)
-ClusterPoolResults$id <- as.character(ClusterPoolResults$id)
-ClusterPoolResults$features.label <- as.character(ClusterPoolResults$features.label)
-ClusterPoolResults$SubGroup <- as.character(ClusterPoolResults$SubGroup)
-
 #Get named clusterpools
 #TODO: remove hard coded inhibitory/excitatory and DDH.
-<<<<<<< HEAD
-clusterpool_names <- c("inhibitory", "excitatory")
-clusterpool_subgroup <- c("SDH", "DDH")
-=======
-clusterpool_names <- c("inhibitory", "excitatory") # input required
->>>>>>> b6254b06e3657ce277c351a9a8b7c02dde786698
+#clusterpool_names <- c("inhibitory", "excitatory")
+#clusterpool_subgroup <- c("SDH", "DDH")
+
+clusterpool_names <- returnClusterpool_names()
+clusterpool_subgroup <- returnClusterpool_subgroups()
+
 ClusterPoolAll <- c()
 ListByCluster <- list()
 
-index <- 0
+index <- 1
 for (name in clusterpool_names){
   for (subgroup in clusterpool_subgroup){
     Clusterpool <- returnClusterpoolGenes(name, subgroup)
+    #create master list of all gene names
     ClusterPoolAll <- c(ClusterPoolAll, Clusterpool)
-    ListByCluster.append(b$data[b$data$id %in% Clusterpool,])
-    typeof(ListByCluster[index])
+    #create key name
+    key <- paste("clusterpool", index, sep = "")
+    #key value pair into ListByCluster
+    ListByCluster[[key]] <- b$data[b$data$id %in% Clusterpool,]
     index <- index + 1
   }
-
 }
-
 # Filtering the data set based on the clusters into
 # 2 clusterpools and a clusterpool containing all of
 # the clusters and their average expression and percent
 # expressed data.
-
 ListbyClusterAll <- b$data[b$data$id %in% ClusterPoolAll,]
 
 #ListByCluster[1] <- b$data[b$data$id %in% grep("Excit-", ClusterPoolAll, value = TRUE),]
@@ -116,10 +106,11 @@ ListbyClusterAll <- b$data[b$data$id %in% ClusterPoolAll,]
 # Clean the features into presentable labels without the 'rna_' tag.
 clean_label_list <- str_remove(features, 'rna_')
 #------
-
-PoolnShare <- function(id1, id2, subgr1, subgr2, subgr3, subgr4){
-  
-  #Defining the full Data Table, it will clear every time
+PoolnShare <- function(id, subgr){
+  # Start and define the data frame that will contain the results.
+  # This step ensures that the values from the dot plot can be 
+  # Stored in the data frame in the correct place with the correct
+  # character type.
   ClusterPoolResults <<- data.frame(avg.exp=numeric(), pct.exp=numeric(), features.plot=character(), id=character(), avg.exp.scaled=numeric(), features.label=character())
   ClusterPoolResults$features.plot <- as.character(ClusterPoolResults$features.plot)
   ClusterPoolResults$id <- as.character(ClusterPoolResults$id)
@@ -151,11 +142,12 @@ PoolnShare <- function(id1, id2, subgr1, subgr2, subgr3, subgr4){
   
   # Running the function PoolAll, (If there were extra pools put them here before the 'Rescale' bellow)
   # Turn this into a for loop
-  PoolAll(ListByCluster[0], id1, subgr1)
-  PoolAll(ListByCluster[1], id2, subgr2)
-  PoolAll(ListByCluster[2], id1, subgr3)
-  PoolAll(ListByCluster[3], id2, subgr4)
-  
+  for (subgr_index in 1:length(subgr)){
+    for (id_index in 1:length(id)){
+      PoolAll(ListByCluster[[subgr_index]], id[[id_index]], subgr[[subgr_index]])
+    }
+  }
+
   #Rescaling average expression based on z scores of the full new dataset
   ClusterPoolResults[, ncol(ClusterPoolResults) + 1] <- 
     data.frame(avg.exp.re.scaled = (ClusterPoolResults[, 1] - colMeans(ClusterPoolResults[1]))/sd(ClusterPoolResults$avg.exp))
@@ -170,11 +162,12 @@ PoolnShare <- function(id1, id2, subgr1, subgr2, subgr3, subgr4){
 # TODO: Make this function take a vector of clusterpool all instead of indivdual 2 scores + 2 clusterpool names.
 
 # Running the pool and share function
-#poolnShare not working.
-ClusterPool1 <- returnClusterpoolGenes(clusterpool_names[1], "DDH")
-ClusterPool2 <- returnClusterpoolGenes(clusterpool_names[2], "DDH")
 
-ClusterPoolResults <- PoolnShare(clusterpool_names[1], clusterpool_names[2], clusterpool_subgroup[1], clusterpool_names[2], clusterpool_subgroup[1], clusterpool_subgroup[2])
+#create id vector and subgroups vector for poolnshare function.
+id <- clusterpool_names
+subgr <- clusterpool_subgroup
+
+ClusterPoolResults <- PoolnShare(id, subgr)
 
 #function to set the width and height of plot saved as an image into global values
 #Parameters: 
@@ -205,8 +198,8 @@ setHeightWidthImage <- function(listOfClusters, listOfGenes){
 save_image <- function(base_filename, Plot,  width = 2000, height = 2000){
   dir.create(sprintf("../Output/%s", project_name), showWarnings = FALSE)
   curr_date <- format(Sys.Date(),"%b_%d%_%Y" )
-  filename <- sprintf("../Output/%s/%s%s.png", project_name, base_filename, curr_date)
-  ggsave(filename, plot = Plot, device = "png", height = height, width = width, units = "px", type = "cairo")
+  filename <- sprintf("../Output/%s/%s%s.jpg", project_name, base_filename, curr_date)
+  ggsave(filename, plot = Plot, device = "jpg", height = height, width = width, units = "px", type = "cairo")
 }
 
 returnClusterpoolResult <- function(){

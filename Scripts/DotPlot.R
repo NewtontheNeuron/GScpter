@@ -24,14 +24,16 @@ Plot <- ListbyClusterAll %>%
     scale_color_viridis_c(option = "plasma") + 
     cowplot::theme_cowplot() + 
     theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1, size = 25), 
-            axis.title = element_text(size = 25, face="bold"), legend.key.size = unit(2.1, "line"), 
-            legend.text = element_text(size = 17), legend.title = element_text(size = 20)) +
-    theme(axis.text.y = element_text(angle = 0, vjust = 0.5, hjust=1, size = 25))
+          axis.title = element_text(size = 25, face="bold"), legend.key.size = unit(2.1, "line"), 
+          legend.text = element_text(size = 17), legend.title = element_text(size = 20)) +
+    theme(axis.text.y = element_text(angle = 0, vjust = 0.5, hjust=1, size = 25)) + 
+    theme(panel.background = element_rect(fill = "white"),
+          plot.background = element_rect(fill = "white"))
 Plot
 
 # Save the image
 # You will have to resize the Rstudio box
 # or set the prefered width and height
 # >>>> input required >>>>
-
-save_image('DotPlot',Plot)
+#width = 10000 for 4 subgroups, 4500 for 2 subgroups.
+save_image('DotPlot', Plot, width = 4500, height = 2250)
