@@ -1,6 +1,7 @@
-.Rproj.user
+*.code-workspace
 .Rhistory
 .RData
 .Ruserdata
 ~$*
 *.code-workspace
+.Rproj.user/
