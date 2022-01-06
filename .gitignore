@@ -5,3 +5,5 @@
 .Ruserdata
 .RDataTmp
 DDH/
+Data/.DS_Store
+data.json

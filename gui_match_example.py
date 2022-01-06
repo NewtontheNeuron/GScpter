@@ -1,11 +1,11 @@
 import json
 
-data = {}
-
-data['features'] = []
-data['project_name'] = ''
-data['filenames'] = {}
-data['clusterpools'] = {}
+data = {
+    'features': [],
+    'project_name': '',
+    'filenames': {},
+    'clusterpools': {}
+}
 
 data['features'] = ["rna_Grin1", "rna_Grin2a", "rna_Grin2b", "rna_Grin2c", "rna_Grin2d", "rna_Grin3a", "rna_Grin3b"]
 data['project_name'] = "SDH_vs_DDH"

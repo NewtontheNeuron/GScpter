@@ -1,12 +1,6 @@
 {
     "features" : ["rna_Grin1", "rna_Grin2a", "rna_Grin2b", "rna_Grin2c", "rna_Grin2d", "rna_Grin3a", "rna_Grin3b"],
     "project_name" : "SDH_vs_DDH",
-    "filenames": 
-    {
-        "pooled" : "x",
-        "unpooled" : "z",
-        "barplot" : "h"
-    },
     "clusterpools":
     {
         "excitatory":
