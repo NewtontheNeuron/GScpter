@@ -5,6 +5,9 @@ library(rstudioapi)
 
 source("Pre_analysis_functions.R")
 
+#run this function if you want to load the data
+#load_data()
+
 ClusterPoolResults <- returnClusterpoolResult()
 
 # Plot the pooled dotplot

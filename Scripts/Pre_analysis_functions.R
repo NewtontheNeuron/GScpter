@@ -17,6 +17,7 @@ library(viridisLite)
 library(Cairo)
 library(rstudioapi)
 library(datasets)
+
 #set working directory to the one this file is currently in
 setwd(dirname(getActiveDocumentContext()$path))
 
@@ -24,40 +25,24 @@ setwd(dirname(getActiveDocumentContext()$path))
 source("JSON_Handler.R")
 
 load_data <- function(){
-  RStudio <- toupper(readline(prompt = "Are you using RStudio to run this? Y/N "))
-  if (RStudio != "Y"){
-    loadedBefore <- toupper(readline(prompt = "Have you loaded the RDS data before? Y/N "))
-    
-    while (loadedBefore != "Y" & loadedBefore != "N"){
-      print("Please enter either 'Y' or 'N'")
-      loadedBefore <- toupper(readline(prompt = "Have you loaded the data before? Y/N "))
-    }
 
-    if (loadedBefore == "N"){
-      #was newdata and savedata functions below
-      print("Loading data into R... this might take a while.")
-      filename <- file.choose()
-      clean_neuron_object <<- readRDS(filename)
-      save(clean_neuron_object, file = '../.RData')
-    } 
-    
-    #was loadfile function
-    # This is good but when newdata and savedata were run then
-    # we do not need to run load because it would already have clean_neuron_object from
-    # above.
-    if (loadedBefore == "Y"){
-      load(file = '../.RData') # We could also place .RData in the Data folder
-      # We also need some form of error handling when the file does not exist so that it prompts
-      # user the .RData file does not exist please ensure that it is in the correct folder or
-      # do you wish to exit
-      print("RDS file loaded!") 
-    }
-  }
+  #was newdata and savedata functions below
+  print("Loading data into R... this might take a while.")
+  filename <- file.choose()
+  clean_neuron_object <<- readRDS(filename)
+  save(clean_neuron_object, file = '../.RData')
   
+  #was loadfile function
+  # This is good but when newdata and savedata were run then
+  # we do not need to run load because it would already have clean_neuron_object from
+  # above.
+  load(file = '../.RData') # We could also place .RData in the Data folder
+  # We also need some form of error handling when the file does not exist so that it prompts
+  # user the .RData file does not exist please ensure that it is in the correct folder or
+  # do you wish to exit
+  print("RDS file loaded!") 
   print("Good to go!")
 }
-
-load_data()
 
 #get the list of features from JSON
 features <- returnFeatures()
@@ -155,24 +140,25 @@ PoolnShare <- function(id, subgr){
 id <- clusterpool_names
 subgr <- clusterpool_subgroup
 numberOfGroups <- length(id) * length(subgr)
+numberOfGenes <- length(ClusterPoolAll)
 
 ClusterPoolResults <- PoolnShare(id, subgr)
 
 #function to set the width and height of plot saved as an image into global values
-resizeImage <- function(base_filename, numOfClusters, numOfGroups, height, width){
+resizeImage <- function(base_filename, numOfClusters, numOfGroups, numOfGenes, height, width){
 
   if (height == 1 && width == 1){
     if (base_filename == "Quad_BarPlot"){
       height <- 5000
       width <- 5000
     } else if (base_filename == "PooledDotPlot"){
-      print(numOfClusters)
-      print(numOfGroups)
       height <- 500 + (200 * ( numOfClusters / numOfGroups ))
       width <- 800 + (300 * numOfGroups)
     } else if (base_filename == "DotPlot"){
-      height <- 5000
-      width <- 5000
+      print(numOfClusters)
+      print(numOfGenes)
+      height <- 1000 + (200 * numOfClusters / numOfGroups)
+      width <- 1000 + (150 * numOfGenes)
     } else {
       print("Not a recognized plot name. Setting Height and Width of Plot to 5000px * 5000px")
       print("If you want to add the plot to resizing, change resizeImage() function.")
@@ -183,9 +169,9 @@ resizeImage <- function(base_filename, numOfClusters, numOfGroups, height, width
     if (base_filename == "Quad_BarPlot"){
       height <- 5000
     } else if (base_filename == "PooledDotPlot"){
+      height <- 900 + (200 * ( numOfClusters / numOfGroups ))
+    } else if (base_filename == "DotPlot"){
       height <- 500 + (200 * ( numOfClusters / numOfGroups ))
-    } else if (base_filename == ""){
-      height <- 5000
     } else {
       print("Not a recognized plot name. Setting Height of Plot to 5000px")
       print("If you want to add the plot to resizing, change resizeImage() function to include your plot name.")
@@ -197,8 +183,8 @@ resizeImage <- function(base_filename, numOfClusters, numOfGroups, height, width
     } else if (base_filename == 'PooledDotPlot'){
       print("hi")
       width <- 800 + (300 * numOfGroups)
-    } else if (base_filename == ""){
-      width <- 5000
+    } else if (base_filename == "DotPlot"){
+      width <- 1000 + (150 * numOfGenes)
     } else {
       print("Not a recognized plot name. Setting Width of Plot to 5000px")
       print("If you want to add the plot to resizing, change resizeImage() function to include your plot name.")
@@ -213,7 +199,7 @@ resizeImage <- function(base_filename, numOfClusters, numOfGroups, height, width
 # filename, and date. If the folder for the project name
 # does not exist you will have to make it.
 save_image <- function(base_filename, Plot, height = 1, width = 1){
-  dimensions = resizeImage(base_filename, length(ClusterPoolResults$features.label) - 1, numberOfGroups, height, width)
+  dimensions = resizeImage(base_filename, length(ClusterPoolResults$features.label) - 1, numberOfGroups, numberOfGenes, height, width)
   dir.create(sprintf("../Output/%s", project_name), showWarnings = FALSE)
   curr_date <- format(Sys.Date(),"%b_%d%_%Y" )
   filename <- sprintf("../Output/%s/%s%s.jpg", project_name, base_filename, curr_date)

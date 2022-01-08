@@ -5,7 +5,7 @@ library(rjson)
 setwd(dirname(getActiveDocumentContext()$path))
 
 #get yaml/json data. Only works if current directory is changed.
-Data <- fromJSON(file = "../Data/JSON/Example_4_Subgroups.json")
+Data <- fromJSON(file = "../Data/JSON/Example_2_Subgroups.json")
 
 #return list of features from JSON object.
 returnFeatures <- function(){

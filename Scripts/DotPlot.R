@@ -5,6 +5,9 @@ setwd(dirname(getActiveDocumentContext()$path))
 
 source("Pre_analysis_functions.R")
 
+#run this function if you want to load the data
+#load_data()
+
 #function not returning anything.
 ListbyClusterAll <- returnListbyClusterAll()
 
@@ -35,5 +38,5 @@ Plot
 # You will have to resize the Rstudio box
 # or set the prefered width and height
 # >>>> input required >>>>
-#width = 10000 for 4 subgroups, 4500 for 2 subgroups.
-save_image('DotPlot', Plot, width = 10000, height = 2250)
+#width = 10000 for 4 subgroups, 4500 for 2 subgroups, width = 2250
+save_image('DotPlot', Plot)

@@ -5,6 +5,9 @@ setwd(dirname(getActiveDocumentContext()$path))
 
 source("Pre_analysis_functions.R")
 
+#run this function if you want to load the data
+#load_data()
+
 # -----------------------------------------------
 # Bargraphs for the average expression and percent
 # expressed data, and also for both clusterpools
