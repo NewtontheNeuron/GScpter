@@ -36,4 +36,4 @@ Plot
 # or set the prefered width and height
 # >>>> input required >>>>
 #width = 10000 for 4 subgroups, 4500 for 2 subgroups.
-save_image('DotPlot', Plot, width = 4500, height = 2250)
+save_image('DotPlot', Plot, width = 10000, height = 2250)

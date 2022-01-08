@@ -18,8 +18,8 @@ Plot_4_Bar <- function (avg1, pct1, avg2, pct2, c1, c2){
     GeneStatResults$name <- as.character(GeneStatResults$name)
     for (i in features){
       ListbyGene <- ListbyClusterAll[str_detect(row.names(ListbyClusterAll), i), ]
-      ListByCluster[[1]] <- ListbyGene[ListbyGene$id %in% ClusterPool1,]
-      ListByCluster[[2]] <- ListbyGene[ListbyGene$id %in% ClusterPool2,]
+      ListByCluster[[1]] <- ListbyGene[ListbyGene$id %in% ListByCluster[[1]],]
+      ListByCluster[[2]] <- ListbyGene[ListbyGene$id %in% ListByCluster[[2]],]
       if (method == "avg"){
         ClusterStatResults <- t.test(ListByCluster[[1]]$avg.exp, ListByCluster[[2]]$avg.exp)
       } else if (method == "pct"){

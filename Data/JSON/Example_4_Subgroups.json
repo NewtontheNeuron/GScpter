@@ -1,14 +1,8 @@
 {
     "features" : ["rna_Grin1", "rna_Grin2a", "rna_Grin2b", "rna_Grin2c", "rna_Grin2d", "rna_Grin3a", "rna_Grin3b"],
     "project_name" : "SDH_vs_DDH",
-    "clusterpool_names": ["inhibitory", "excitatory"],
+    "clusterpool_names": ["excitatory","inhibitory"],
     "subgroup_names": ["SDH", "DDH"],
-    "filenames": 
-    {
-        "pooled" : "x",
-        "unpooled" : "z",
-        "barplot" : "h"
-    },
     "clusterpools":
     {
         "excitatory":
@@ -25,6 +19,10 @@
                 "Excit-23","Excit-24","Excit-25","Excit-26","Excit-27",
                 "Excit-29","Excit-30","Excit-31","Excit-32","Excit-34",
                 "Excit-35","Excit-36"
+                ],
+            "Example": 
+                [
+                ""
                 ]
         },
         "inhibitory": 
