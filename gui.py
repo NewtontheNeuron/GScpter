@@ -1,6 +1,9 @@
 import json
+import os, sys
 import tkinter as tk
 from tkinter import Tk, ttk
+
+os.chdir(os.path.dirname(sys.argv[0]))
 
 # dictionary that stores all values to be exported in the json file
 data = {
