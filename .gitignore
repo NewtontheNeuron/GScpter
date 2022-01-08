@@ -3,8 +3,7 @@
 .RData
 .Ruserdata
 .RDataTmp
-DDH/
-Data/.DS_Store
-data.json
+.DS_Store
 .Rproj.user/
 .guitheme/
+Output/
