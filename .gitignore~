@@ -7,4 +7,4 @@ DDH/
 Data/.DS_Store
 data.json
 .Rproj.user/
-.guitheme/
+.guitheme/*

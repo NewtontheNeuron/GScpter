@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 {
     "features" : ["rna_Grin1", "rna_Grin2a", "rna_Grin2b", "rna_Grin2c", "rna_Grin2d", "rna_Grin3a", "rna_Grin3b"],
     "project_name" : "SDH_vs_DDH",
@@ -28,4 +29,30 @@
                 ]
         }
     }
+=======
+{
+    "features" : ["rna_Grin1", "rna_Grin2a", "rna_Grin2b", "rna_Grin2c", "rna_Grin2d", "rna_Grin3a", "rna_Grin3b"],
+    "project_name" : "SDH_vs_DDH",
+    "clusterpools":
+    {
+        "excitatory":
+        {
+            "SDH":
+                [
+                "Excit-01", "Excit-02","Excit-03","Excit-08","Excit-09",
+                "Excit-10","Excit-12","Excit-14","Excit-15","Excit-16",
+                "Excit-18","Excit-04","Excit-05","Excit-13","Excit-19"
+                ]
+        },
+        "inhibitory": 
+        {
+            "SDH":
+                [
+                "Inhib-01", "Inhib-02", "Inhib-03", "Inhib-04", "Inhib-05",
+                "Inhib-06", "Inhib-07", "Inhib-09", "Inhib-10", "Inhib-11",
+                "Inhib-12", "Inhib-13"
+                ]
+        }
+    }
+>>>>>>> 688f38ecb83ae2a64fa0ed25ecdc4a99bf2d17b6
 }
