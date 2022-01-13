@@ -1,7 +1,5 @@
 # Function for adding the file to the workspace and saving the workspace.
 # This is only necessary outside Rstudio or if loading the data for this first time.
-# >>>> input required >>>>
-
 library(Seurat)
 library(ggplot2)
 library(patchwork)
@@ -66,7 +64,7 @@ for (name in clusterpool_names){
     #create master list of all gene names
     ClusterPoolAll <- c(ClusterPoolAll, Clusterpool)
     #create key name
-    key <- paste("clusterpool", index, sep = "")
+    key <- paste(subgroup, name, sep = " ")
     #key value pair into ListByCluster
     ListByCluster[[key]] <- b$data[b$data$id %in% Clusterpool,]
     index <- index + 1
@@ -181,7 +179,6 @@ resizeImage <- function(base_filename, numOfClusters, numOfGroups, numOfGenes, h
     if (base_filename == "Quad_BarPlot"){
       width <- 5000
     } else if (base_filename == 'PooledDotPlot'){
-      print("hi")
       width <- 800 + (300 * numOfGroups)
     } else if (base_filename == "DotPlot"){
       width <- 1000 + (150 * numOfGenes)
@@ -195,15 +192,35 @@ resizeImage <- function(base_filename, numOfClusters, numOfGroups, numOfGenes, h
   return(c(height, width)) 
 }
 
-# Function for saving images with specific folder,
-# filename, and date. If the folder for the project name
-# does not exist you will have to make it.
+# Function for saving images with specific folder, filename, and date. 
 save_image <- function(base_filename, Plot, height = 1, width = 1){
+  #set working directory to output directory
+  #if already in the correct directory don't set again (or else there will be an error and crash)
+  if (!(grepl( "Output", getwd(), fixed = TRUE))){
+    setwd("../Output" )
+  }
+
+  #get proper calculated dimensions
   dimensions = resizeImage(base_filename, length(ClusterPoolResults$features.label) - 1, numberOfGroups, numberOfGenes, height, width)
-  dir.create(sprintf("../Output/%s", project_name), showWarnings = FALSE)
+  
+  #get current date to put on graph title
   curr_date <- format(Sys.Date(),"%b_%d%_%Y" )
-  filename <- sprintf("../Output/%s/%s%s.jpg", project_name, base_filename, curr_date)
+
+  dir.create(sprintf("%s", project_name), showWarnings = FALSE)
+  #put all quad bar plots in another folder inside the project.
+  if (substr(base_filename, 1,3) == "QB_"){
+    dir.create(sprintf("%s/Quad_BarPlot", project_name), showWarnings = FALSE)
+    filename <- sprintf("%s/Quad_BarPlot/%s_%s.jpg", project_name, base_filename, curr_date)
+  } else {
+    filename <- sprintf("%s/%s_%s.jpg", project_name, base_filename, curr_date)
+  }
+
+  #save plot to proper location as a jpg.
   ggsave(filename, plot = Plot, device = "jpg", height = dimensions[1], width = dimensions[2], units = "px", type = "cairo")
+}
+
+returnListByCluster <- function(){
+  return(ListByCluster)
 }
 
 returnClusterpoolResult <- function(){

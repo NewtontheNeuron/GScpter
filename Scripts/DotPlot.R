@@ -2,24 +2,21 @@ library(rstudioapi)
 
 #set working directory to the one this file is currently in
 setwd(dirname(getActiveDocumentContext()$path))
-
 source("Pre_analysis_functions.R")
 
-#run this function if you want to load the data
-#load_data()
-
-#function not returning anything.
-ListbyClusterAll <- returnListbyClusterAll()
-
-# Plotting all the relevant clusters form the data by
-# using ClusterPoolAll
-Gene <- ListbyClusterAll$features.label
-Cluster <- ListbyClusterAll$id
-AvgExpScaled <- ListbyClusterAll$avg.exp.scaled
-markers <- Gene %>% unique()
-
-Plot <- ListbyClusterAll %>% 
-  filter(features.label %in% markers) %>% 
+main <- function(){
+  
+  ListbyClusterAll <- returnListbyClusterAll()
+  
+  # Plotting all the relevant clusters form the data by
+  # using ClusterPoolAll
+  Gene <- ListbyClusterAll$features.label
+  Cluster <- ListbyClusterAll$id
+  AvgExpScaled <- ListbyClusterAll$avg.exp.scaled
+  markers <- Gene %>% unique()
+  
+  Plot <- ListbyClusterAll %>% 
+    filter(features.label %in% markers) %>% 
     mutate(`% Expressing` = ListbyClusterAll$pct.exp) %>% 
     ggplot(aes(y=Gene, x = Cluster, color = AvgExpScaled, size = `% Expressing`)) +
     geom_point() + 
@@ -32,11 +29,16 @@ Plot <- ListbyClusterAll %>%
     theme(axis.text.y = element_text(angle = 0, vjust = 0.5, hjust=1, size = 25)) + 
     theme(panel.background = element_rect(fill = "white"),
           plot.background = element_rect(fill = "white"))
-Plot
+  Plot
+  
+  # Save the image
+  # You will have to resize the Rstudio box
+  # or set the prefered width and height
+  #width = 10000 for 4 subgroups, 4500 for 2 subgroups, width = 2250
+  save_image('DotPlot', Plot)
+}
 
-# Save the image
-# You will have to resize the Rstudio box
-# or set the prefered width and height
-# >>>> input required >>>>
-#width = 10000 for 4 subgroups, 4500 for 2 subgroups, width = 2250
-save_image('DotPlot', Plot)
+#run this function if you want to load the data
+#load_data()
+
+main()
