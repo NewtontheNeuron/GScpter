@@ -247,3 +247,5 @@ PctExpPar <- function (x) {
     group_by(features.plot) %>% 
     summarise(std.err = SE(pct.exp), pct.exp = mean(pct.exp), lower = pct.exp - std.err, upper = pct.exp + std.err)
 }
+
+

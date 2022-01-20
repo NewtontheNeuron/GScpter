@@ -78,19 +78,35 @@ Run_ANOVA <- function (cluster, method, anova.p.val=NULL) {
 
 #create individual plot with wanted options.
 Plot_details <- function (avg, clusterpool, clusterpool_exp, method_exp, title, method, label, y_lim){
-    ggplot(avg, aes(features.plot, method_exp, fill = factor(features.plot))) + 
-      geom_col(color="black", show.legend = FALSE) + 
-      scale_fill_viridis_d(option = "plasma") + 
-      geom_errorbar(aes(ymin = lower, ymax = upper), position = position_dodge(width=0.9), width = 0.50) +
-      geom_point(data = clusterpool, y = clusterpool_exp, fill = "white", color="black") +
-      scale_y_continuous(expand = c(0,0), limits = c(0, y_lim)) + 
-      labs(x=paste(label, "Genes"), y=title) +
-      cowplot::theme_cowplot() + 
-      scale_x_discrete(labels=clean_label_list) +
-        theme(axis.title = element_text(size=20,face="bold")) +
-        theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1, size=20)) +
-        theme(axis.text.y = element_text(angle = 0, vjust = 0.5, hjust=1, size=20)) +
-      annotate("text", label=paste("p < ", Run_ANOVA(clusterpool, method, anova.p.val = TRUE)), x = 4.5, y = Position_ANOVA(avg, method), size = 8.5, color = "black")
+    plot <- ggplot(avg, aes(features.plot, method_exp, fill = factor(features.plot))) + 
+            geom_col(color="black", show.legend = FALSE) + 
+            scale_fill_viridis_d(option = "plasma") + 
+            geom_errorbar(aes(ymin = lower, ymax = upper), position = position_dodge(width=0.9), width = 0.50) +
+            geom_point(data = clusterpool, y = clusterpool_exp, fill = "white", color="black") +
+            scale_y_continuous(expand = c(0,0), limits = c(0, y_lim)) + 
+            labs(x="Gene", y=title) +
+            cowplot::theme_cowplot() + 
+            scale_x_discrete(labels=clean_label_list) +
+              theme(axis.title = element_text(size=20,face="bold")) +
+              theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1, size=20)) +
+              theme(axis.text.y = element_text(angle = 0, vjust = 0.5, hjust=1, size=20)) +
+            annotate("text", label=paste("p < ", Run_ANOVA(clusterpool, method, anova.p.val = TRUE)), 
+              x = 4.5, y = Position_ANOVA(avg, method), size = 8.5, color = "black")
+    
+    #add breaks if needeed
+    if (FALSE & method = "avg"){
+      plot <- plot + 
+        scale_y_continuous(breaks = (seq(0, 100, by = 20)))
+    }
+    
+    #add a category title for comparisons between the two clusterpools.
+    if (method == "avg"){
+      plot <- plot + ggtitle(label) +
+        theme(plot.title = element_text(hjust = 0.5, size = 34))
+    }
+    
+    return(plot)
+    
 }
 
 # Bargraphs for the average expression and percent expressed data, and also for both clusterpools
@@ -101,12 +117,14 @@ Plot_4_Bar <- function (avg1, pct1, avg2, pct2, c1, c2, labels){
   Plot_2 <- Plot_details(avg2, c2, c2$avg.exp, avg2$avg.exp, "Average Expression", "avg", labels[2], 12)
   Plot_2 <- Plot_Bween(Plot_2, Bween_pool("avg", c1, c2), "avg", c2)
   
-  Plot_3 <- Plot_details(pct1, c1, c1$pct.exp, pct1$pct.exp, "%Expressed", "pct", labels[1], 100)
-  
-  Plot_4 <- Plot_details(pct2, c2, c2$pct.exp, pct2$pct.exp, "%Expressed", "pct", labels[2], 100)
+  Plot_3 <- Plot_details(pct1, c1, c1$pct.exp, pct1$pct.exp, "% Expressed", "pct", labels[1], 100)
+
+  Plot_4 <- Plot_details(pct2, c2, c2$pct.exp, pct2$pct.exp, "% Expressed", "pct", labels[2], 100)
   Plot_4 <- Plot_Bween(Plot_4, Bween_pool("pct", c1, c2), "pct", c2)
   
   Plot <- Plot_1 + Plot_2 + Plot_3 + Plot_4
+
+
   return(Plot)
 }
 
