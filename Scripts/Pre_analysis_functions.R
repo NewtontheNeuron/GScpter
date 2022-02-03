@@ -7,7 +7,7 @@ library(ggplot2)
 library(patchwork)
 library(tidyverse)
 library(ggdendro)
-library(cowplot)
+library(cowplot) # I do not think this is needed here
 library(patchwork)
 library(dplyr)
 library(stringr)
@@ -111,33 +111,41 @@ PoolnShare <- function(id, subgr){
   # This step ensures that the values from the dot plot can be 
   # Stored in the data frame in the correct place with the correct
   # character type.
-  ClusterPoolResults <<- data.frame(avg.exp=numeric(), pct.exp=numeric(), features.plot=character(), id=character(), avg.exp.scaled=numeric(), features.label=character())
+  ClusterPoolResults <<- data.frame(avg.exp=numeric(), pct.exp=numeric(), features.plot=character(), id=character(), features.label=character(), SubGroup=character())
   ClusterPoolResults$features.plot <- as.character(ClusterPoolResults$features.plot)
   ClusterPoolResults$id <- as.character(ClusterPoolResults$id)
   ClusterPoolResults$features.label <- as.character(ClusterPoolResults$features.label)
   ClusterPoolResults$SubGroup <- as.character(ClusterPoolResults$SubGroup)
   
-  #For repeating function
-  PoolAllRepeat <- 1
-  
-  #Average, Scale and save
+  # Average, percent, scale and save
   PoolAll <- function (cluster, identity, subgr){
     for(i in features){
-      ListByGene <- cluster[str_detect(row.names(cluster), i), ]
-      NewListItem <- data.frame(colMeans(ListByGene[1]), colMeans(ListByGene[2]), Col3=i, 
-        Col4=identity, colMeans(ListByGene[5]), Col6=clean_label_list[match(str_remove(i, 'rna_'), clean_label_list)], SubGroup= subgr)
-      NewListItem$Col3 <- as.character(NewListItem$Col3)
-      NewListItem$Col4 <- as.character(NewListItem$Col4)
-      NewListItem$Col6 <- as.character(NewListItem$Col6)
-      NewListItem$SubGroup <- as.character(NewListItem$SubGroup)
-      ClusterPoolResults[nrow(ClusterPoolResults) + 1, ] <<- NewListItem
-      if(PoolAllRepeat == 1){
-        row.names(ClusterPoolResults)[nrow(ClusterPoolResults)] <<- i
-      } else {
-        row.names(ClusterPoolResults)[nrow(ClusterPoolResults)] <<- paste(i, PoolAllRepeat)
-      }
+      ListByGene <- cluster[str_detect(row.names(cluster), i), ] # Change this to filter by gene
+      wfeature <- clean_label_list[match(str_remove(i, 'rna_'), clean_label_list)] # i.e. the working feature 
+      # or the current feature in the loop
+
+      # Now we compute the average expression and percent expressed
+      # First grab the indicies of the working feature
+      # The average expression and percent expressed is calculated
+      # just like it is done in Seurat/utilities.R
+      GeneIndicies <- match(wfeature, unlist(clean_neuron_object@assays$RNA@data@Dimnames[1]))
+      # Then grab the indicies of the cells in the specific list of clusters
+      CellIndicies <- which(unlist(clean_neuron_object@meta.data$seurat_clusters) %in% unique(ListByCluster[[subgr_index]]$id))
+      # Get the relevant data using the the indicies otained above
+      Transcript_exp <- GetAssayData(clean_neuron_object, assay = 'RNA', slot = 'data')[GeneIndicies, CellIndicies]
+      # Exponentiate the data and then compute the mean
+      raw.avg <- mean(expm1(Transcript_exp))
+      # Now the percent expressed does not require exponentiation
+      raw.pct <- length(Transcript_exp[Transcript_exp > 0]) / length(Transcript_exp)
+      
+      # Add a new row to ClusterPoolResults and place the values in the relevant collumn
+      ClusterPoolResults[nrow(ClusterPoolResults) + 1, ] <<- c(raw.avg, raw.pct, i, identity, wfeature, subgr)
+      # This might no longer be needed because it is not even used
     }
-    PoolAllRepeat <<- PoolAllRepeat + 1
+    # This is because it is just saving the feature as the row name
+    # which is like the dot plot output but not necessary,
+    # we may even find a more efficent way of accessing the info
+    # besides from a dot plot print out.
   }
   
   # Running the function PoolAll, (If there were extra pools put them here before the 'Rescale' bellow)
@@ -155,6 +163,7 @@ PoolnShare <- function(id, subgr){
 }
 
 
+
 # Function for pooling the average expression and percent 
 # expressed from the dotplot data. The function also re-scales avg.exp
 # using a z-score system similar to Seurat's z-score system.
@@ -167,7 +176,7 @@ PoolnShare <- function(id, subgr){
 id <- clusterpool_names
 subgr <- clusterpool_subgroup
 
-ClusterPoolResults <- PoolnShare(id, subgr)
+ClusterPoolResults <- PoolnShare(id, subgr) # Error I get nothing in the ClusterPoolResults
 
 #function to set the width and height of plot saved as an image into global values
 #Parameters: 
