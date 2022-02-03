@@ -142,11 +142,17 @@ main <- function(){
 
     ListByCluster <- returnListByCluster()
     
+    #get all avg.exp in one plot
+    ListByCluster[1]
+    
+    for (m in 1)
+    
     #go through all possible combinations of clusterpools
     for ( i in 1:length(labels(ListByCluster)) ){
       for (j in 1:length(labels(ListByCluster)) ){
         
         if (i == j){
+          #break if clusterpools are the same.
           break;
         } else if (i != j){
 
@@ -174,6 +180,12 @@ main <- function(){
 
 #run this function if you want to load the data
 #load_data()
+
+ListByCluster <- returnListByCluster()
+
+par(mar=c(3,3,1,1))
+plot(AllAvg_Exp)
+
 
 #produce quad barchart with all possible combinations as jpg in a folder in Output.
 main()
