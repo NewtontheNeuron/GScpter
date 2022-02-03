@@ -129,6 +129,9 @@ class App(ttk.Frame):
         print(data)
         with open('Data/JSON/data.json', 'w') as outfile:
             json.dump(data, outfile)
+        #run the scripts with project name :)
+        runScript(data['project_name'])
+        
 
 class PoolPopupWindow(tk.Toplevel):
     def __init__(self, parent, poolList):
@@ -189,6 +192,13 @@ class PoolPopupWindow(tk.Toplevel):
                 poolList.append(key)
         print(poolList)
         self.destroy()
+
+def runScript(project_name):
+    #run all R scripts
+    #command line call
+
+    #pass project name (JSON data file name) to R
+    return
 
 if __name__ == "__main__":
     data = {
