@@ -5,6 +5,8 @@
 .Ruserdata
 .RDataTmp
 .DS_Store
+~$*
+*.code-workspace
 .Rproj.user/
 .guitheme/
 Output/*
