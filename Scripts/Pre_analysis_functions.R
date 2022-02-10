@@ -1,5 +1,6 @@
 # Function for adding the file to the workspace and saving the workspace.
-# This is only necessary outside Rstudio or if loading the data for this first time.
+# This is only necessary outside Rstudio or if loading the data for 
+# this first time.
 # >>>> input required >>>>
 
 library(Seurat) #*
@@ -23,40 +24,24 @@ setwd(dirname(getActiveDocumentContext()$path))
 source("JSON_Handler.R")
 
 load_data <- function(){
-  RStudio <- toupper(readline(prompt = "Are you using RStudio to run this? Y/N "))
-  if (RStudio != "Y"){
-    loadedBefore <- toupper(readline(prompt = "Have you loaded the RDS data before? Y/N "))
-    
-    while (loadedBefore != "Y" & loadedBefore != "N"){
-      print("Please enter either 'Y' or 'N'")
-      loadedBefore <- toupper(readline(prompt = "Have you loaded the data before? Y/N "))
-    }
 
-    if (loadedBefore == "N"){
-      #was newdata and savedata functions below
-      print("Loading data into R... this might take a while.")
-      filename <- file.choose()
-      clean_neuron_object <<- readRDS(filename)
-      save(clean_neuron_object, file = '../.RData')
-    } 
-    
-    #was loadfile function
-    # This is good but when newdata and savedata were run then
-    # we do not need to run load because it would already have clean_neuron_object from
-    # above.
-    if (loadedBefore == "Y"){
-      load(file = '../.RData') # We could also place .RData in the Data folder
-      # We also need some form of error handling when the file does not exist so that it prompts
-      # user the .RData file does not exist please ensure that it is in the correct folder or
-      # do you wish to exit
-      print("RDS file loaded!") 
-    }
-  }
+  #was newdata and savedata functions below
+  print("Loading data into R... this might take a while.")
+  filename <- file.choose()
+  clean_neuron_object <<- readRDS(filename)
+  save(clean_neuron_object, file = '../.RData')
   
+  #was loadfile function
+  # This is good but when newdata and savedata were run then
+  # we do not need to run load because it would already have clean_neuron_object from
+  # above.
+  load(file = '../.RData') # We could also place .RData in the Data folder
+  # We also need some form of error handling when the file does not exist so that it prompts
+  # user the .RData file does not exist please ensure that it is in the correct folder or
+  # do you wish to exit
+  print("RDS file loaded!") 
   print("Good to go!")
 }
-
-load_data()
 
 #get the list of features from JSON
 features <- returnFeatures()
@@ -66,11 +51,6 @@ project_name <- returnProjectName()
 # The dotplot information involves the average expression and
 # the percent expressed.
 b <- DotPlot(clean_neuron_object, features = features)
-
-#Get named clusterpools
-#TODO: remove hard coded inhibitory/excitatory and DDH.
-#clusterpool_names <- c("inhibitory", "excitatory")
-#clusterpool_subgroup <- c("SDH", "DDH")
 
 clusterpool_names <- returnClusterpool_names()
 clusterpool_subgroup <- returnClusterpool_subgroups()
@@ -85,21 +65,14 @@ for (name in clusterpool_names){
     #create master list of all gene names
     ClusterPoolAll <- c(ClusterPoolAll, Clusterpool)
     #create key name
-    key <- paste("clusterpool", index, sep = "")
+    key <- paste(subgroup, name, sep = " ")
     #key value pair into ListByCluster
     ListByCluster[[key]] <- b$data[b$data$id %in% Clusterpool,]
     index <- index + 1
   }
 }
-# Filtering the data set based on the clusters into
-# 2 clusterpools and a clusterpool containing all of
-# the clusters and their average expression and percent
-# expressed data.
-ListbyClusterAll <- b$data[b$data$id %in% ClusterPoolAll,]
 
-#ListByCluster[1] <- b$data[b$data$id %in% grep("Excit-", ClusterPoolAll, value = TRUE),]
-#ListByCluster[2] <- b$data[b$data$id %in% grep("Inhib-", ClusterPoolAll, value = TRUE),]
-#change ListByCluster to a dictionary type object ListByCluster[1]
+ListbyClusterAll <- b$data[b$data$id %in% ClusterPoolAll,]
 
 # Remove the 'rna_' label on most genes in the Levine Dataset
 # Clean the features into presentable labels without the 'rna_' tag.
@@ -193,40 +166,90 @@ PoolnShare <- function(id, subgr){
 #create id vector and subgroups vector for poolnshare function.
 id <- clusterpool_names
 subgr <- clusterpool_subgroup
+numberOfGroups <- length(id) * length(subgr)
+numberOfGenes <- length(ClusterPoolAll)
 
 ClusterPoolResults <- PoolnShare(id, subgr) # Error I get nothing in the ClusterPoolResults
 
 #function to set the width and height of plot saved as an image into global values
-#Parameters: 
-#   listOfClusters : vector of names of clusters
-#   listOfGenes: a vector of names of genes used.
-setHeightWidthImage <- function(listOfClusters, listOfGenes){
-  numClusters <- length(listOfClusters) / length(listOfGenes)
-  numGenes <- length(listOfGenes)
-  
-  if (numClusters > 0 && numClusters <= 5){
-    plot_width <<- (numClusters * 210) + 1000
-  } else if (numClusters > 5){
-    plot_width <<- (numClusters * 160) + 1000
-  }
-  plot_height <<- (numGenes * 250) + 150
-  
-  
-  message(sprintf("number of Clusters: %2.f", numClusters))
-  message(sprintf("plot height (in px): %2.f", plot_width))
-  
-  message(sprintf("number of genes formatted: %2.f", numGenes))
-  message(sprintf("plot width (in px) %2.f", plot_height))
+resizeImage <- function(base_filename, numOfClusters, numOfGroups, numOfGenes, height, width){
+
+  if (height == 1 && width == 1){
+    if (base_filename == "Quad_BarPlot"){
+      height <- 5000
+      width <- 5000
+    } else if (base_filename == "PooledDotPlot"){
+      height <- 500 + (200 * ( numOfClusters / numOfGroups ))
+      width <- 800 + (300 * numOfGroups)
+    } else if (base_filename == "DotPlot"){
+      print(numOfClusters)
+      print(numOfGenes)
+      height <- 1000 + (200 * numOfClusters / numOfGroups)
+      width <- 1000 + (150 * numOfGenes)
+    } else {
+      print("Not a recognized plot name. Setting Height and Width of Plot to 5000px * 5000px")
+      print("If you want to add the plot to resizing, change resizeImage() function.")
+      height <- 5000
+      width <- 5000
+    }
+  } else if (height == 1){
+    if (base_filename == "Quad_BarPlot"){
+      height <- 5000
+    } else if (base_filename == "PooledDotPlot"){
+      height <- 900 + (200 * ( numOfClusters / numOfGroups ))
+    } else if (base_filename == "DotPlot"){
+      height <- 500 + (200 * ( numOfClusters / numOfGroups ))
+    } else {
+      print("Not a recognized plot name. Setting Height of Plot to 5000px")
+      print("If you want to add the plot to resizing, change resizeImage() function to include your plot name.")
+      height <- 5000
+    }
+  } else if (width == 1){
+    if (base_filename == "Quad_BarPlot"){
+      width <- 5000
+    } else if (base_filename == 'PooledDotPlot'){
+      width <- 800 + (300 * numOfGroups)
+    } else if (base_filename == "DotPlot"){
+      width <- 1000 + (150 * numOfGenes)
+    } else {
+      print("Not a recognized plot name. Setting Width of Plot to 5000px")
+      print("If you want to add the plot to resizing, change resizeImage() function to include your plot name.")
+      width <- 5000
+    }
+  } 
+  print(sprintf("%s plot height (in px): %2.f, and width (in px): %2.f", base_filename, height, width))
+  return(c(height, width)) 
 }
 
-# Function for saving images with specific folder,
-# filename, and date. If the folder for the project name
-# does not exist you will have to make it.
-save_image <- function(base_filename, Plot,  width = 2000, height = 2000){
-  dir.create(sprintf("../Output/%s", project_name), showWarnings = FALSE)
+# Function for saving images with specific folder, filename, and date. 
+save_image <- function(base_filename, Plot, height = 1, width = 1){
+  #set working directory to output directory
+  #if already in the correct directory don't set again (or else there will be an error and crash)
+  if (!(grepl( "Output", getwd(), fixed = TRUE))){
+    setwd("../Output" )
+  }
+
+  #get proper calculated dimensions
+  dimensions = resizeImage(base_filename, length(ClusterPoolResults$features.label) - 1, numberOfGroups, numberOfGenes, height, width)
+  
+  #get current date to put on graph title
   curr_date <- format(Sys.Date(),"%b_%d%_%Y" )
-  filename <- sprintf("../Output/%s/%s%s.jpg", project_name, base_filename, curr_date)
-  ggsave(filename, plot = Plot, device = "jpg", height = height, width = width, units = "px", type = "cairo")
+
+  dir.create(sprintf("%s", project_name), showWarnings = FALSE)
+  #put all quad bar plots in another folder inside the project.
+  if (substr(base_filename, 1,3) == "QB_"){
+    dir.create(sprintf("%s/Quad_BarPlot", project_name), showWarnings = FALSE)
+    filename <- sprintf("%s/Quad_BarPlot/%s_%s.jpg", project_name, base_filename, curr_date)
+  } else {
+    filename <- sprintf("%s/%s_%s.jpg", project_name, base_filename, curr_date)
+  }
+
+  #save plot to proper location as a jpg.
+  ggsave(filename, plot = Plot, device = "jpg", height = dimensions[1], width = dimensions[2], units = "px", type = "cairo")
+}
+
+returnListByCluster <- function(){
+  return(ListByCluster)
 }
 
 returnClusterpoolResult <- function(){
@@ -249,3 +272,5 @@ PctExpPar <- function (x) {
     group_by(features.plot) %>% 
     summarise(std.err = SE(pct.exp), pct.exp = mean(pct.exp), lower = pct.exp - std.err, upper = pct.exp + std.err)
 }
+
+
