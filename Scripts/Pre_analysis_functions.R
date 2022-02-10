@@ -2,21 +2,20 @@
 # This is only necessary outside Rstudio or if loading the data for this first time.
 # >>>> input required >>>>
 
-library(Seurat)
+library(Seurat) #*
 library(ggplot2)
 library(patchwork)
-library(tidyverse)
+library(tidyverse) #*
 library(ggdendro)
 library(cowplot) # I do not think this is needed here
-library(patchwork)
 library(dplyr)
 library(stringr)
 library(data.table)
 library(tibble)
 library(viridisLite)
-library(Cairo)
-library(rstudioapi)
-library(datasets)
+library(Cairo) #*
+library(rstudioapi) #*
+library(datasets) #*
 #set working directory to the one this file is currently in
 setwd(dirname(getActiveDocumentContext()$path))
 
@@ -110,13 +109,19 @@ PoolnShare <- function(id, subgr){
   # Start and define the data frame that will contain the results.
   # This step ensures that the values from the dot plot can be 
   # Stored in the data frame in the correct place with the correct
-  # character type.
-  ClusterPoolResults <<- data.frame(avg.exp=numeric(), pct.exp=numeric(), features.plot=character(), id=character(), features.label=character(), SubGroup=character())
+  # class of variables.
+  ClusterPoolResults <<- data.frame(avg.exp=numeric(), pct.exp=numeric(), features.plot=character(), id=character(), features.label=character(), SubGroup=character(),
+                                    avg.std.err = numeric(), avg.lower = numeric(), avg.upper = numeric())
   ClusterPoolResults$features.plot <- as.character(ClusterPoolResults$features.plot)
   ClusterPoolResults$id <- as.character(ClusterPoolResults$id)
   ClusterPoolResults$features.label <- as.character(ClusterPoolResults$features.label)
   ClusterPoolResults$SubGroup <- as.character(ClusterPoolResults$SubGroup)
-  
+
+  # Adding the standard error function
+  SE <- function (x) {
+  sd(x)/sqrt(length(x))
+  }
+
   # Average, percent, scale and save
   PoolAll <- function (cluster, identity, subgr){
     for(i in features){
@@ -130,16 +135,29 @@ PoolnShare <- function(id, subgr){
       # just like it is done in Seurat/utilities.R
       GeneIndicies <- match(wfeature, unlist(clean_neuron_object@assays$RNA@data@Dimnames[1]))
       # Then grab the indicies of the cells in the specific list of clusters
-      CellIndicies <- which(unlist(clean_neuron_object@meta.data$seurat_clusters) %in% unique(ListByCluster[[subgr_index]]$id))
+      CellIndicies <- which(unlist(clean_neuron_object@active.ident) %in% unique(ListByCluster[[subgr_index]]$id))
       # Get the relevant data using the the indicies otained above
       Transcript_exp <- GetAssayData(clean_neuron_object, assay = 'RNA', slot = 'data')[GeneIndicies, CellIndicies]
       # Exponentiate the data and then compute the mean
       raw.avg <- mean(expm1(Transcript_exp))
+      # Now lets look at save some descriptive statistics for average expression
+      avg.std.err <- SE(expm1(Transcript_exp))
+      avg.lower <- raw.avg - avg.std.err
+      avg.upper<- raw.avg + avg.std.err
       # Now the percent expressed does not require exponentiation
-      raw.pct <- length(Transcript_exp[Transcript_exp > 0]) / length(Transcript_exp)
+      raw.pct <- length(Transcript_exp[Transcript_exp > 0]) / length(Transcript_exp) * 100
       
       # Add a new row to ClusterPoolResults and place the values in the relevant collumn
-      ClusterPoolResults[nrow(ClusterPoolResults) + 1, ] <<- c(raw.avg, raw.pct, i, identity, wfeature, subgr)
+      ClusterPoolResults <<- ClusterPoolResults %>% # This method works but is a bit slow
+        add_row(avg.exp = raw.avg,                  # In the futrue I could just try adding
+                pct.exp = raw.pct,                  # in the variables one data type at a time.
+                features.plot = i, 
+                id = identity, 
+                features.label = wfeature, 
+                SubGroup = subgr,
+                avg.std.err = avg.std.err,
+                avg.lower = avg.lower,
+                avg.upper = avg.upper)
       # This might no longer be needed because it is not even used
     }
     # This is because it is just saving the feature as the row name
@@ -158,7 +176,7 @@ PoolnShare <- function(id, subgr){
 
   #Rescaling average expression based on z scores of the full new dataset
   ClusterPoolResults[, ncol(ClusterPoolResults) + 1] <- 
-    data.frame(avg.exp.re.scaled = (ClusterPoolResults[, 1] - colMeans(ClusterPoolResults[1]))/sd(ClusterPoolResults$avg.exp))
+    c(avg.exp.re.scaled = (ClusterPoolResults$avg.exp - colMeans(ClusterPoolResults[1]))/sd(ClusterPoolResults$avg.exp))
   return(ClusterPoolResults)
 }
 
@@ -218,10 +236,6 @@ returnClusterpoolResult <- function(){
 returnListbyClusterAll <- function(){
     ListbyClusterAll[, ncol(ListbyClusterAll) + 1] <- data.frame(features.label = clean_label_list)
     return(ListbyClusterAll)
-}
-
-SE <- function (x) {
-  sd(x)/sqrt(length(x))
 }
 
 AvgExpPar <- function (x) {
