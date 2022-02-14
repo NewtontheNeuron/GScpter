@@ -25,7 +25,8 @@ Bween_pool <- function(method, c1, c2){
         ClusterStatResults <- t.test(expm1(filter(c1, features.label == i)$raw_counts),
                                      expm1(filter(c2, features.label == i)$raw_counts))
       } else if (method == "pct"){
-        ClusterStatResults <- t.test(c1$pct.exp, c2$pct.exp)
+        ClusterStatResults <- t.test(rnorm(10, 5, 1), rpois(10, 5))
+        # Need to fix this later
       }
       # Save the necessary information to Gene stat results
       GeneStatResults <- rbind(GeneStatResults,
@@ -43,42 +44,57 @@ Bween_pool <- function(method, c1, c2){
 # It should take a list of comparison combinations and adjust their pvalues
 # based on the tcomparisons counter.
 pvalue_adjust <- function(list_of_stats) {
-  lapply(list_of_stats, transform, p.value.adj = p.value * tcomparisons)
+  # Loop through each comparison pair
+  for (i in 1:length(list_of_stats)) {
+    # Save the current comparison pair to stat
+    stat <- list_of_stats[[i]]
+    # Loop through each metric/info in the stat object
+    for (n in 1:length(stat)) {
+      # Exclude the desc_key from getting a p.value not found error
+      if (typeof(stat[[n]]) == "list"){
+        # Adjust and save the new pvalue
+        stat[[n]]$p.value.adj <- stat[[n]]$p.value * tcomparisons
+      }
+    }
+    # Save the new stat object and return
+    list_of_stats[[i]] <- stat
+  }
+  return(list_of_stats)
 }
 
 # Function
-Plot_Bween <- function(wplot, ttest_table, method, rsource){
+Plot_Bween <- function(plot, stats, method){
   # Loop throw the row of the ttest dataframe
-    for(i in 1:nrow(ttest_table)){
+    for(i in 1:nrow(stats)){
       # Find a value 10% more than the maximum value
-      Ext_gene <- filter(rsource, features.label %in% ttest_table$features.label[i])
+      Ext_gene <- filter(plot$data, features.label %in% stats$features.label[i])
       if(method == "avg") {
         value <- max(Ext_gene$avg.exp) + max(Ext_gene$avg.exp) * 0.10
       } else if(method == "pct"){
         value <- max(Ext_gene$pct.exp) + max(Ext_gene$pct.exp) * 0.10
       }
       # Setting the stars based on the adjusted pvalue
-      if(ttest_table$p.value.adj[i] < 0.05){
+      if(stats$p.value.adj[i] < 0.05){
         stars <- "*"
-        if(ttest_table$p.value.adj[i] < 0.01){
+        if(stats$p.value.adj[i] < 0.01){
           stars <- "**"
-          if(ttest_table$p.value.adj[i] < 0.001){
+          if(stats$p.value.adj[i] < 0.001){
             stars <- "***"
           }
         }
         # Change plot if adjusted pvalue is less than 0.05
-        wplot <- wplot + annotate("text", label = stars, x = ttest_table$features.label[i], y = value, size = 6, colour = "black")
+        plot <- plot + annotate("text", label = stars, x = stats$features.label[i], y = value, size = 6, colour = "black")
       }
     }
-    return(wplot)
+    return(plot)
 }
 
 #run anova to get p value 
 Run_ANOVA <- function (cluster, method, anova.p.val=NULL) {
     if(method == "avg"){
-        ANOVA <- aov(avg.exp ~ features.plot, data = cluster)
+        ANOVA <- aov(expm1(raw_counts) ~ features.label, data = cluster)
     } else if (method == "pct"){
-        ANOVA <- aov(pct.exp ~ features.plot, data = cluster)
+        ANOVA <- aov(expm1(raw_counts) ~ features.label, data = cluster) # This needs to change
     }
     if (isTRUE(anova.p.val)){
         anova <- summary(ANOVA)[[1]][["Pr(>F)"]][1]
@@ -91,56 +107,23 @@ Run_ANOVA <- function (cluster, method, anova.p.val=NULL) {
 }
 
 #create individual plot with wanted options.
-Plot_details <- function (avg, clusterpool, clusterpool_exp, method_exp, title, method, label, y_lim){
-    plot <- ggplot(avg, aes(features.plot, method_exp, fill = factor(features.plot))) + 
-            geom_col(color="black", show.legend = FALSE) + 
-            scale_fill_viridis_d(option = "plasma") + 
-            # geom_errorbar(aes(ymin = lower, ymax = upper), position = position_dodge(width=0.9), width = 0.50) +
-            # geom_point(data = clusterpool, y = clusterpool_exp, fill = "white", color="black") +
-            # Removing the points.
-            scale_y_continuous(expand = c(0,0), limits = c(0, y_lim)) + 
-            labs(x = "Gene", y = title) +
-            cowplot::theme_cowplot() + 
-            scale_x_discrete(labels = clean_label_list) +
-            theme(axis.title = element_text(size = 20, face = "bold")) +
-            theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1, size=20)) +
-            theme(axis.text.y = element_text(angle = 0, vjust = 0.5, hjust=1, size=20)) +
-            annotate("text", label=paste("p < ", Run_ANOVA(clusterpool, method, anova.p.val = TRUE)), 
-              x = 4.5, y = Position_ANOVA(avg, method), size = 8.5, color = "black")
-    
-    #add breaks if needeed
-    #if (FALSE & method = "avg"){
-    #  plot <- plot + 
-    #    scale_y_continuous(breaks = (seq(0, 100, by = 20)))
-    #}
-    
-    #add a category title for comparisons between the two clusterpools.
-    if (method == "avg"){
-      plot <- plot + ggtitle(label) +
-        theme(plot.title = element_text(hjust = 0.5, size = 34))
-    }
-    
-    return(plot)
-    
-}
-
 # Re working plot details to work with ClusterPoolResults
-Plot_details <- function (avg, clusterpool, clusterpool_exp, method_exp, title, method, label, y_lim){
-  plot <- ggplot(avg, aes(features.label, method_exp, fill = factor(features.label))) + 
-    geom_col(color="black", show.legend = FALSE) + 
+Plot_details <- function (pro_data, clusterpool, clusterpool_exp, method_exp, title, method, label, y_lim){
+  plot <- ggplot(pro_data, aes(features.label, method_exp, fill = factor(features.label))) + 
+    geom_col(color = "black", show.legend = FALSE) + 
     scale_fill_viridis_d(option = "plasma") + 
-    # geom_errorbar(aes(ymin = lower, ymax = upper), position = position_dodge(width=0.9), width = 0.50) +
-    # geom_point(data = clusterpool, y = clusterpool_exp, fill = "white", color="black") +
+    #geom_errorbar(aes(ymin = lower, ymax = upper), position = position_dodge(width=0.9), width = 0.50) +
+    geom_point(data = clusterpool, y = clusterpool_exp, fill = "white", color="black") +
     # Removing the points.
     scale_y_continuous(expand = c(0,0), limits = c(0, y_lim)) + 
     labs(x = "Gene", y = title) +
     cowplot::theme_cowplot() + 
-    scale_x_discrete(labels = clean_label_list) +
+    scale_x_discrete(labels = features_no_key) +
     theme(axis.title = element_text(size = 20, face = "bold")) +
-    theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1, size=20)) +
-    theme(axis.text.y = element_text(angle = 0, vjust = 0.5, hjust=1, size=20)) +
+    theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1, size = 20)) +
+    theme(axis.text.y = element_text(angle = 0, vjust = 0.5, hjust = 1, size = 20)) +
     annotate("text", label=paste("p < ", Run_ANOVA(clusterpool, method, anova.p.val = TRUE)), 
-             x = 4.5, y = Position_ANOVA(avg, method), size = 8.5, color = "black")
+             x = 4.5, y = Position_ANOVA(pro_data, method), size = 8.5, color = "black")
   
   #add breaks if needeed
   #if (FALSE & method = "avg"){
@@ -153,39 +136,20 @@ Plot_details <- function (avg, clusterpool, clusterpool_exp, method_exp, title, 
     plot <- plot + ggtitle(label) +
       theme(plot.title = element_text(hjust = 0.5, size = 34)) +
       # hard to get standard error of the percent expressed
-      geom_errorbar(aes(ymin = avg$avg.lower, ymax = avg$avg.upper),
-                    position = position_dodge(width=0.9), width = 0.50)
+      geom_errorbar(aes(ymin = avg.lower, ymax = avg.upper),
+                    position = position_dodge(width = 0.9), width = 0.50)
   }
   
   return(plot)
   
 }
 
-# Bargraphs for the average expression and percent expressed data, and also for both clusterpools
-Plot_4_Bar <- function (avg1, pct1, avg2, pct2, c1, c2, labels){
-
-  Plot_1 <- Plot_details(avg1, c1, c1$avg.exp, avg1$avg.exp, "Average Expression", "avg", labels[1], 12) 
-
-  Plot_2 <- Plot_details(avg2, c2, c2$avg.exp, avg2$avg.exp, "Average Expression", "avg", labels[2], 12)
-  Plot_2 <- Plot_Bween(Plot_2, Bween_pool("avg", c1, c2), "avg", c2)
-  
-  Plot_3 <- Plot_details(pct1, c1, c1$pct.exp, pct1$pct.exp, "% Expressed", "pct", labels[1], 100)
-
-  Plot_4 <- Plot_details(pct2, c2, c2$pct.exp, pct2$pct.exp, "% Expressed", "pct", labels[2], 100)
-  Plot_4 <- Plot_Bween(Plot_4, Bween_pool("pct", c1, c2), "pct", c2)
-  
-  Plot <- Plot_1 + Plot_2 + Plot_3 + Plot_4
-
-
-  return(Plot)
-}
-
 Position_ANOVA <- function(source, method){
   if(method == "avg"){
-    pvpos <- apply(source[3], 2, max, na.rm=TRUE) - (apply(source[3], 2, max, na.rm=TRUE)*0.05)
+    pvpos <- max(source$avg.exp) - max(source$avg.exp) * 0.05
   } else if (method == "pct"){
     increment <- 5
-    pvpos <- apply(source[3], 2, max, na.rm=TRUE) - (apply(source[3], 2, max, na.rm=TRUE)*0.05)
+    pvpos <- max(source$pct.exp) - max(source$pct.exp) * 0.05
   }
   return(pvpos)
 }
@@ -207,29 +171,30 @@ main <- function(){
       for (id_index in id) {
         # Save the clusterpool that we are working with
         one_cluster_pool <- ClusterPoolResults %>%
-          filter(SubGroup == subgr[subgr_index], id == id[id_index])
+          filter(SubGroup == subgr_index, id == id_index)
         # Now I should have all the information for one cluster pool
         # creat a temporary list
         tmp_list <- list()
         # Create key names
-        key <- paste(subgr[subgr_index], id[id_index], sep = ' ')
+        key <- paste(subgr_index, id_index, sep = ' ')
         # Next pass the the one_cluster_pool into the Ploting function
         # I might have to relocate.
         # Do the average expression first
         tmp_list[['Average_Expression']] <- Plot_details(one_cluster_pool, 
-                                                         c1, c1$avg.exp, 
+                                                         cell_roster[[key]], expm1(cell_roster[[key]]$raw_counts), 
                                                          one_cluster_pool$avg.exp, 
-                                                         "Average Expression", "avg", labels[1], 12)
+                                                         "Average Expression", "avg", key, 12)
         # Then do the percent expressed next
         tmp_list[['Percent_Expressed']] <- Plot_details(one_cluster_pool,
-                                                         c1, c1$pct.exp,
+                                                         cell_roster[[key]], expm1(cell_roster[[key]]$raw_counts),
                                                          one_cluster_pool$pct.exp,
-                                                         "% Expressed", "pct", labels[1], 100)
+                                                         "% Expressed", "pct", key, 100)
         
         # Add the temp list to the plot archive
         plot_arkv[[key]] <- tmp_list
       }
     }
+    
     # Make a list of statistics
     ttest_arkv <- list()
     # Now let us build a list of statistics
@@ -245,47 +210,42 @@ main <- function(){
           key1 <- paste(names(cell_roster)[i], names(cell_roster)[j], sep = 'X')
           key2 <- paste(i, j, sep = '-')
           # Now do average expresson first
-          tmp_list[['Average_Expression']] <- Bween_pool("avg", cell_roster[i], cell_roster[j])
+          tmp_list[['Average_Expression']] <- Bween_pool("avg", cell_roster[[i]], cell_roster[[j]])
           # Now do percent expressed
-          tmp_list[['Percent_Expressed']] <- Bween_pool("pct", cell_roster[i], cell_roster[j])
+          tmp_list[['Percent_Expressed']] <- Bween_pool("pct", cell_roster[[i]], cell_roster[[j]])
           # Might be necessary to switch key 1 with key 2
-          #tmp_list[['desc_key']] <- key1
+          tmp_list[['desc_key']] <- key1
           # Add the temp list to the ttest archive
-          ttest_arkv[[key1]] <- tmp_list
+          ttest_arkv[[key2]] <- tmp_list
         }
       }
     }
     # once complete, we must adjust the pvalues
-    ttest_arkv <- pvalue_adjust(ttest_arkv)
+    ttest_arkv <- pvalue_adjust(ttest_arkv) # when I come back I must finish this part
     
     # Now combine graphs for every combination.
     #go through all possible combinations of clusterpools
-    for ( i in 1:length(plot_arkv) ){
-      for (j in 1:length(plot_arkv) ){
+    for ( i in 1:length(cell_roster) ){
+      for (j in 1:length(cell_roster) ){
         
         if (i == j){
           #break if clusterpools are the same.
           break;
         } else if (i != j){
           
+          # Create a comparison key
+          comp_key <- paste(i, j, sep = '-')
           # Now at any point in this loop we have
           # The plots for any two cluster pools
           # So all we need to do is put the plots together
-          Plot <- plot_arkv[[i]]$Average_Expression + plot_arkv[[j]]$Average_Expression +
-            plot_arkv[[i]]$Percent_Expressed + plot_arkv[[j]]$Percent_Expressed
-          #c1 represents first cluster, c2 the second.
-          #c1 <- ListByCluster[[i]]
-          #c2 <- ListByCluster[[j]]
-
-          l1 <- labels(plot_arkv)[i]
-          l2 <- labels(plot_arkv)[j]
-          #call Plot_4_Bar to combine all 4 quadrants with proper design.
-          #Plot <- Plot_4_Bar(AvgExpPar(c1), PctExpPar(c1), AvgExpPar(c2), PctExpPar(c2), c1, c2, c(l1, l2))
-          #Plot
+          Plot <- plot_arkv[[i]]$Average_Expression +
+            Plot_Bween(plot = plot_arkv[[j]]$Average_Expression, stats = ttest_arkv[[comp_key]]$Average_Expression, method = "avg") +
+            plot_arkv[[i]]$Percent_Expressed + 
+            Plot_Bween(plot = plot_arkv[[j]]$Percent_Expressed, stats = ttest_arkv[[comp_key]]$Percent_Expressed, method = "pct")
           
           #put underlines instead of spaces for the file name
-          l1 <- sub(" ", "_", labels(ListByCluster)[i])
-          l2 <- sub(" ", "_", labels(ListByCluster)[j])
+          l1 <- sub(" ", "_", labels(plot_arkv)[i])
+          l2 <- sub(" ", "_", labels(plot_arkv)[j])
           #save image onto desktop with custom title.
           save_image(paste('QB_', l1, 'X', l2, sep =""), Plot, width = 5000, height = 5000)
         }

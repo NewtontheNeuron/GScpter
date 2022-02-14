@@ -138,7 +138,7 @@ PoolnShare <- function(id, subgr){
   PoolAll <- function (cluster, identity, subgr){
     for(i in features){
       ListByGene <- cluster[str_detect(row.names(cluster), i), ] # Change this to filter by gene
-      wfeature <- clean_label_list[match(str_remove(i, 'rna_'), clean_label_list)] # i.e. the working feature 
+      wfeature <- features_no_key[match(str_remove(i, 'rna_'), features_no_key)] # i.e. the working feature 
       # or the current feature in the loop
 
       # Now we compute the average expression and percent expressed
@@ -301,7 +301,7 @@ returnClusterpoolResult <- function(){
 }
 
 returnListbyClusterAll <- function(){
-    ListbyClusterAll[, ncol(ListbyClusterAll) + 1] <- data.frame(features.label = clean_label_list)
+    ListbyClusterAll[, ncol(ListbyClusterAll) + 1] <- data.frame(features.label = features_no_key)
     return(ListbyClusterAll)
 }
 
