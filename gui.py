@@ -57,6 +57,9 @@ class App(ttk.Frame):
         self.clusterpoolTreeView.heading("#0", text="Clusterpool Heirarchy", anchor="center")
         self.clusterpoolTreeView.bind('<<TreeviewSelect>>', self.itemSelected)
         
+        self.removeGroupButton = ttk.Button(self.clusterpoolFrame, text='Remove', width=10, command=self.removeGroup)
+        self.removeGroupButton.grid(row=3, column=0)
+
         self.editPoolsButton = ttk.Button(self.clusterpoolFrame, text='Edit Pools', width=10, command=self.openPoolPopupWindow, state='disabled')
         self.editPoolsButton.grid(row=3, column=1)
 
@@ -67,6 +70,8 @@ class App(ttk.Frame):
         feature = self.featureEntry.get()
         if len(feature) == 0:
             return
+        if not feature.startswith('rna_'):
+            feature = 'rna_' + feature
         for iid in self.featureTreeView.get_children():
             if feature == self.featureTreeView.item(iid)['text']:
                 return
@@ -80,9 +85,8 @@ class App(ttk.Frame):
         clusterpool = self.clusterpoolEntry.get()
         if len(clusterpool) == 0:
             return
-        for iid in self.clusterpoolTreeView.get_children():
-            if clusterpool == self.clusterpoolTreeView.item(iid)['text']:
-                return
+        for name in data['clusterpool_names']:
+            if name == clusterpool: return
         data['clusterpool_names'].append(clusterpool)
         data['clusterpools'][clusterpool] = {}
         id = self.clusterpoolTreeView.insert('', 'end', text=clusterpool)
@@ -94,12 +98,29 @@ class App(ttk.Frame):
         subgroup = self.subgroupEntry.get()
         if len(subgroup) == 0:
             return
+        for name in data['subgroup_names']:
+            if name == subgroup: return
         data['subgroup_names'].append(subgroup)
         for iid in self.clusterpoolTreeView.get_children():
             self.clusterpoolTreeView.insert(iid, 'end', text=subgroup)
         for clusterpool in data['clusterpools'].keys():
             data['clusterpools'][clusterpool][subgroup] = []
             print(data)
+
+    def removeGroup(self):
+        selectedItem = self.clusterpoolTreeView.focus()
+        selectedValue = self.clusterpoolTreeView.item(selectedItem)['text']
+
+        if(self.clusterpoolTreeView.parent(self.clusterpoolTreeView.selection()) == ''): #selection is a clusterpool
+            data['clusterpool_names'].remove(selectedValue)
+            data['clusterpools'].pop(selectedValue)
+        else:                                                                            #selection is a subgroup
+            data['subgroup_names'].remove(selectedValue)
+            for clusterpool in data['clusterpools']:
+                data['clusterpools'][clusterpool].pop(selectedValue)
+
+        self.clusterpoolTreeView.delete(selectedItem)
+        print(data)
     
     def itemSelected(self, event):
         if(self.clusterpoolTreeView.parent(self.clusterpoolTreeView.selection()) == ''):
@@ -116,7 +137,7 @@ class App(ttk.Frame):
         subgroup = self.clusterpoolTreeView.item(selectedItem)['text']
         print("editing", clusterpool, subgroup)
 
-        window = PoolPopupWindow(self, data['clusterpools'][clusterpool][subgroup])
+        PoolPopupWindow(self, data['clusterpools'][clusterpool][subgroup])
 
     def updateData(self):
         data['project_name'] = self.projectNameEntry.get()
@@ -143,7 +164,7 @@ class PoolPopupWindow(tk.Toplevel):
 
         for i in range(38):
             name = "Excit-"+str(i+1)
-            self.excCheckboxVariables[name] = tk.IntVar(0)
+            self.excCheckboxVariables[name] = tk.IntVar(self, 0, name)
             self.excCheckboxList.append(tk.Checkbutton(
                 self, 
                 text=name,
@@ -159,7 +180,7 @@ class PoolPopupWindow(tk.Toplevel):
 
         for i in range(27):
             name = "Inhib-"+str(i+1)
-            self.inhCheckboxVariables[name] = tk.IntVar(0)
+            self.inhCheckboxVariables[name] = tk.IntVar(self, 0, name)
             self.inhCheckboxList.append(tk.Checkbutton(
                 self, 
                 text=name,
@@ -174,8 +195,14 @@ class PoolPopupWindow(tk.Toplevel):
             else:
                 self.inhCheckboxList[i].deselect()
 
-        button_close = ttk.Button(self, text="Close", command=partial(self.savePoolListAndClose, poolList) )
-        button_close.grid(row=19, column=3)
+        copyPoolsButton = ttk.Button(self, text="Copy Pools from...", command=partial(self.openCopyPoolsWindow) )
+        copyPoolsButton.grid(row=19, column=2)
+
+        closeButton = ttk.Button(self, text="Close", command=partial(self.savePoolListAndClose, poolList) )
+        closeButton.grid(row=19, column=3)
+
+    def openCopyPoolsWindow(self):
+        CopyPoolsWindow(self)
 
     def savePoolListAndClose(self, poolList):
         poolList.clear()
@@ -189,6 +216,57 @@ class PoolPopupWindow(tk.Toplevel):
                 poolList.append(key)
         print(poolList)
         self.destroy()
+
+class CopyPoolsWindow(tk.Toplevel):
+    def __init__(self, parent):
+        tk.Toplevel.__init__(self)
+        self.parent = parent
+        self.title('Copy Pools')
+
+        self.copyPoolsLabel = ttk.Label(self, text="Copy pools from:")
+        self.copyPoolsLabel.grid(row=0,column=0)
+
+        self.copyPoolsTreeView = ttk.Treeview(self, selectmode="browse", height=6)
+        self.copyPoolsTreeView.grid(row=1, column=0, columnspan=2, pady=10)
+        self.copyPoolsTreeView.column("#0", anchor="w", width=200)
+        self.copyPoolsTreeView.heading("#0", text="Clusterpool Options", anchor="center")
+
+        for clusterpool in data['clusterpool_names']:
+            for subgroup in data['subgroup_names']:
+                name = clusterpool + ' // ' + subgroup
+                self.copyPoolsTreeView.insert('', 'end', text=name)
+        
+        self.selectButton = ttk.Button(self, text="Select", command=self.copyPools)
+        self.selectButton.grid(row=2, column=1)
+
+    def copyPools(self):
+        selectedItem = self.copyPoolsTreeView.focus()
+        selectedValue = self.copyPoolsTreeView.item(selectedItem)['text']
+        selectedValue = selectedValue.split(' // ')
+        clusterpool = selectedValue[0]
+        subgroup = selectedValue[1]
+
+        poolList = data['clusterpools'][clusterpool][subgroup]
+
+        for i in range(38):
+            name = "Excit-"+str(i+1)
+            if name in poolList:
+                self.parent.excCheckboxList[i].select()
+            else:
+                self.parent.excCheckboxList[i].deselect()
+
+        for i in range(27):
+            name = "Inhib-"+str(i+1)
+            if name in poolList:
+                self.parent.inhCheckboxList[i].select()
+            else:
+                self.parent.inhCheckboxList[i].deselect()
+
+        self.destroy()
+
+
+
+
 
 if __name__ == "__main__":
     data = {
