@@ -3,6 +3,7 @@ import os, sys
 import tkinter as tk
 from tkinter import ttk
 from functools import partial
+import subprocess as sp
 
 class App(ttk.Frame):
     def __init__(self, parent, data):
@@ -127,8 +128,10 @@ class App(ttk.Frame):
         self.updateData()
         print("--exporting data:")
         print(data)
+
         with open('Data/JSON/data.json', 'w') as outfile:
             json.dump(data, outfile)
+
         #run the scripts with project name :)
         runScript(data['project_name'])
         
@@ -146,7 +149,7 @@ class PoolPopupWindow(tk.Toplevel):
 
         for i in range(38):
             name = "Excit-"+str(i+1)
-            self.excCheckboxVariables[name] = tk.IntVar(0)
+            self.excCheckboxVariables[name] = tk.IntVar(self, 0, name)
             self.excCheckboxList.append(tk.Checkbutton(
                 self, 
                 text=name,
@@ -162,7 +165,7 @@ class PoolPopupWindow(tk.Toplevel):
 
         for i in range(27):
             name = "Inhib-"+str(i+1)
-            self.inhCheckboxVariables[name] = tk.IntVar(0)
+            self.inhCheckboxVariables[name] = tk.IntVar(self, 0, name)
             self.inhCheckboxList.append(tk.Checkbutton(
                 self, 
                 text=name,
@@ -192,12 +195,22 @@ class PoolPopupWindow(tk.Toplevel):
                 poolList.append(key)
         print(poolList)
         self.destroy()
-
+    
+#run all R scripts with command line call (running just one rn)
 def runScript(project_name):
-    #run all R scripts
-    #command line call
 
-    #pass project name (JSON data file name) to R
+    #change working directory to Scripts
+    print(os.getcwdb())
+
+    os.chdir("Scripts/")
+
+    #command line call and print feedback
+    #TODO: call project name in command line, allow for it in R files.
+    projectNameCMD = '"' + project_name + '"'
+    stream = os.popen('Rscript main.R ' + projectNameCMD)
+    print(stream.read())
+
+    os.chdir("../")
     return
 
 if __name__ == "__main__":
@@ -209,6 +222,7 @@ if __name__ == "__main__":
         'clusterpools': {}
     }
 
+    #put working directory in same file as gui.py
     os.chdir(os.path.dirname(sys.argv[0]))
     
     root = tk.Tk()

@@ -1,23 +1,24 @@
 # Function for adding the file to the workspace and saving the workspace.
 # This is only necessary outside Rstudio or if loading the data for this first time.
+options(repos = list(CRAN="http://cran.rstudio.com/"))
+
+list.of.packages <- c("ggplot2", "Seurat", "patchwork", "tidyverse", "ggdendro", "dplyr", "stringr", "data.table", "tibble", "viridisLite", "Cairo", "datasets", "rjson")
+new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
+if(length(new.packages)) install.packages(new.packages)
+
 library(Seurat)
 library(ggplot2)
 library(patchwork)
 library(tidyverse)
 library(ggdendro)
-library(cowplot) # I do not think this is needed here
-library(patchwork)
 library(dplyr)
 library(stringr)
 library(data.table)
 library(tibble)
 library(viridisLite)
 library(Cairo)
-library(rstudioapi)
 library(datasets)
-
-#set working directory to the one this file is currently in
-setwd(dirname(getActiveDocumentContext()$path))
+library(rjson)
 
 #get JSON_Handler functions.
 source("JSON_Handler.R")
@@ -28,13 +29,15 @@ load_data <- function(){
   print("Loading data into R... this might take a while.")
   filename <- file.choose()
   clean_neuron_object <<- readRDS(filename)
-  save(clean_neuron_object, file = '../.RData')
+  
+  #save(clean_neuron_object, file = '../.RData')
   
   #was loadfile function
   # This is good but when newdata and savedata were run then
   # we do not need to run load because it would already have clean_neuron_object from
   # above.
-  load(file = '../.RData') # We could also place .RData in the Data folder
+
+  #load(file = '../.RData') # We could also place .RData in the Data folder
   # We also need some form of error handling when the file does not exist so that it prompts
   # user the .RData file does not exist please ensure that it is in the correct folder or
   # do you wish to exit
@@ -42,6 +45,7 @@ load_data <- function(){
   print("Good to go!")
 }
 
+load_data()
 #get the list of features from JSON
 features <- returnFeatures()
 project_name <- returnProjectName()
@@ -76,20 +80,26 @@ ListbyClusterAll <- b$data[b$data$id %in% ClusterPoolAll,]
 # Remove the 'rna_' label on most genes in the Levine Dataset
 # Clean the features into presentable labels without the 'rna_' tag.
 clean_label_list <- str_remove(features, 'rna_')
+
+
+ClusterPoolResults <<- data.frame(avg.exp=numeric(), pct.exp=numeric(), features.plot=character(), id=character(), features.label=character(), SubGroup=character())
+ClusterPoolResults$avg.exp <- as.numeric(ClusterPoolResults$avg.exp)
+ClusterPoolResults$pct.exp <- as.numeric(ClusterPoolResults$pct.exp)
+ClusterPoolResults$features.plot <- as.character(ClusterPoolResults$features.plot)
+ClusterPoolResults$id <- as.character(ClusterPoolResults$id)
+ClusterPoolResults$features.label <- as.character(ClusterPoolResults$features.label)
+ClusterPoolResults$SubGroup <- as.character(ClusterPoolResults$SubGroup)
+
 #------
 PoolnShare <- function(id, subgr){
   # Start and define the data frame that will contain the results.
   # This step ensures that the values from the dot plot can be 
   # Stored in the data frame in the correct place with the correct
-  # character type.
-  ClusterPoolResults <<- data.frame(avg.exp=numeric(), pct.exp=numeric(), features.plot=character(), id=character(), features.label=character(), SubGroup=character())
-  ClusterPoolResults$features.plot <- as.character(ClusterPoolResults$features.plot)
-  ClusterPoolResults$id <- as.character(ClusterPoolResults$id)
-  ClusterPoolResults$features.label <- as.character(ClusterPoolResults$features.label)
-  ClusterPoolResults$SubGroup <- as.character(ClusterPoolResults$SubGroup)
+  # character types
   
   # Average, percent, scale and save
   PoolAll <- function (cluster, identity, subgr){
+    
     for(i in features){
       ListByGene <- cluster[str_detect(row.names(cluster), i), ] # Change this to filter by gene
       wfeature <- clean_label_list[match(str_remove(i, 'rna_'), clean_label_list)] # i.e. the working feature 
@@ -101,22 +111,27 @@ PoolnShare <- function(id, subgr){
       # just like it is done in Seurat/utilities.R
       GeneIndicies <- match(wfeature, unlist(clean_neuron_object@assays$RNA@data@Dimnames[1]))
       # Then grab the indicies of the cells in the specific list of clusters
-      CellIndicies <- which(unlist(clean_neuron_object@meta.data$seurat_clusters) %in% unique(ListByCluster[[subgr_index]]$id))
+      CellIndicies <- which(unlist(clean_neuron_object@active.ident) %in% unique(ListByCluster[[subgr_index]]$id))
       # Get the relevant data using the the indicies otained above
       Transcript_exp <- GetAssayData(clean_neuron_object, assay = 'RNA', slot = 'data')[GeneIndicies, CellIndicies]
       # Exponentiate the data and then compute the mean
       raw.avg <- mean(expm1(Transcript_exp))
       # Now the percent expressed does not require exponentiation
-      raw.pct <- length(Transcript_exp[Transcript_exp > 0]) / length(Transcript_exp)
+      raw.pct <- length(Transcript_exp[Transcript_exp > 0]) / length(Transcript_exp) * 100 #times 100 for percentage
       
-      # Add a new row to ClusterPoolResults and place the values in the relevant collumn
-      ClusterPoolResults[nrow(ClusterPoolResults) + 1, ] <<- c(raw.avg, raw.pct, i, identity, wfeature, subgr)
+      # Add a new row to ClusterPoolResults and place the values in the relevant column    
+      
+      ClusterPoolResults[nrow(ClusterPoolResults) + 1, ] <<- c( raw.avg, raw.pct, i, identity, wfeature, subgr)
+      
+      
+      
       # This might no longer be needed because it is not even used
     }
     # This is because it is just saving the feature as the row name
     # which is like the dot plot output but not necessary,
     # we may even find a more efficent way of accessing the info
     # besides from a dot plot print out.
+    
   }
   
   # Running the function PoolAll, (If there were extra pools put them here before the 'Rescale' bellow)
@@ -126,8 +141,15 @@ PoolnShare <- function(id, subgr){
       PoolAll(ListByCluster[[subgr_index]], id[[id_index]], subgr[[subgr_index]])
     }
   }
-
+  
+  ClusterPoolResults$avg.exp <- as.numeric(ClusterPoolResults$avg.exp)
+  ClusterPoolResults$pct.exp <- as.numeric(ClusterPoolResults$pct.exp)
+  
+  
   #Rescaling average expression based on z scores of the full new dataset
+  ClusterPoolResults[1]
+  colMeans(ClusterPoolResults[1])
+  
   ClusterPoolResults[, ncol(ClusterPoolResults) + 1] <- 
     data.frame(avg.exp.re.scaled = (ClusterPoolResults[, 1] - colMeans(ClusterPoolResults[1]))/sd(ClusterPoolResults$avg.exp))
   return(ClusterPoolResults)
@@ -149,7 +171,7 @@ subgr <- clusterpool_subgroup
 numberOfGroups <- length(id) * length(subgr)
 numberOfGenes <- length(ClusterPoolAll)
 
-ClusterPoolResults <- PoolnShare(id, subgr) # Error I get nothing in the ClusterPoolResults
+ClusterPoolResults <- PoolnShare(id, subgr)
 
 #function to set the width and height of plot saved as an image into global values
 resizeImage <- function(base_filename, numOfClusters, numOfGroups, numOfGenes, height, width){
@@ -162,8 +184,7 @@ resizeImage <- function(base_filename, numOfClusters, numOfGroups, numOfGenes, h
       height <- 500 + (200 * ( numOfClusters / numOfGroups ))
       width <- 800 + (300 * numOfGroups)
     } else if (base_filename == "DotPlot"){
-      print(numOfClusters)
-      print(numOfGenes)
+
       height <- 1000 + (200 * numOfClusters / numOfGroups)
       width <- 1000 + (150 * numOfGenes)
     } else {

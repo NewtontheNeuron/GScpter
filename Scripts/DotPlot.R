@@ -1,13 +1,11 @@
-library(rstudioapi)
+#library(rstudioapi)
 
 #set working directory to the one this file is currently in
-setwd(dirname(getActiveDocumentContext()$path))
-source("Pre_analysis_functions.R")
+#setwd(dirname(getActiveDocumentContext()$path))
+#source("Pre_analysis_functions.R")
 
-main <- function(){
-  
-  ListbyClusterAll <- returnListbyClusterAll()
-  
+mainDP <- function(ListByClusterAll){
+   
   # Plotting all the relevant clusters form the data by
   # using ClusterPoolAll
   Gene <- ListbyClusterAll$features.label
@@ -41,4 +39,5 @@ main <- function(){
 #run this function if you want to load the data
 #load_data()
 
-main()
+#main()
+

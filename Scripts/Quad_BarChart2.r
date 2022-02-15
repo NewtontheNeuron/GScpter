@@ -1,9 +1,4 @@
-library(rstudioapi)
-
-#set working directory to the one this file is currently in
-setwd(dirname(getActiveDocumentContext()$path))
-
-source("Pre_analysis_functions.R")
+#source("Pre_analysis_functions.R")
 
 Bween_pool <- function(method, c1, c2){
 
@@ -82,7 +77,7 @@ Plot_details <- function (avg, clusterpool, clusterpool_exp, method_exp, title, 
             geom_col(color="black", show.legend = FALSE) + 
             scale_fill_viridis_d(option = "plasma") + 
             geom_errorbar(aes(ymin = lower, ymax = upper), position = position_dodge(width=0.9), width = 0.50) +
-            geom_point(data = clusterpool, y = clusterpool_exp, fill = "white", color="black") +
+            #geom_point(data = clusterpool, y = clusterpool_exp, fill = "white", color="black") +
             scale_y_continuous(expand = c(0,0), limits = c(0, y_lim)) + 
             labs(x="Gene", y=title) +
             cowplot::theme_cowplot() + 
@@ -94,10 +89,10 @@ Plot_details <- function (avg, clusterpool, clusterpool_exp, method_exp, title, 
               x = 4.5, y = Position_ANOVA(avg, method), size = 8.5, color = "black")
     
     #add breaks if needeed
-    if (FALSE & method = "avg"){
-      plot <- plot + 
-        scale_y_continuous(breaks = (seq(0, 100, by = 20)))
-    }
+    #if (FALSE & method = "avg"){
+    #  plot <- plot + 
+    #    scale_y_continuous(breaks = (seq(0, 100, by = 20)))
+    #}
     
     #add a category title for comparisons between the two clusterpools.
     if (method == "avg"){
@@ -138,9 +133,7 @@ Position_ANOVA <- function(source, method){
   return(pvpos)
 }
 
-main <- function(){
-
-    ListByCluster <- returnListByCluster()
+mainQBC <- function(ListByCluster){
     
     #get all avg.exp in one plot
     ListByCluster[1]
@@ -181,12 +174,8 @@ main <- function(){
 #run this function if you want to load the data
 #load_data()
 
-ListByCluster <- returnListByCluster()
-
-par(mar=c(3,3,1,1))
-plot(AllAvg_Exp)
-
+#ListByCluster <- returnListByCluster()
 
 #produce quad barchart with all possible combinations as jpg in a folder in Output.
-main()
+#main(ListByCluster)
 

@@ -1,13 +1,6 @@
-library(rstudioapi)
+#source("Pre_analysis_functions.R")
 
-#set working directory to the one this file is currently in
-setwd(dirname(getActiveDocumentContext()$path))
-
-source("Pre_analysis_functions.R")
-
-main <- function(){
-  
-  ClusterPoolResults <- returnClusterpoolResult()
+mainPDP <- function(ClusterPoolResults){
   
   # Plot the pooled dotplot
   ClusterPoolResults$ClusterAndSubgroup <- paste(ClusterPoolResults$id, ClusterPoolResults$SubGroup) 
@@ -21,7 +14,6 @@ main <- function(){
     mutate(`% Expressing` = ClusterPoolResults$pct.exp) %>% 
     ggplot(aes(y=Gene, x = Subgroup, color = AvgExpScaled, size = `% Expressing`)) + 
     geom_point() + 
-    #scale_x_discrete(guide = guide_axis(n.dodge = 2)) +
     scale_size(range = c(0, 20)) +
     scale_color_viridis_c(option = "plasma") + 
     cowplot::theme_cowplot() + 
@@ -40,4 +32,4 @@ main <- function(){
 #uncomment this function if you want to load the data
 #load_data()
 
-main()
+#main()
