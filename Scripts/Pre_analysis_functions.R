@@ -3,20 +3,20 @@
 # this first time.
 # >>>> input required >>>>
 
-library(Seurat) #*
-library(ggplot2) #~
-library(patchwork) #~
-library(tidyverse) #*
-library(ggdendro) #~
-library(cowplot) # I do not think this is needed here
-library(dplyr) #~
-library(stringr) #~
-library(data.table) #~
-library(tibble) #~
-library(viridisLite)
-library(Cairo) #*
-library(rstudioapi) #*
-library(datasets) #*
+library(Seurat) #* **
+library(ggplot2) #~ **
+#library(patchwork) #~
+#library(tidyverse) #*
+#library(ggdendro) #~
+#library(cowplot) # I do not think this is needed here
+library(dplyr) #~ **
+library(stringr) #~ **
+#library(data.table) #~ **
+#library(tibble) #~ **
+#library(viridisLite)
+library(Cairo) #* **
+library(rstudioapi) #* **
+#library(datasets) #*
 #set working directory to the one this file is currently in
 setwd(dirname(getActiveDocumentContext()$path))
 
