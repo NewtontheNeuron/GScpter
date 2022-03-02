@@ -221,6 +221,9 @@ class App(ttk.Frame):
         print(data)
         with open('Data/JSON/' + data['project_name'] + '.json', 'w') as outfile:
             json.dump(data, outfile)
+        #run the scripts with project name :)
+        runScript(data['project_name'])
+        
 
 
 '''
@@ -373,7 +376,12 @@ class CopyPoolsWindow(tk.Toplevel):
 
         self.destroy()                                                          # close the CopyPoolsWindow
 
+def runScript(project_name):
+    #run all R scripts
+    #command line call
 
+    #pass project name (JSON data file name) to R
+    return
 
 '''
 main

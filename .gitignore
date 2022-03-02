@@ -3,9 +3,11 @@
 .Rhistory
 .RData
 .Ruserdata
+~$*
+*.code-workspace
 .RDataTmp
 .DS_Store
 .Rproj.user/
 .guitheme/
 Output/*
-Data/JSON/data.json
+Scripts/scrap.R
