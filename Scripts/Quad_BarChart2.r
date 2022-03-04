@@ -1,10 +1,3 @@
-#library(rstudioapi)
-
-#set working directory to the one this file is currently in
-#setwd(dirname(getActiveDocumentContext()$path))
-
-#source("Pre_analysis_functions.R")
-
 Bween_pool <- function(method, c1, c2){
 
     GeneStatResults <- data.frame(t=numeric(), df=numeric(), p.value=numeric(), name=character())
@@ -174,12 +167,4 @@ mainQBC <- function(ListByCluster){
     }
     
 }
-
-#run this function if you want to load the data
-#RDSfile <- load_data()
-
-#ListByCluster <- createListbyCluster(RDSfile)
-
-#produce quad barchart with all possible combinations as jpg in a folder in Output.
-#mainQBC(ListByCluster)
 

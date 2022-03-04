@@ -25,10 +25,3 @@ mainPDP <- function(ClusterPoolResults){
   # Save the image
   save_image('PooledDotPlot', Plot) 
 }
-
-#uncomment this function if you want to load the data
-#RDSfile <- load_data()
-
-#ClusterPoolResults <- createClusterPoolResults(RDSfile)
-
-#mainPDP(ClusterPoolResults)

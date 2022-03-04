@@ -3,10 +3,11 @@
 .Rhistory
 .RData
 .Ruserdata
-.RDataTmp
-.DS_Store
 ~$*
 *.code-workspace
+.RDataTmp
+.DS_Store
 .Rproj.user/
 .guitheme/
 Output/*
+Scripts/scrap.R

@@ -218,6 +218,8 @@ save_image <- function(base_filename, Plot, height = 1, width = 1){
   if (!(grepl( "Output", getwd(), fixed = TRUE))){
     setwd("../Output" )
   }
+  # In any cass set the working directory
+  setwd("../Output")
 
   #get proper calculated dimensions
   dimensions = getImageDimensions(base_filename, height, width)
@@ -236,7 +238,7 @@ save_image <- function(base_filename, Plot, height = 1, width = 1){
   } else {
     filename <- sprintf("%s/%s_%s.jpg", project_name, base_filename, curr_date)
   }
-
+  
   #save plot to proper location as a jpg.
   ggsave(filename, plot = Plot, device = "jpg", height = dimensions[1], width = dimensions[2], units = "px", type = "cairo", limitsize = FALSE)
 

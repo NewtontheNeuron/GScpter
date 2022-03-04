@@ -1,14 +1,5 @@
-#library(rstudioapi)
-
-#set working directory to the one this file is currently in
-#setwd(dirname(getActiveDocumentContext()$path))
-
-#source("Pre_analysis_functions.R")
-
 mainDP <- function(ListByClusterAll){
-   
-  # Plotting all the relevant clusters form the data by
-  # using ClusterPoolAll
+  
   Gene <- ListbyClusterAll$features.label
   Cluster <- ListbyClusterAll$id
   AvgExpScaled <- ListbyClusterAll$avg.exp.scaled
@@ -30,16 +21,9 @@ mainDP <- function(ListByClusterAll){
           plot.background = element_rect(fill = "white"))
   Plot
   
-  # Save the image
-  # or set the prefered width and height
-  #width = 10000 for 4 subgroups, 4500 for 2 subgroups, width = 2250
+  # Save the image, you can set the prefered width and height
+  # width = 10000 for 4 subgroups, 4500 for 2 subgroups, width = 2250
   save_image('DotPlot', Plot)
 }
 
-#uncomment these to run the file individually
-#RDSfile <- load_data()
-
-#ListbyClusterAll <- createListByClusterAll(RDSfile)
-
-#mainDP(ListbyClusterAll)
 
