@@ -2,6 +2,7 @@
 
 #set working directory to the one this file is currently in
 #setwd(dirname(getActiveDocumentContext()$path))
+
 #source("Pre_analysis_functions.R")
 
 mainDP <- function(ListByClusterAll){
@@ -30,14 +31,15 @@ mainDP <- function(ListByClusterAll){
   Plot
   
   # Save the image
-  # You will have to resize the Rstudio box
   # or set the prefered width and height
   #width = 10000 for 4 subgroups, 4500 for 2 subgroups, width = 2250
   save_image('DotPlot', Plot)
 }
 
-#run this function if you want to load the data
-#load_data()
+#uncomment these to run the file individually
+#RDSfile <- load_data()
 
-#main()
+#ListbyClusterAll <- createListByClusterAll(RDSfile)
+
+#mainDP(ListbyClusterAll)
 

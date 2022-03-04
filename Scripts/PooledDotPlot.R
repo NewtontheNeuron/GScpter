@@ -1,12 +1,10 @@
-#source("Pre_analysis_functions.R")
-
 mainPDP <- function(ClusterPoolResults){
   
   # Plot the pooled dotplot
   ClusterPoolResults$ClusterAndSubgroup <- paste(ClusterPoolResults$id, ClusterPoolResults$SubGroup) 
   Gene <- ClusterPoolResults$features.label
   Subgroup <- ClusterPoolResults$ClusterAndSubgroup
-  AvgExpScaled <- ClusterPoolResults$avg.exp.re.scaled
+  AvgExpScaled <- ClusterPoolResults$avg.exp.z.scaled
   markers <- Gene %>% unique()
   
   Plot <- ClusterPoolResults %>% 
@@ -25,11 +23,12 @@ mainPDP <- function(ClusterPoolResults){
   Plot
   
   # Save the image
-
   save_image('PooledDotPlot', Plot) 
 }
 
 #uncomment this function if you want to load the data
-#load_data()
+#RDSfile <- load_data()
 
-#main()
+#ClusterPoolResults <- createClusterPoolResults(RDSfile)
+
+#mainPDP(ClusterPoolResults)

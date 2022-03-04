@@ -1,10 +1,16 @@
+#library(rstudioapi)
+
+#set working directory to the one this file is currently in
+#setwd(dirname(getActiveDocumentContext()$path))
+
 #source("Pre_analysis_functions.R")
 
 Bween_pool <- function(method, c1, c2){
 
-    ListbyClusterAll <- b$data[b$data$id %in% ClusterPoolAll,]
     GeneStatResults <- data.frame(t=numeric(), df=numeric(), p.value=numeric(), name=character())
     GeneStatResults$name <- as.character(GeneStatResults$name)
+
+    features <- returnFeatures()
 
     for (i in features){ 
 
@@ -73,11 +79,13 @@ Run_ANOVA <- function (cluster, method, anova.p.val=NULL) {
 
 #create individual plot with wanted options.
 Plot_details <- function (avg, clusterpool, clusterpool_exp, method_exp, title, method, label, y_lim){
+  
+    clean_label_list <- returnCleanLabelList()
+
     plot <- ggplot(avg, aes(features.plot, method_exp, fill = factor(features.plot))) + 
             geom_col(color="black", show.legend = FALSE) + 
             scale_fill_viridis_d(option = "plasma") + 
             geom_errorbar(aes(ymin = lower, ymax = upper), position = position_dodge(width=0.9), width = 0.50) +
-            #geom_point(data = clusterpool, y = clusterpool_exp, fill = "white", color="black") +
             scale_y_continuous(expand = c(0,0), limits = c(0, y_lim)) + 
             labs(x="Gene", y=title) +
             cowplot::theme_cowplot() + 
@@ -87,12 +95,6 @@ Plot_details <- function (avg, clusterpool, clusterpool_exp, method_exp, title, 
               theme(axis.text.y = element_text(angle = 0, vjust = 0.5, hjust=1, size=20)) +
             annotate("text", label=paste("p < ", Run_ANOVA(clusterpool, method, anova.p.val = TRUE)), 
               x = 4.5, y = Position_ANOVA(avg, method), size = 8.5, color = "black")
-    
-    #add breaks if needeed
-    #if (FALSE & method = "avg"){
-    #  plot <- plot + 
-    #    scale_y_continuous(breaks = (seq(0, 100, by = 20)))
-    #}
     
     #add a category title for comparisons between the two clusterpools.
     if (method == "avg"){
@@ -149,12 +151,13 @@ mainQBC <- function(ListByCluster){
           break;
         } else if (i != j){
 
-          #c1 represents first cluster, c2 the second.
+          #c1 represents first cluster, c2 the second. (there are always only 2 clusters represented in the graph)
           c1 <- ListByCluster[[i]]
           c2 <- ListByCluster[[j]]
 
           l1 <- labels(ListByCluster)[i]
           l2 <- labels(ListByCluster)[j]
+
           #call Plot_4_Bar to combine all 4 quadrants with proper design.
           Plot <- Plot_4_Bar(AvgExpPar(c1), PctExpPar(c1), AvgExpPar(c2), PctExpPar(c2), c1, c2, c(l1, l2))
           Plot
@@ -162,6 +165,7 @@ mainQBC <- function(ListByCluster){
           #put underlines instead of spaces for the file name
           l1 <- sub(" ", "_", labels(ListByCluster)[i])
           l2 <- sub(" ", "_", labels(ListByCluster)[j])
+
           #save image onto desktop with custom title.
           save_image(paste('QB_', l1, 'X', l2, sep =""), Plot, width = 5000, height = 5000)
         }
@@ -172,10 +176,10 @@ mainQBC <- function(ListByCluster){
 }
 
 #run this function if you want to load the data
-#load_data()
+#RDSfile <- load_data()
 
-#ListByCluster <- returnListByCluster()
+#ListByCluster <- createListbyCluster(RDSfile)
 
 #produce quad barchart with all possible combinations as jpg in a folder in Output.
-#main(ListByCluster)
+#mainQBC(ListByCluster)
 

@@ -1,5 +1,4 @@
 #set working directory to the one this file is currently in
-#setwd(dirname(getActiveDocumentContext()$path))
 
 #get yaml/json data. Only works if current directory is changed.
 Data <- fromJSON(file = "../Data/JSON/data.json")
