@@ -9,4 +9,5 @@
 .DS_Store
 .Rproj.user/
 .guitheme/
+Output/*
 Scripts/scrap.R
