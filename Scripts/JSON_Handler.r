@@ -1,11 +1,7 @@
-library(rstudioapi)
-library(rjson)
-
 #set working directory to the one this file is currently in
-setwd(dirname(getActiveDocumentContext()$path))
 
 #get yaml/json data. Only works if current directory is changed.
-Data <- fromJSON(file = "../Data/JSON/Example_4_Subgroups.json")
+Data <- fromJSON(file = "../Data/JSON/data.json")
 
 #return list of features from JSON object.
 returnFeatures <- function(){

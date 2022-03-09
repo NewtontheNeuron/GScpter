@@ -1,15 +1,5 @@
-library(rstudioapi)
-
-#set working directory to the one this file is currently in
-setwd(dirname(getActiveDocumentContext()$path))
-source("Pre_analysis_functions.R")
-
-main <- function(){
+mainDP <- function(ListByClusterAll){
   
-  ListbyClusterAll <- returnListbyClusterAll()
-  
-  # Plotting all the relevant clusters form the data by
-  # using ClusterPoolAll
   Gene <- ListbyClusterAll$features.label
   Cluster <- ListbyClusterAll$id
   AvgExpScaled <- ListbyClusterAll$avg.exp.scaled
@@ -31,14 +21,9 @@ main <- function(){
           plot.background = element_rect(fill = "white"))
   Plot
   
-  # Save the image
-  # You will have to resize the Rstudio box
-  # or set the prefered width and height
-  #width = 10000 for 4 subgroups, 4500 for 2 subgroups, width = 2250
+  # Save the image, you can set the prefered width and height
+  # width = 10000 for 4 subgroups, 4500 for 2 subgroups, width = 2250
   save_image('DotPlot', Plot)
 }
 
-#run this function if you want to load the data
-#load_data()
 
-main()
