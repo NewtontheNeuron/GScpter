@@ -1,3 +1,5 @@
+#! /usr/bin/env python3
+
 import json
 import os, sys
 import tkinter as tk                # python GUI package
@@ -380,7 +382,19 @@ def runScript(project_name):
     #run all R scripts
     #command line call
 
-    #pass project name (JSON data file name) to R
+    #change working directory to Scripts
+    print(os.getcwdb())
+
+    os.chdir("Scripts/")
+
+    #command line call and print feedback
+    #TODO: call project name in command line, allow for it in R files.
+    #os.system('echo $PATH')
+    projectNameCMD = '"' + project_name + '"'
+    stream = os.popen('Rscript main.R ' + projectNameCMD)
+    print(stream.read())
+
+    os.chdir("../")
     return
 
 '''
