@@ -3,6 +3,8 @@
 #something like this
 args <- commandArgs(trailingOnly = TRUE)
 print(paste ("this is the title project name entered: ", args[1]))
+print(paste ("this was the given directory:", args[2]))
+
 
 #source pre_analysis_functions for all the functions
 source("loadLibraries.R")
@@ -15,7 +17,7 @@ source("PooledDotPlot.R")
 source("Quad_BarChart2.r")
 
 #load data
-RDSfile <- load_data()
+RDSfile <- load_data(args[2])
 
 #call each script while passing the data as a value.
 

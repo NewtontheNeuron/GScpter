@@ -1,35 +1,56 @@
-#create clusterPoolAll list that combines all cell clusters from every subgroup in JSON data
-createClusterpoolAll <- function(groups, subGroups){
+createCellRoster <- function(clean_neuron_object){
 
-  ClusterPoolAll <- c()
+  features_no_key <- returnCleanLabelList()
 
-  #go through every possible combination of group and subgroups to combine all
+  groups <- returnClusterpool_names()
+  subGroups <- returnClusterpool_subgroups()
+
   for (group in groups){
     for (subgroup in subGroups){
-      Clusterpool <- returnClusterpoolGenes(group, subgroup)
-      ClusterPoolAll <- c(ClusterPoolAll, Clusterpool)
+
+      Clusterpool <- returnClusters(group, subGroup)
+
+      GeneIndices <- which(unlist(clean_neuron_object@assays$RNA@data@Dimnames[1]) %in% features_no_key)
+      CellIndicies <- which(unlist(clean_neuron_object@active.ident) %in% Clusterpool)
+
+      raw_data <- GetAssayData(clean_neuron_object, assay = 'RNA', slot = 'data')[GeneIndicies, CellIndicies]
+
+      clusters_n_cells <- as.data.frame(unlist(clean_neuronObject@active.ident)[CellIndicies])
+
+      key <- paste(subgroup, name, sep = " ")
+
+      cell_roster[[key]] <- raw_data %>% # Using dplyr
+      # Change the object to a data frame
+      as.data.frame() %>% 
+      # Make the row names an actual column, necessary for an acurate pivot
+      mutate('features.label' = row.names(raw_data)) %>%
+      # Pivot the data frame with the cells and raw counts in separte columns
+      pivot_longer(cols = -features.label, names_to = 'cell.barcode', values_to = 'raw_counts') %>%
+      # Add a column with the clusters
+      mutate('cluster' = clusters_n_cells[match(cell.barcode, row.names(clusters_n_cells)), 1], .keep = "unused") %>%
+      # Add a column with the id and subgroup
+      mutate('id' = name, 'subgr' = subgroup)
     }
-  }
+  }  
 
-  return(ClusterPoolAll)
 }
 
+returnAllCellRoster <- function(){
+  cell_roster <- createCellRoster()
 
-returnCleanLabelList <- function(){
-  features <- returnFeatures()
-  clean_label_list <- str_remove(features, 'rna_')
-  return(clean_label_list)
+  all_cell_roster <- data.table::rbindlist(cell_roster)
+
+  return(all_cell_roster)
 }
 
-createListbyCluster <- function(RDSfile){
-
-  clean_neuron_object <- RDSfile
+createListbyCluster <- function(clean_neuron_object){
   
   #get gene names as features and project name
   features <- returnFeatures()
 
-  #get dotplot information, information about average expression and percent expressed.
+  #get dotplot information, information about average expression and percent expressed
   b <- getDotPlot(clean_neuron_object, features)
+
 
   groups <- returnClusterpool_names()
   subGroups <- returnClusterpool_subgroups()
@@ -40,7 +61,7 @@ createListbyCluster <- function(RDSfile){
     for (subgroup in subGroups){
 
       #create key name from subgroup and group so it looks good on the graph.
-      Clusterpool <- returnClusterpoolGenes(group, subgroup)
+      Clusterpool <- returnClusters(group, subgroup)
       key <- paste(subgroup, group, sep = " ")
       ListByCluster[[key]] <- b$data[b$data$id %in% Clusterpool,]
     }
@@ -49,9 +70,7 @@ createListbyCluster <- function(RDSfile){
   return(ListByCluster)
 }
 
-createListByClusterAll <- function(RDSfile){
-
-  clean_neuron_object <- RDSfile
+createListByClusterAll <- function(clean_neuron_object){
   
   #get gene names as features and project name
   features <- returnFeatures()
@@ -59,10 +78,7 @@ createListByClusterAll <- function(RDSfile){
   #get dotplot information, information about average expression and percent expressed.
   b <- getDotPlot(clean_neuron_object, features)
 
-  clusterpool_names <- returnClusterpool_names()
-  clusterpool_subgroup <- returnClusterpool_subgroups()
-
-  ClusterPoolAll <- createClusterpoolAll(clusterpool_names, clusterpool_subgroup)
+  ClusterPoolAll <- returnAllClusters()
 
   ListbyClusterAll <- b$data[b$data$id %in% ClusterPoolAll,]
 
@@ -73,18 +89,7 @@ createListByClusterAll <- function(RDSfile){
 
 }
 
-returnClusterPoolAll <- function(){
-  clusterpool_names <- returnClusterpool_names()
-  clusterpool_subgroup <- returnClusterpool_subgroups()
-
-  ClusterPoolAll <- createClusterpoolAll(clusterpool_names, clusterpool_subgroup)
-
-  return(ClusterPoolAll)
-}
-
-createClusterPoolResults <- function(RDSfile){
-
-  clean_neuron_object <- RDSfile
+createClusterPoolResults <- function(clean_neuron_object){
 
   #get group, subgroup and features from JSON as a list
   groups <- returnClusterpool_names()
@@ -92,10 +97,9 @@ createClusterPoolResults <- function(RDSfile){
   features <- returnFeatures()
 
   #get dotplot information, information about average expression and percent expressed.
-  b <- getDotPlot(clean_neuron_object, features)
 
   #get ListByCluster, will be necessary to extract information later on.
-  ListByCluster <- createListbyCluster(RDSfile)
+  ListByCluster <- createListbyCluster(clean_neuron_object)
 
   #create base dataframe that we will be adding data into.
   ClusterPoolResults <- data.frame(avg.exp = numeric(),
@@ -133,19 +137,21 @@ createClusterPoolResults <- function(RDSfile){
 
 
         ClusterPoolResults <- ClusterPoolResults %>%
-        add_row(avg.exp = raw.avg, #done
-                pct.exp = raw.pct, #done
-                features.plot = feature, #done
-                id = group, #done
-                features.label = feature_noRNA_, #done
-                SubGroup = subGroup,  #done
-                avg.std.err = avg.std.err, #done
-                avg.lower = avg.lower, #done
-                avg.upper = avg.upper) #done
+        add_row(avg.exp = raw.avg,
+                pct.exp = raw.pct, 
+                features.plot = feature, 
+                id = group, 
+                features.label = feature_noRNA_, 
+                SubGroup = subGroup,  
+                avg.std.err = avg.std.err, 
+                avg.lower = avg.lower,
+                avg.upper = avg.upper)
       }
     }
   }
 
+
+  #I just shortened the name so it could fit on one line.
   CPR <- ClusterPoolResults
 
   CPR[, ncol(CPR) + 1] <- data.frame(avg.exp.re.scaled = (CPR[, 1] - colMeans(CPR[1]))/sd(CPR$avg.exp))
@@ -155,6 +161,8 @@ createClusterPoolResults <- function(RDSfile){
   return(CPR)
 }
 
+
+?file.choose
 #function to set the width and height of plot saved as an image into global values
 getImageDimensions <- function(base_filename, height, width){
 
@@ -163,7 +171,7 @@ getImageDimensions <- function(base_filename, height, width){
   numSubgroups <- length(returnClusterpool_subgroups())
 
   numOfGroups <- numClusterpools * numSubgroups
-  numOfGenes <- length(returnClusterPoolAll())
+  numOfGenes <- length(returnAllClusters())
   numOfClusters <- length(returnFeatures())
 
   if (height == 1 && width == 1){
@@ -272,12 +280,17 @@ PctExpPar <- function (x) {
 }
 
 #call this function to load an RDS data file into an object
-load_data <- function(){
+load_data <- function(fileLocation){
 
-  print("Loading data into R... this might take a while.")
-  filename <- file.choose()
-  clean_neuron_object <<- readRDS(filename)
-  
+  print("Loading data into R...")
+
+  if (fileLocation == "NULL"){
+    filename <- file.choose()
+    clean_neuron_object <- readRDS(filename)
+  } else {
+    clean_neuron_object <- readRDS(paste(fileLocation, "/clean_neuron_object.RDS", sep = ""))
+  }
+
   print("RDS file loaded!") 
 
   return(clean_neuron_object)
