@@ -4,8 +4,10 @@ import json
 import os, sys
 import tkinter as tk                # python GUI package
 from tkinter import ttk             # allows for the use of themed widgets (in this app they use Azure, stored in guitheme)
+from tkinter import filedialog
 from functools import partial
 import subprocess as sp
+import platform
 
 '''
 App class
@@ -383,8 +385,11 @@ class CopyPoolsWindow(tk.Toplevel):
 
         self.destroy()                                                          # close the CopyPoolsWindow
 
+'''
+runScript
+- 
+'''
 def runScript(project_name):
-
     #change working directory to Scripts
     print(os.getcwdb())
 
@@ -392,13 +397,31 @@ def runScript(project_name):
 
     #command line call and print feedback
     #TODO: call project name in command line, allow for it in R files.
-    #os.system('echo $PATH')
-    projectNameCMD = '"' + project_name + '"'
-    stream = os.popen('Rscript main.R ' + projectNameCMD)
+    projectNameCMD = ' "' + project_name + '"'
+    datafileDirectory = "NULL"
+
+    #if user is running on a mac make them choose the directory from python
+    if (platform.system() == 'Darwin'):
+        datafileDirectory = getDataFileDirectory()
+
+    datafileDirectoryCMD = ' "' + datafileDirectory + '"'
+    stream = os.popen('Rscript main.R' + projectNameCMD + datafileDirectoryCMD)
     print(stream.read())
 
     os.chdir("../")
-    return
+
+'''
+getDataFileDirectory
+- 
+'''
+def getDataFileDirectory():
+    currdir = os.getcwd()
+    tempdir = filedialog.askdirectory(parent=root, initialdir=currdir, title = 'Select the directory your datafile is in:')
+    if len(tempdir) > 0:
+        print("you chose: %s" % tempdir)
+
+    return tempdir
+
 
 '''
 main
