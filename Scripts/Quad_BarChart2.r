@@ -10,8 +10,7 @@ tcomparisons <- 0
 # Function computes a t-test between two cluster pools
 # Takes the method = avg or pct, and list by cluster 1 and 2
 Bween_pool <- function(method, c1, c2){
-    # Instead use all_cell_roster and cell_roster inherited from pre_analysis_functions
-    #ListbyClusterAll <- b$data[b$data$id %in% ClusterPoolAll,]
+    # Use all_cell_roster and cell_roster inherited from pre_analysis_functions
     GeneStatResults <- data.frame(t = numeric(), df = numeric(), p.value = numeric(), features.label = character())
     GeneStatResults$features.label <- as.character(GeneStatResults$features.label)
 
@@ -107,7 +106,7 @@ Run_ANOVA <- function (cluster, method, anova.p.val=NULL) {
 }
 
 #create individual plot with wanted options.
-# Re working plot details to work with ClusterPoolResults
+# Re working plot details to work with CPR_new
 Plot_details <- function (pro_data, clusterpool, clusterpool_exp, method_exp, title, method, label, y_lim){
   plot <- ggplot(pro_data, aes(features.label, method_exp, fill = factor(features.label))) + 
     geom_col(color = "black", show.legend = FALSE) + 
@@ -155,11 +154,6 @@ Position_ANOVA <- function(source, method){
 }
 
 main <- function(){
-
-    ListByCluster <- returnListByCluster()
-    
-    #get all avg.exp in one plot
-    ListByCluster[1]
     
     #for (m in 1)
       
@@ -170,7 +164,7 @@ main <- function(){
     for (subgr_index in subgr) {
       for (id_index in id) {
         # Save the clusterpool that we are working with
-        one_cluster_pool <- ClusterPoolResults %>%
+        one_cluster_pool <- CPR_new %>%
           filter(SubGroup == subgr_index, id == id_index)
         # Now I should have all the information for one cluster pool
         # creat a temporary list
@@ -258,7 +252,6 @@ main <- function(){
 #run this function if you want to load the data
 #load_data()
 
-ListByCluster <- returnListByCluster()
 
 par(mar=c(3,3,1,1))
 plot(AllAvg_Exp)
