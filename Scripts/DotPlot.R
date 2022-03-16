@@ -1,24 +1,15 @@
-library(rstudioapi)
-
-#set working directory to the one this file is currently in
-setwd(dirname(getActiveDocumentContext()$path))
-source("Pre_analysis_functions.R")
-
-main <- function(){
-  
+mainDP <- function(lbc){
   # Setting a gloabal size factor
   global_size <- 25
   
-  # Plotting all the relevant clusters form the data by
-  # using ClusterPoolAll
-  Gene <- lbc_new$features.label
-  Cluster <- lbc_new$cluster  
-  AvgExpScaled <- lbc_new$avg.exp.scaled
+  Gene <- lbc$features.label
+  Cluster <- lbc$cluster
+  AvgExpScaled <- lbc$avg.exp.scaled
   markers <- Gene %>% unique()
   
-  Plot <<- lbc_new %>% 
+  Plot <<- lbc %>% 
     filter(features.label %in% markers) %>% 
-    mutate(`% Expressing` = lbc_new$pct.exp) %>% 
+    mutate(`% Expressing` = lbc$pct.exp) %>% 
     ggplot(aes(y=Gene, x = Cluster, color = AvgExpScaled, size = `% Expressing`)) +
     geom_point() + 
     scale_size(range = c(0, 25)) +
@@ -32,14 +23,9 @@ main <- function(){
           plot.background = element_rect(fill = "white"))
   Plot
   
-  # Save the image
-  # You will have to resize the Rstudio box
-  # or set the prefered width and height
-  #width = 10000 for 4 subgroups, 4500 for 2 subgroups, width = 2250
+  # Save the image, you can set the prefered width and height
+  # width = 10000 for 4 subgroups, 4500 for 2 subgroups, width = 2250
   save_image('DotPlot', Plot)
 }
 
-#run this function if you want to load the data
-#load_data()
 
-main()

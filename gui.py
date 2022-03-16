@@ -2,8 +2,10 @@ import json
 import os, sys
 import tkinter as tk                # python GUI package
 from tkinter import ttk             # allows for the use of themed widgets (in this app they use Azure, stored in guitheme)
+from tkinter import filedialog
 from functools import partial
-
+import subprocess as sp
+import platform
 
 '''
 App class
@@ -219,8 +221,13 @@ class App(ttk.Frame):
         self.updateData()
         print('--exporting data to Data/JSON/' + data['project_name'] + '.json')
         print(data)
-        with open('Data/JSON/' + data['project_name'] + '.json', 'w') as outfile:
+
+        #in the future...
+        #with open('Data/JSON/' + data['project_name'] + '.json', 'w') as outfile:
+
+        with open('Data/JSON/data.json', 'w') as outfile:
             json.dump(data, outfile)
+
         #run the scripts with project name :)
         runScript(data['project_name'])
         
@@ -377,11 +384,36 @@ class CopyPoolsWindow(tk.Toplevel):
         self.destroy()                                                          # close the CopyPoolsWindow
 
 def runScript(project_name):
-    #run all R scripts
-    #command line call
 
-    #pass project name (JSON data file name) to R
+    #change working directory to Scripts
+    print(os.getcwdb())
+
+    os.chdir("Scripts/")
+
+    #command line call and print feedback
+    #TODO: call project name in command line, allow for it in R files.
+    projectNameCMD = ' "' + project_name + '"'
+    datafileDirectory = "NULL"
+
+    #if user is running on a mac make them choose the directory from python
+    if (platform.system() == 'Darwin'):
+        datafileDirectory = getDataFileDirectory()
+
+    datafileDirectoryCMD = ' "' + datafileDirectory + '"'
+    stream = os.popen('Rscript main.R' + projectNameCMD + datafileDirectoryCMD)
+    print(stream.read())
+
+    os.chdir("../")
     return
+
+def getDataFileDirectory():
+
+    currdir = os.getcwd()
+    tempdir = filedialog.askdirectory(parent=root, initialdir=currdir, title = 'Select the directory your datafile is in:')
+    if len(tempdir) > 0:
+        print("you chose: %s" % tempdir)
+
+    return tempdir
 
 '''
 main
@@ -397,7 +429,7 @@ if __name__ == "__main__":
         'clusterpools': {}
     }
 
-    os.chdir(os.path.dirname(sys.argv[0]))                  # ??? something important Justin added lol
+    os.chdir(os.path.dirname(sys.argv[0]))                  # change working directory to current file location to assure files are detected properly
     
     root = tk.Tk()                                          # the root of all GUI windows and widgets in tkinter
     root.title("Cluster Pool Comparison Tool")
