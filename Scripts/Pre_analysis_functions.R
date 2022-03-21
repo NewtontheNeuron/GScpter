@@ -25,7 +25,7 @@ createCellRoster <- function(clean_neuron_object){
   # for example GRIN1 vs. Grin1
   # Now merging meta data and active ident and finding where the clusters are stored
   # First merge @meta.data and @active.ident
-  meta_ident <- as.data.frame(clean_neuron_object@meta.data) %>%
+  meta_ident <<- as.data.frame(clean_neuron_object@meta.data) %>%
     mutate(cells = row.names(as.data.frame(clean_neuron_object@active.ident)),
            id_plus = as.data.frame(clean_neuron_object@active.ident)[[1]])
   # Next look for the first cluster pool within each collumn
@@ -38,6 +38,7 @@ createCellRoster <- function(clean_neuron_object){
     MARGIN = 2) == TRUE))[1] # Just take any one of the culumns or names (there may be multiple)
   # Now it can be used further down to get the index for the cells i.e. CellIndicies
   # TODO: add the ability to introduce secondary identifiers
+  # TODO: turn this into a function
 
   # Create empty list and vector
   cell_roster <- list()
@@ -56,7 +57,7 @@ createCellRoster <- function(clean_neuron_object){
 
       # Dataframe with the cells and the associated clusters
       clusters_n_cells <- meta_ident %>%
-        select(all_of(clusters_location)) %>%
+        select(all_of(clusters_location), age) %>%
         slice(CellIndicies)
       
       key <- paste(subGroup, group, sep = " ")
@@ -70,7 +71,8 @@ createCellRoster <- function(clean_neuron_object){
       # Pivot the data frame with the cells and raw counts in separte columns
       pivot_longer(cols = -features.label, names_to = 'cell.barcode', values_to = 'raw_counts') %>%
       # Add a column with the clusters
-      mutate('cluster' = clusters_n_cells[match(cell.barcode, row.names(clusters_n_cells)), 1], .keep = "unused") %>%
+      mutate('cluster' = clusters_n_cells[match(cell.barcode, row.names(clusters_n_cells)), 1],
+             'sample' = clusters_n_cells[match(cell.barcode, row.names(clusters_n_cells)), 2], .keep = "unused") %>%
       # Add a column with the id and subGroup
       mutate('id' = group, 'subgr' = subGroup)
     }
@@ -207,7 +209,7 @@ getImageDimensions <- function(base_filename, height, width){
 }
 
 # Function for saving images with specific folder, filename, and date. 
-save_image <- function(base_filename, Plot, height = 1, width = 1){
+save_image <- function(base_filename, Plot, height = 1, width = 1, dpi = 300){
   
   #set working directory to output directory
   if (!(grepl( "Output", getwd(), fixed = TRUE))){
@@ -239,7 +241,7 @@ save_image <- function(base_filename, Plot, height = 1, width = 1){
   ggsave(filename, plot = Plot, device = "jpg",
   height = dimensions[1],
   width = dimensions[2], units = "px",
-  type = "cairo", limitsize = FALSE) #, dpi = 400)
+  type = "cairo", limitsize = FALSE, dpi = dpi) #, dpi = 400)
 
   #set working directory to what it was before
   setwd("../Scripts" )
