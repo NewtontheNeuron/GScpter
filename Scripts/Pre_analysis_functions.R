@@ -222,12 +222,13 @@ getImageDimensions <- function(base_filename, height, width){
 # Function for saving images with specific folder, filename, and date. 
 save_image <- function(base_filename, Plot, height = 1, width = 1){
 
+  print(getwd())
   #set working directory to output directory
   if (!(grepl( "Output", getwd(), fixed = TRUE))){
     setwd("../Output" )
   }
   # In any cass set the working directory
-  setwd("../Output")
+  #setwd("../Output")
 
   #get proper calculated dimensions
   dimensions = getImageDimensions(base_filename, height, width)
