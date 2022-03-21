@@ -1,22 +1,33 @@
-mainDP <- function(ListByClusterAll){
+library(rstudioapi)
+
+#set working directory to the one this file is currently in
+setwd(dirname(getActiveDocumentContext()$path))
+source("Pre_analysis_functions.R")
+
+main <- function(){
   
-  Gene <- ListbyClusterAll$features.label
-  Cluster <- ListbyClusterAll$id
-  AvgExpScaled <- ListbyClusterAll$avg.exp.scaled
+  # Setting a gloabal size factor
+  global_size <- 25
+  
+  # Plotting all the relevant clusters form the data by
+  # using ClusterPoolAll
+  Gene <- lbc_new$features.label
+  Cluster <- lbc_new$cluster  
+  AvgExpScaled <- lbc_new$avg.exp.scaled
   markers <- Gene %>% unique()
   
-  Plot <- ListbyClusterAll %>% 
+  Plot <<- lbc_new %>% 
     filter(features.label %in% markers) %>% 
-    mutate(`% Expressing` = ListbyClusterAll$pct.exp) %>% 
+    mutate(`% Expressing` = lbc_new$pct.exp) %>% 
     ggplot(aes(y=Gene, x = Cluster, color = AvgExpScaled, size = `% Expressing`)) +
     geom_point() + 
     scale_size(range = c(0, 25)) +
     scale_color_viridis_c(option = "plasma") + 
     cowplot::theme_cowplot() + 
-    theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1, size = 25), 
-          axis.title = element_text(size = 25, face="bold"), legend.key.size = unit(2.1, "line"), 
+    theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1, size = global_size), 
+          axis.title = element_text(size = global_size, face="bold"), legend.key.size = unit(2.1, "line"), 
           legend.text = element_text(size = 17), legend.title = element_text(size = 20)) +
-    theme(axis.text.y = element_text(angle = 0, vjust = 0.5, hjust=1, size = 25)) + 
+    theme(axis.text.y = element_text(angle = 0, vjust = 0.5, hjust=1, size = global_size)) + 
     theme(panel.background = element_rect(fill = "white"),
           plot.background = element_rect(fill = "white"))
   Plot

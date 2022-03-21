@@ -3,7 +3,14 @@ Bween_pool <- function(method, c1, c2){
     GeneStatResults <- data.frame(t=numeric(), df=numeric(), p.value=numeric(), name=character())
     GeneStatResults$name <- as.character(GeneStatResults$name)
 
-    features <- returnFeatures()
+# Start a counter for the total number of comparisons
+tcomparisons <- 0
+# Function computes a t-test between two cluster pools
+# Takes the method = avg or pct, and list by cluster 1 and 2
+Bween_pool <- function(method, c1, c2){
+    # Use all_cell_roster and cell_roster inherited from pre_analysis_functions
+    GeneStatResults <- data.frame(t = numeric(), df = numeric(), p.value = numeric(), features.label = character())
+    GeneStatResults$features.label <- as.character(GeneStatResults$features.label)
 
     for (i in features){ 
 
@@ -71,7 +78,29 @@ Run_ANOVA <- function (cluster, method, anova.p.val=NULL) {
 }
 
 #create individual plot with wanted options.
-Plot_details <- function (avg, clusterpool, clusterpool_exp, method_exp, title, method, label, y_lim){
+# Re working plot details to work with CPR_new
+Plot_details <- function (pro_data, clusterpool, clusterpool_exp, method_exp, title, method, label, y_lim){
+  plot <- ggplot(pro_data, aes(features.label, method_exp, fill = factor(features.label))) + 
+    geom_col(color = "black", show.legend = FALSE) + 
+    scale_fill_viridis_d(option = "plasma") + 
+    #geom_errorbar(aes(ymin = lower, ymax = upper), position = position_dodge(width=0.9), width = 0.50) +
+    geom_point(data = clusterpool, y = clusterpool_exp, fill = "white", color="black") +
+    # Removing the points.
+    scale_y_continuous(expand = c(0,0), limits = c(0, y_lim)) + 
+    labs(x = "Gene", y = title) +
+    cowplot::theme_cowplot() + 
+    scale_x_discrete(labels = features_no_key) +
+    theme(axis.title = element_text(size = 20, face = "bold")) +
+    theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1, size = 20)) +
+    theme(axis.text.y = element_text(angle = 0, vjust = 0.5, hjust = 1, size = 20)) +
+    annotate("text", label=paste("p < ", Run_ANOVA(clusterpool, method, anova.p.val = TRUE)), 
+             x = 4.5, y = Position_ANOVA(pro_data, method), size = 8.5, color = "black")
+  
+  #add breaks if needeed
+  #if (FALSE & method = "avg"){
+  #  plot <- plot + 
+  #    scale_y_continuous(breaks = (seq(0, 100, by = 20)))
+  #}
   
     clean_label_list <- returnCleanLabelList()
 
@@ -128,13 +157,68 @@ Position_ANOVA <- function(source, method){
   return(pvpos)
 }
 
-mainQBC <- function(ListByCluster){
-    
-    #get all avg.exp in one plot
-    ListByCluster[1]
+main <- function(){
     
     for (m in 1)
     
+    # Create and store a plot for each cluster pool possible clusterpools
+    for (subgr_index in subgr) {
+      for (id_index in id) {
+        # Save the clusterpool that we are working with
+        one_cluster_pool <- CPR_new %>%
+          filter(SubGroup == subgr_index, id == id_index)
+        # Now I should have all the information for one cluster pool
+        # creat a temporary list
+        tmp_list <- list()
+        # Create key names
+        key <- paste(subgr_index, id_index, sep = ' ')
+        # Next pass the the one_cluster_pool into the Ploting function
+        # I might have to relocate.
+        # Do the average expression first
+        tmp_list[['Average_Expression']] <- Plot_details(one_cluster_pool, 
+                                                         cell_roster[[key]], expm1(cell_roster[[key]]$raw_counts), 
+                                                         one_cluster_pool$avg.exp, 
+                                                         "Average Expression", "avg", key, 12)
+        # Then do the percent expressed next
+        tmp_list[['Percent_Expressed']] <- Plot_details(one_cluster_pool,
+                                                         cell_roster[[key]], expm1(cell_roster[[key]]$raw_counts),
+                                                         one_cluster_pool$pct.exp,
+                                                         "% Expressed", "pct", key, 100)
+        
+        # Add the temp list to the plot archive
+        plot_arkv[[key]] <- tmp_list
+      }
+    }
+    
+    # Make a list of statistics
+    ttest_arkv <- list()
+    # Now let us build a list of statistics
+    for (i in 1:length(cell_roster)) {
+      for (j in 1: length(cell_roster)) {
+        if (i == j){
+          break
+        } else if (i != j) {
+          
+          # creat a temporary list
+          tmp_list <- list()
+          # Create key names
+          key1 <- paste(names(cell_roster)[i], names(cell_roster)[j], sep = 'X')
+          key2 <- paste(i, j, sep = '-')
+          # Now do average expresson first
+          tmp_list[['Average_Expression']] <- Bween_pool("avg", cell_roster[[i]], cell_roster[[j]])
+          # Now do percent expressed
+          tmp_list[['Percent_Expressed']] <- Bween_pool("pct", cell_roster[[i]], cell_roster[[j]])
+          # Might be necessary to switch key 1 with key 2
+          tmp_list[['desc_key']] <- key1
+          # Add the temp list to the ttest archive
+          ttest_arkv[[key2]] <- tmp_list
+        }
+      }
+    }
+    # once complete, we must adjust the pvalues
+    ttest_arkv <- pvalue_adjust(ttest_arkv) # when I come back I must finish this part
+    
+    # Now combine graphs for every combination.
     #go through all possible combinations of clusterpools
     for ( i in 1:length(labels(ListByCluster)) ){
       for (j in 1:length(labels(ListByCluster)) ){
@@ -167,4 +251,15 @@ mainQBC <- function(ListByCluster){
     }
     
 }
+
+#run this function if you want to load the data
+#load_data()
+
+
+par(mar=c(3,3,1,1))
+plot(AllAvg_Exp)
+
+
+#produce quad barchart with all possible combinations as jpg in a folder in Output.
+main()
 

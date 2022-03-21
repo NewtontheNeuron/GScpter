@@ -1,25 +1,102 @@
-createCellRoster <- function(clean_neuron_object){
+#### Pre-analysis functions
+# This script contains functions that are used by multiple graphing scripts
+# to extract information from seurat objects and process the information
+# tidy the information, and perform basic calculations.
 
-  features_no_key <- returnCleanLabelList()
+library(Seurat) #* **
+library(ggplot2) #~ **
+library(dplyr) #~ **
+#library(stringr) #~ **
+library(Cairo) #* **
+library(rstudioapi) #* **
 
-  groups <- returnClusterpool_names()
-  subGroups <- returnClusterpool_subgroups()
+#set working directory to the one this file is currently in
+setwd(dirname(getActiveDocumentContext()$path))
 
-  for (group in groups){
-    for (subgroup in subGroups){
+#get JSON_Handler functions.
+source("JSON_Handler.R")
 
-      Clusterpool <- returnClusters(group, subGroup)
+# Load data function that load's the Seurat data
+load_data <- function() {
 
-      GeneIndices <- which(unlist(clean_neuron_object@assays$RNA@data@Dimnames[1]) %in% features_no_key)
-      CellIndicies <- which(unlist(clean_neuron_object@active.ident) %in% Clusterpool)
+  #was newdata and savedata functions below
+  print("Loading data into R... this might take a while.")
+  filename <- file.choose()
+  clean_neuron_object <<- readRDS(filename)
+  save(clean_neuron_object, file = '../.RData')
+  #was loadfile function
+  # This is good but when newdata and savedata were run then
+  # we do not need to run load because it would already have clean_neuron_object from
+  # above.
+  load(file = '../.RData') # We could also place .RData in the Data folder
+  # We also need some form of error handling when the file does not exist so
+  # that it prompts user the .RData file does not exist please ensure that it
+  # is in the correct folder or do you wish to exit.
+  print("RDS file loaded!") 
+  print("Good to go!")
+}
 
-      raw_data <- GetAssayData(clean_neuron_object, assay = 'RNA', slot = 'data')[GeneIndicies, CellIndicies]
+#get the list of features from JSON
+features <- returnFeatures()
+project_name <- returnProjectName()
 
-      clusters_n_cells <- as.data.frame(unlist(clean_neuronObject@active.ident)[CellIndicies])
+# Remove the 'rna_' label on most genes in the Levine Dataset
+# Clean the features into presentable labels without the 'rna_' tag.
+features_no_key <- str_remove(features, 'rna_')
 
-      key <- paste(subgroup, name, sep = " ")
+# TODO: need to find a way to get the correct formating for the genes
+# for example GRIN1 vs. Grin1
 
-      cell_roster[[key]] <- raw_data %>% # Using dplyr
+clusterpool_names <- returnClusterpool_names()
+clusterpool_subgroup <- returnClusterpool_subgroups()
+
+# Now merging meta data and active ident and finding where the clusters are stored
+# First merge @meta.data and @active.ident
+meta_ident <- as.data.frame(clean_neuron_object@meta.data) %>%
+  mutate(cells = row.names(as.data.frame(clean_neuron_object@active.ident)),
+         id_plus = as.data.frame(clean_neuron_object@active.ident)[[1]])
+# Next look for the first cluster pool within each collumn
+sample_cp <- returnClusterpoolGenes(clusterpool_names[1], clusterpool_subgroup[1])
+# Then get the names of the collumns that have at least one of the
+# clusters in the clusterpool
+clusters_location <- names(which(apply(
+  meta_ident, 
+  FUN = function (x) any(x %in% sample_cp), 
+  MARGIN = 2) == TRUE))[1] # Just take any one of the culumns or names (there may be multiple)
+# Now it can be used further down to get the index for the cells i.e. CellIndicies
+# TODO: add the ability to introduce secondary identifiers
+
+# Create empty list and vector
+ClusterPoolAll <- c()
+cell_roster <- list()
+
+index <- 1
+for (name in clusterpool_names){
+  for (subgroup in clusterpool_subgroup){
+    Clusterpool <- returnClusterpoolGenes(name, subgroup)
+    
+    #create master list of all gene names
+    ClusterPoolAll <- c(ClusterPoolAll, Clusterpool)
+    
+    #create key name
+    key <- paste(subgroup, name, sep = " ")
+    
+    # First grab the indices of the features
+    GeneIndicies <- which(unlist(clean_neuron_object@assays$RNA@data@Dimnames[1]) %in% features_no_key)
+    
+    # Then grab the indicies of the cells for the spcefic Clusterpool
+    CellIndicies <- which(meta_ident[[clusters_location]] %in% Clusterpool)
+    
+    # Get the relevant data using the the indicies otained above
+    raw_data <- GetAssayData(clean_neuron_object, assay = 'RNA', slot = 'data')[GeneIndicies, CellIndicies]
+    
+    # Dataframe with the cells and the associated clusters
+    clusters_n_cells <- meta_ident %>%
+      select(all_of(clusters_location)) %>%
+      slice(CellIndicies)
+    
+    # Now we turn raw_data into a data framesc
+    cell_roster[[key]] <- raw_data %>% # Using dplyr
       # Change the object to a data frame
       as.data.frame() %>% 
       # Make the row names an actual column, necessary for an acurate pivot
@@ -35,134 +112,66 @@ createCellRoster <- function(clean_neuron_object){
 
 }
 
-returnAllCellRoster <- function(){
-  cell_roster <- createCellRoster()
+# Now to make a master roster of the cells
+all_cell_roster <- data.table::rbindlist(cell_roster)
 
-  all_cell_roster <- data.table::rbindlist(cell_roster)
-
-  return(all_cell_roster)
+# TODO: These can be separated as utility functions
+# Create a function for calculating percent expressed
+pct_calc <- function (x) {
+  length(x[x > 0]) / length(x) * 100
 }
 
-createListbyCluster <- function(clean_neuron_object){
-  
-  #get gene names as features and project name
-  features <- returnFeatures()
-
-  #get dotplot information, information about average expression and percent expressed
-  b <- getDotPlot(clean_neuron_object, features)
-
-
-  groups <- returnClusterpool_names()
-  subGroups <- returnClusterpool_subgroups()
-
-  ListByCluster <- list()
-
-  for (group in groups){
-    for (subgroup in subGroups){
-
-      #create key name from subgroup and group so it looks good on the graph.
-      Clusterpool <- returnClusters(group, subgroup)
-      key <- paste(subgroup, group, sep = " ")
-      ListByCluster[[key]] <- b$data[b$data$id %in% Clusterpool,]
-    }
-  }  
-
-  return(ListByCluster)
+# Create a function to calculate the z score
+zs_calc <- function (x) {
+  (x - mean(x)) / sd(x)
 }
 
-createListByClusterAll <- function(clean_neuron_object){
-  
-  #get gene names as features and project name
-  features <- returnFeatures()
-
-  #get dotplot information, information about average expression and percent expressed.
-  b <- getDotPlot(clean_neuron_object, features)
-
-  ClusterPoolAll <- returnAllClusters()
-
-  ListbyClusterAll <- b$data[b$data$id %in% ClusterPoolAll,]
-
-  clean_label_list <- returnCleanLabelList()
-  ListbyClusterAll[, ncol(ListbyClusterAll) + 1] <- data.frame(features.label = clean_label_list)
-
-  return(ListbyClusterAll)
-
+# Adding the standard error function
+SE <- function(x) {
+  sd(x) / sqrt(length(x))
 }
 
-createClusterPoolResults <- function(clean_neuron_object){
+# Using all_cell_roster to calcualte the average expression and percent expressed
+# for each cluster pool (id and subgr) and gene combination
+CPR_new <- all_cell_roster %>%
+  # group by clusterpool (id and subgroup) gene combinations
+  group_by(id, subgr, features.label) %>%
+  # perform the following calculations within the groups and store the
+  # neccessary information
+  summarise(avg.exp = mean(expm1(raw_counts)),
+            pct.exp = pct_calc(raw_counts),
+            avg.std.err = SE(expm1(raw_counts)),
+            avg.lower = avg.exp - avg.std.err,
+            avg.upper = avg.exp + avg.std.err) %>%
+  # Ungroup the data table and caluclate the appropriate scaling
+  ungroup(id, subgr, features.label) %>%
+  mutate(avg.exp.z.scaled = log10(avg.exp))
 
-  #get group, subgroup and features from JSON as a list
-  groups <- returnClusterpool_names()
-  subGroups <- returnClusterpool_subgroups()
-  features <- returnFeatures()
+# Calculate average expression, percent expressed, and average expression scaled
+# for each cluster and gene combination
+lbc_new <- all_cell_roster %>%
+  # group by cluster and gene combinations
+  group_by(cluster, features.label) %>%
+  # calculate the average expression and percent expressed
+  summarise(avg.exp = mean(expm1(raw_counts)),
+            pct.exp = pct_calc(raw_counts)) %>%
+  # Ungroup and perform the appropriate scaling
+  ungroup(cluster, features.label) %>%
+  # This scaling turns to NA any thing 4 standard deviations above the mean
+  mutate(avg.exp.scaled = ifelse(avg.exp > mean(avg.exp) + (4 * sd(avg.exp)), NA, zs_calc(avg.exp)))
 
-  #get dotplot information, information about average expression and percent expressed.
+# lbc_new %>% ggplot(aes(x=cluster, y = log(avg.exp, base = 100), color = features.label)) + geom_point()
+# I had to exclude a very high outlier for Grin2a and shift to a log 10 scale.
+# TODO: look into the scaling.
+# TODO: protocol for creating new graphs
+# TODO: make the standard deviation calculation exclude the extremely large values
 
-  #get ListByCluster, will be necessary to extract information later on.
-  ListByCluster <- createListbyCluster(clean_neuron_object)
+# TODO: Make PoolnShare (deprecated now CPR_new) function take a vector of clusterpool
+# all instead of indivdual 2 scores + 2 clusterpool names.
 
-  #create base dataframe that we will be adding data into.
-  ClusterPoolResults <- data.frame(avg.exp = numeric(),
-                                  pct.exp = numeric(),
-                                  features.plot = character(),
-                                  id = character(),
-                                  features.label = character(),
-                                  SubGroup = character(),
-                                  avg.std.err = numeric(),
-                                  avg.lower = numeric(),
-                                  avg.upper = numeric())
-  
-  #for all possible combinations of group and subgroup, add a row with relevant information
+numberOfGroups <- length(id) * length(subgr)
+numberOfGenes <- length(ClusterPoolAll)
 
-  for (group in groups){
-    for (subGroup in subGroups){
-      for (feature in features){
-
-        feature_noRNA_ <- str_remove(feature, 'rna_')
-        
-        currentCluster <- ListByCluster[[paste(subGroup, group, sep = " ")]]
-
-        #get wanted index of wanted data
-        GeneIndices <- match(feature_noRNA_, unlist(clean_neuron_object@assays$RNA@data@Dimnames[1]))
-        CellIndicies <- which(unlist(clean_neuron_object@active.ident) %in% unique(currentCluster$id))
-
-        Transcript_exp <- GetAssayData(clean_neuron_object, assay = 'RNA', slot = 'data')[GeneIndices, CellIndicies]
-
-        raw.avg <- mean(expm1(Transcript_exp))
-        raw.pct <- length(Transcript_exp[Transcript_exp > 0]) / length(Transcript_exp) * 100
-
-        avg.std.err <- SE(expm1(Transcript_exp))
-        avg.lower <- raw.avg - avg.std.err
-        avg.upper<- raw.avg + avg.std.err
-
-
-        ClusterPoolResults <- ClusterPoolResults %>%
-        add_row(avg.exp = raw.avg,
-                pct.exp = raw.pct, 
-                features.plot = feature, 
-                id = group, 
-                features.label = feature_noRNA_, 
-                SubGroup = subGroup,  
-                avg.std.err = avg.std.err, 
-                avg.lower = avg.lower,
-                avg.upper = avg.upper)
-      }
-    }
-  }
-
-
-  #I just shortened the name so it could fit on one line.
-  CPR <- ClusterPoolResults
-
-  CPR[, ncol(CPR) + 1] <- data.frame(avg.exp.re.scaled = (CPR[, 1] - colMeans(CPR[1]))/sd(CPR$avg.exp))
-  
-  names(CPR)[ncol(CPR)] <- 'avg.exp.z.scaled'
-
-  return(CPR)
-}
-
-
-?file.choose
 #function to set the width and height of plot saved as an image into global values
 getImageDimensions <- function(base_filename, height, width){
 
@@ -249,52 +258,8 @@ save_image <- function(base_filename, Plot, height = 1, width = 1){
   }
   
   #save plot to proper location as a jpg.
-  ggsave(filename, plot = Plot, device = "jpg", height = dimensions[1], width = dimensions[2], units = "px", type = "cairo", limitsize = FALSE)
-
-  #set working directory to what it was before
-  setwd("../Scripts" )
+  #added an ifelse statement to check if the
+  # R user set a specified height or width
+  ggsave(filename, plot = Plot, device = "jpg", height = ifelse(height > 1, height, dimensions[1]), 
+         width = ifelse(width > 1, width, dimensions[2]), units = "px", type = "cairo") #, dpi = 400)
 }
-
-#run DotPlot seurat function to get wanted dataframe using genes as features.
-getDotPlot <- function(clean_neuron_object, features){
-  dotPlot <- DotPlot(clean_neuron_object, features = features)
-  return(dotPlot)
-}
-
-#calculate the standard error
-SE <- function (x) {
-  sd(x)/sqrt(length(x))
-}
-
-#return average expression
-AvgExpPar <- function (x) {
-  x %>% 
-    group_by(features.plot) %>% 
-    summarise(std.err = SE(avg.exp), avg.exp = mean(avg.exp), lower = avg.exp - std.err, upper = avg.exp + std.err)
-}
-
-#return percent expressed
-PctExpPar <- function (x) {
-  x %>% 
-    group_by(features.plot) %>% 
-    summarise(std.err = SE(pct.exp), pct.exp = mean(pct.exp), lower = pct.exp - std.err, upper = pct.exp + std.err)
-}
-
-#call this function to load an RDS data file into an object
-load_data <- function(fileLocation){
-
-  print("Loading data into R...")
-
-  if (fileLocation == "NULL"){
-    filename <- file.choose()
-    clean_neuron_object <- readRDS(filename)
-  } else {
-    clean_neuron_object <- readRDS(paste(fileLocation, "/clean_neuron_object.RDS", sep = ""))
-  }
-
-  print("RDS file loaded!") 
-
-  return(clean_neuron_object)
-}
-
-
