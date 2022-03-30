@@ -1,7 +1,7 @@
 mainPDP <- function(CPR){
   
   # Plot the pooled dotplot
-  CPR$ClusterAndSubgroup <- paste(CPR$id, CPR$SubGroup) 
+  CPR$ClusterAndSubgroup <- paste(CPR$id, CPR$subgr) 
   Gene <- CPR$features.label
   Subgroup <- CPR$ClusterAndSubgroup
   AvgExpScaled <- CPR$avg.exp.z.scaled
@@ -17,7 +17,7 @@ mainPDP <- function(CPR){
     cowplot::theme_cowplot() + 
     theme(axis.title = element_text(size = 20, face = "bold"),
           legend.key.size=unit(1, "line"),
-          axis.text.x = element_text(angle = 0, vjust = 0.5, hjust=0.5, size=15)) + # changed -45 angle to 0
+          axis.text.x = element_text(angle = -45, vjust = 0.5, hjust=0.5, size=15)) + # changed -45 angle to 0
     theme(axis.text.y = element_text(angle = 0, vjust = 0.5, hjust=0.5, size=15)) +
     theme(panel.background = element_rect(fill = "white"),
           plot.background = element_rect(fill = "white"))

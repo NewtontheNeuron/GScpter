@@ -56,6 +56,16 @@ zs_calc <- function (x, rm.out = FALSE) {
   }
 }
 
+mad_scaled <- function(x) {
+  # First remove those outliers greater than 4* mad
+  median_norms <- (x - median(x, na.rm = T)) / mad(x, na.rm = T)
+  # Find out which ones are too great and remove them in x
+  x[which(median_norms > 3 * mad(x))] <- NA
+  # Then recalculate the median norms and return them
+  median_norms <- (x - median(x, na.rm = T)) / mad(x, na.rm = T)
+  return(median_norms)
+}
+
 all_cell_roster <- all_cell_roster %>%
   mutate(ClusterAndSubgroup = paste(id, subgr), 
          age = case_when(
@@ -76,6 +86,7 @@ lbc_samp <- all_cell_roster %>%
               sample == "Sathyamurthy" ~ "Adult",
               grepl("Rosenberg", sample) ~ "Postnatal",
               grepl("Haring", sample) ~ "Juvenile"),
+            id = id,
             clu_sub_age = paste(ClusterAndSubgroup, age)) %>%
   # Ungroup and perform the appropriate scaling
   ungroup(cluster, features.label) %>%
@@ -83,8 +94,8 @@ lbc_samp <- all_cell_roster %>%
   mutate(avg.exp.scaled = ifelse(avg.exp > mean(avg.exp) + (4 * sd(avg.exp)), NA, log10(avg.exp)))
 
 lbc_samp %>% ggplot(aes(x = cluster, y = log(avg.exp, base = 100),
-                        color = features.label, shape = sample)) + geom_point() +
-  geom_line(aes(group = features.label)) +
+                        shape = features.label, color = sample)) + geom_point() +
+  #geom_line(aes(group = features.label)) +
   theme(axis.text.x = element_text(angle = -45))
 
 lbc_samp %>% ggplot(aes(x = sample, y = log(avg.exp, base = 100),
@@ -100,7 +111,7 @@ lbc_samp %>% ggplot(aes(x = sample, y = avg.exp,
 # CPR
 CPR_samp <- all_cell_roster %>%
   # group by clusterpool (id and subgroup) gene combinations
-  group_by(id, subgr, features.label, sample) %>%
+  group_by(id, features.label, sample) %>%
   # perform the following calculations within the groups and store the
   # neccessary information
   summarise(avg.exp = mean(expm1(raw_counts)),
@@ -109,27 +120,29 @@ CPR_samp <- all_cell_roster %>%
             avg.lower = avg.exp - avg.std.err,
             avg.upper = avg.exp + avg.std.err) %>%
   # Ungroup the data table and caluclate the appropriate scaling
-  ungroup(id, subgr, features.label) %>%
+  ungroup(id, features.label, sample) %>%
   mutate(avg.exp.z.scaled = zs_calc(avg.exp, rm.out = TRUE)) %>%
-  mutate(ClusterAndSubgroup = paste(id, subgr), 
+  mutate(#ClusterAndSubgroup = paste(id, subgr), 
          age = case_when(
            sample == "Sathyamurthy" ~ "Adult",
            grepl("Rosenberg", sample) ~ "Postnatal",
            grepl("Haring", sample) ~ "Juvenile"),
-         clu_sub_age = paste(ClusterAndSubgroup, age))
+         age_and_id = paste(age, id),
+         )#clu_sub_age = paste(ClusterAndSubgroup, age))
 
 # explore
+# What I learned the pooling of the pooled dotplot and 
+# cluster pooled results relies on the user deciding what 
+# they want to pool
 
-CPR_samp$ClusterAndSubgroup <- paste(CPR_samp$id, CPR_samp$subgr) 
-Gene <- CPR_samp$features.label
-Subgroup <- CPR_samp$ClusterAndSubgroup
-AvgExpScaled <- CPR_samp$avg.exp.z.scaled
-markers <- Gene %>% unique()
+# It also relies on how you want things recoded
 
 Plot <- CPR_samp %>%
-  ggplot(aes(y = Gene, x = clu_sub_age, color = AvgExpScaled, size = pct.exp)) + 
+  filter(age != "Postnatal") %>%
+  ggplot(aes(y = features.label, x = age_and_id,
+             color = avg.exp.z.scaled, size = pct.exp)) + 
   geom_point() +
-  labs(size = '% Expressing') +
+  labs(size = '% Expressing', x = "Clusterpools", y = "Gene") +
   scale_size(range = c(0, 20)) +
   scale_color_viridis_c(option = "plasma") + 
   cowplot::theme_cowplot() + 
@@ -141,20 +154,60 @@ Plot <- CPR_samp %>%
         plot.background = element_rect(fill = "white"))
 Plot
 
-Plot <- CPR_samp %>% ggplot(aes(x = age, y = avg.exp,
-                        fill = features.label)) + geom_col() +
-  #geom_line(aes(group = cluster)) +
-  facet_wrap(~features.label, scales = "free_y")
+Plot <- CPR_samp %>%
+  mutate(id = fct_relevel(id, "SDH", "DDH")) %>%
+  ggplot(aes(x = age, y = pct.exp, fill = id)) +
+  geom_col(position = position_dodge(width = 0.75),
+           width = 0.7) +
+  facet_wrap(~features.label, scales = "free_y") +
+  scale_fill_hue(h = c(270, 360)) +
+  labs(y = "Percent Expressed",
+       fill = "Location in dorsal horn",
+       x = "Age") +
+  #scale_y_continuous(expand = c(0,0)) +
+  #cowplot::theme_cowplot() +
+  theme(axis.title = element_text(size = 15, face = "bold"),
+        legend.key.size = unit(2, "line"),
+        legend.title = element_text(size = 10, face = "bold"),
+        axis.text.x = element_text(size = 15),
+        axis.text.y = element_text(size = 10),
+        strip.text = element_text(size = 15),
+        panel.background = element_rect(),
+        plot.background = element_rect())
+
+Plot
+
+# Reordering
+#age = fct_relevel(age,
+#                  "Postnatal",
+#                  "Juvenile",
+#                  "Adult")
 
 # Same thing as above but as a box plot
-lbc_samp %>% ggplot(aes(x = age, y = avg.exp, fill = features.label)) +
-  geom_boxplot() +
-  facet_wrap(~features.label, scales = "free_y")
+Plot <- lbc_samp %>%
+  mutate(id = fct_relevel(id, "SDH", "DDH")) %>%
+  ggplot(aes(x = age, y = avg.exp, fill = id)) +
+  geom_boxplot(position = position_dodge(width = 0.75),
+               width = 0.7) +
+  facet_wrap(~features.label, scales = "free_y") +
+  scale_fill_hue(h = c(270, 360)) + 
+  labs(y = "Average Expression",
+       fill = "Location in dorsal horn",
+       x = "Age") +
+  theme(axis.title = element_text(size = 15, face = "bold"),
+        legend.key.size = unit(2, "line"),
+        legend.title = element_text(size = 10, face = "bold"),
+        axis.text.x = element_text(size = 15),
+        axis.text.y = element_text(size = 10),
+        strip.text = element_text(size = 15),
+        panel.background = element_rect(),
+        plot.background = element_rect())
+Plot
 
 # Now let us look at the distribution differences across the cells
 all_cell_roster %>%
-  ggplot(aes(x = age, y = expm1(raw_counts), fill = features.label)) +
-  geom_violin() +
+  ggplot(aes(x = age, y = expm1(raw_counts), fill = id)) +
+  geom_violin(position = position_dodge()) +
   #geom_point() +
   facet_wrap(~features.label, scales = "free_y")
 
@@ -168,4 +221,38 @@ Plot <- all_cell_roster %>%
   facet_wrap(~features.label, scales = "free_y")
 
 # Saving some of my ecplorations
-save_image("DP_Age", Plot, width = 3500, height = 2300, dpi = 350)
+save_image("BoxPlot_Avg_Age", Plot, width = 4700, height = 2300, dpi = 350)
+
+# ---- Explore human data
+# Exploring the percent expressed
+
+CPR %>% ggplot(aes(features.label, pct.exp, fill = subgr)) +
+  geom_col(position = position_dodge())
+
+Plot <- all_cell_roster %>% ggplot(aes(subgr, raw_counts, fill = sample)) +
+  geom_boxplot(position = position_dodge()) +
+  facet_wrap(~features.label, scales = "free_y") +
+  labs(fill = "Samples",
+       y = "Raw log-scaled expression levels",
+       x = "Subgroups")
+
+Plot <- CPR %>% ggplot(aes(subgr, log1p(avg.exp), fill = pct.exp)) +
+  geom_col(position = position_dodge()) +
+  scale_fill_viridis_c() +
+  facet_wrap(~features.label, scales = "free_y") +
+  labs(fill = "Percent Expressed",
+       y = "Log-scaled pooled average expression",
+       x = "Subgroups") +
+  #scale_y_continuous(expand = c(0,0)) +
+  #cowplot::theme_cowplot() +
+  theme(axis.title = element_text(size = 10, face = "bold"),
+        legend.key.size = unit(1, "line"),
+        legend.title = element_text(size = 10, face = "bold"),
+        axis.text.x = element_text(size = 10),
+        axis.text.y = element_text(size = 10),
+        strip.text = element_text(size = 10),
+        panel.background = element_rect(),
+        plot.background = element_rect())
+
+# Saving some of my ecplorations
+save_image("Boxplot_Samples_Human", Plot, width = 4700, height = 2300, dpi = 350)

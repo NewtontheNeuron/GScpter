@@ -29,13 +29,13 @@ createCellRoster <- function(clean_neuron_object){
     mutate(cells = row.names(as.data.frame(clean_neuron_object@active.ident)),
            id_plus = as.data.frame(clean_neuron_object@active.ident)[[1]])
   # Next look for the first cluster pool within each collumn
-  sample_cp <- returnClusters(groups[1], subGroups[1])
+  all_clusters <- returnAllClusters()
   # Then get the names of the collumns that have at least one of the
   # clusters in the clusterpool
-  clusters_location <- names(which(apply(
+  clusters_location <- names(which.max(apply(
     meta_ident, 
-    FUN = function (x) any(x %in% sample_cp), 
-    MARGIN = 2) == TRUE))[1] # Just take any one of the culumns or names (there may be multiple)
+    FUN = function (x) sum(x %in% all_clusters), 
+    MARGIN = 2))) # Just take any one of the culumns or names (there may be multiple)
   # Now it can be used further down to get the index for the cells i.e. CellIndicies
   # TODO: add the ability to introduce secondary identifiers
   # TODO: turn this into a function
@@ -57,7 +57,7 @@ createCellRoster <- function(clean_neuron_object){
 
       # Dataframe with the cells and the associated clusters
       clusters_n_cells <- meta_ident %>%
-        select(all_of(clusters_location), age) %>%
+        select(all_of(clusters_location), id_plus) %>%
         slice(CellIndicies)
       
       key <- paste(subGroup, group, sep = " ")
@@ -118,7 +118,7 @@ createListbyCluster <- function(clean_neuron_object){
     # Ungroup and perform the appropriate scaling
     ungroup(cluster, features.label) %>%
     # This scaling turns to NA any thing 4 standard deviations above the mean
-    mutate(avg.exp.scaled = ifelse(avg.exp > mean(avg.exp) + (4 * sd(avg.exp)), NA, zs_calc(avg.exp)))
+    mutate(avg.exp.scaled = mad_scaled(avg.exp)) # human: median vs zs_scaled
 
   # lbc_new %>% ggplot(aes(x=cluster, y = log(avg.exp, base = 100), color = features.label)) + geom_point()
   # I had to exclude a very high outlier for Grin2a and shift to a log 10 scale.
@@ -147,7 +147,7 @@ createClusterPoolResults <- function(clean_neuron_object){
               avg.upper = avg.exp + avg.std.err) %>%
     # Ungroup the data table and caluclate the appropriate scaling
     ungroup(id, subgr, features.label) %>%
-    mutate(avg.exp.z.scaled = log10(avg.exp))
+    mutate(avg.exp.z.scaled = mad_scaled(avg.exp)) # human: median vs zs_scaled
 
   return(CPR)
 }
@@ -255,11 +255,22 @@ load_data <- function(fileLocation){
   if (fileLocation == "NULL"){
     filename <- file.choose()
     clean_neuron_object <- readRDS(filename)
-  } else {
+  } else if (str_detect(fileLocation,
+                        regex("^.*.(rda|rdata)$", ignore_case = T))) {
+    # Start a new environment
+    myenv <- new.env()
+    # Load the .RData or RDA into the environment
+    load(fileLocation, envir = myenv)
+    # set the first object in the environment to the proper name
+    clean_neuron_object <- get0(ls(myenv)[1], envir = myenv)
+    # remove the environment
+    rm(myenv)
+  }
+  else {
     clean_neuron_object <- readRDS(paste(fileLocation, "/clean_neuron_object.RDS", sep = ""))
   }
 
-  print("RDS file loaded!") 
+  print("RDS file loaded!")
 
   return(clean_neuron_object)
 }

@@ -16,13 +16,31 @@ source("JSON_Handler.R")
 source("Pre_analysis_functions.R")
 
 #source scripts to get them to run.
+# TODO: source a script that sources scripts with all the plots?
 source("DotPlot.R")
 source("PooledDotPlot.R")
 source("Quad_BarChart2.r")
 
 #load data
-RDSfile <- load_data(args[2])
-RDSfile <- load(args[2])
+start <- Sys.time()
+#RDSfile <- load_data(args[2])
+# Start a new environment
+myenv <- new.env()
+# Load the .RData or RDA into the environment
+load(args[2], envir = myenv)
+# set the first object in the environment to the proper name
+RDSfile <- get0(ls(myenv)[1], envir = myenv)
+# remove the environment
+rm(myenv)
+end <- Sys.time()
+duration <- end - start
+# duration <- c(43.22078, 28.90538, 1126.886, 546.6604)
+# start <- c("2022-03-24 08:37:09 EDT", "2022-03-24 10:52:30 EDT", NA, "2022-03-25 08:02:31 EDT")
+# condition <- c("Early morning with no browser only MS OneNote", "Nothing running
+# but discord and MS OneNote", "Late night lots of things open no Google chrome",
+# "Early morning with nothing open")
+# data.type <- c("mouse", "mouse", "human", "human")
+# duration <- data.frame(dur = duration, start = start, condition = conditions, data = data.type)
 
 # Everything relies on all_cell_roster and cell_roster
 all_cell_roster <- returnAllCellRoster(RDSfile)
