@@ -1,0 +1,14 @@
+name: Clusterpool_Tool
+title:
+username:
+account: hildebrandlab
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 6091307
+bundleId: 5822694
+url: https://hildebrandlab.shinyapps.io/Clusterpool_Tool/
+when: 1650554655.18985
+lastSyncTime: 1650554655.18985
+asMultiple: FALSE
+asStatic: FALSE
+ignoredFiles: loadData.R|main.R|Quad_BarChart2.r

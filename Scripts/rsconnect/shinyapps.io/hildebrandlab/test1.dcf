@@ -1,0 +1,11 @@
+name: test1
+title: test1
+username:
+account: hildebrandlab
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 6085727
+bundleId:
+url: https://hildebrandlab.shinyapps.io/test1/
+when: 1649882507.5604
+lastSyncTime: 1649882507.5604
