@@ -256,3 +256,172 @@ Plot <- CPR %>% ggplot(aes(subgr, log1p(avg.exp), fill = pct.exp)) +
 
 # Saving some of my ecplorations
 save_image("Boxplot_Samples_Human", Plot, width = 4700, height = 2300, dpi = 350)
+
+
+#### Intelligent Rank based scaling ####
+# Try makeing ranks
+all_cell_roster %>%
+  group_by(id, subgr, features.label) %>%
+  summarise(num_0 = length(which(raw_counts == 0)),
+            numa = length(which(raw_counts > 0)),
+            pct.exp = pct_calc(raw_counts)) %>%
+  filter(pct.exp < 5)
+# Remove those that are less than 5% because when I omit the zeroes
+# they would appear to have more average expression than actually thought
+
+# Now do the zero omit step with some visualizations to help things
+no_a0 <- all_cell_roster %>%
+  #filter(!features.label %in% c("Grin2c", "Grin3b")) %>%
+  #filter(raw_counts != 0) %>%
+  mutate(fullgroup = paste(id, subgr))
+# Create summary avg.exp
+cpr_noa0 <- all_cell_roster %>%
+  mutate(fullgroup = paste(id, subgr)) %>%
+  group_by(fullgroup, features.label) %>%
+  summarise(avg.exp = mean(raw_counts),
+            pct.exp = pct_calc(raw_counts)) %>%
+  ungroup(everything()) %>%
+  mutate(avg.exp = case_when(
+    pct.exp < 5 ~ 0,
+    pct.exp > 5 ~ avg.exp
+  ))
+
+# Plot histogram
+no_a0 %>%
+  ggplot(aes(raw_counts, fill = fullgroup)) +
+  geom_histogram(binwidth = 0.1) +
+  geom_vline(data = cpr_noa0,
+             aes(xintercept = avg.exp, color = fullgroup),
+             size = 1) +
+  coord_cartesian(ylim = c(0, 700)) +
+  facet_wrap(~features.label)
+# Create ranking
+cpr_noa0$avg.exp <- as.numeric(cpr_noa0$avg.exp)
+cpr_noa0$ranking <- rank(cpr_noa0$avg.exp)
+
+Plot <- cpr_noa0 %>%
+  ggplot(aes(y = features.label, x = fullgroup, color = ranking, size = pct.exp)) + 
+  geom_point() + 
+  scale_size(range = c(0, 20)) +
+  scale_color_viridis_c(option = "plasma") + 
+  cowplot::theme_cowplot() + 
+  theme(axis.title = element_text(size = 20, face = "bold"),
+        legend.key.size=unit(1, "line"),
+        axis.text.x = element_text(angle = -45, vjust = 0.5, hjust=0.5, size=15)) + # changed -45 angle to 0
+  theme(axis.text.y = element_text(angle = 0, vjust = 0.5, hjust=0.5, size=15)) +
+  theme(panel.background = element_rect(fill = "white"),
+        plot.background = element_rect(fill = "white"))
+Plot
+
+
+# Try again as lbc
+lbc <- all_cell_roster %>%
+  group_by(cluster, features.label) %>%
+  summarise(avg.exp = mean(raw_counts),
+            pct.exp = pct_calc(raw_counts),
+            avg.exp.noz = mean(raw_counts[which(raw_counts > 0)]),
+            sd.noz = sd(raw_counts[which(raw_counts > 0)])) %>%
+  ungroup(everything()) %>%
+  mutate(avg.exp = case_when(
+    pct.exp < 5 ~ 0,
+    pct.exp > 5 ~ avg.exp
+  ))
+lbc$avg.exp <- as.numeric(lbc$avg.exp)
+lbc$ranking <- rank(lbc$avg.exp)
+lbc$avg.exp.noz <- as.numeric(lbc$avg.exp.noz)
+lbc$ranking.noz <- rank(lbc$avg.exp.noz)
+lbc$sd.noz <- as.numeric(lbc$sd.noz)
+lbc$ranking.sd.noz <- rank(lbc$sd.noz)
+lbc$cross.rank <- lbc$ranking.noz * lbc$sd.noz
+lbc$cross.rank.2 <- lbc$ranking / lbc$sd.noz
+
+Plot <- lbc %>%
+  mutate(`% Expressing` = pct.exp) %>%
+  ggplot(aes(y = features.label, x = cluster, color = cross.rank, size = pct.exp)) +
+  geom_point() +
+  labs(x = "Cluster", y = "Gene", color = "AvgExpScaled", size = "% Expressing") +
+  scale_size(range = c(0, 25)) +
+  scale_color_viridis_c(option = "plasma") +
+  #cowplot::theme_cowplot() +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1, size = 25),
+        axis.title = element_text(size = 25, face = "bold"),
+        legend.key.size = unit(2.1, "line"),
+        legend.text = element_text(size = 17),
+        legend.title = element_text(size = 20),
+        axis.text.y = element_text(angle = 0, vjust = 0.5, hjust = 1, size = 25),
+        panel.background = element_rect(fill = "white"),
+        plot.background = element_rect(fill = "white"))
+Plot
+save_image("dotplot_with_cross_rank_scale", Plot, height = 4000, width = 7000)
+
+
+# Try the rank system for age
+# Create summary avg.exp
+cpr <- all_cell_roster %>%
+  mutate(age = case_when(
+           age == "Sathyamurthy" ~ "Adult",
+           grepl("Rosenberg", age) ~ "Postnatal",
+           grepl("Haring", age) ~ "Juvenile"),
+         fullgroup = paste(age, id)) %>%
+  group_by(fullgroup, features.label) %>%
+  summarise(avg.exp = mean(raw_counts),
+            avg.exp.nol = mean(expm1(raw_counts[which(raw_counts > 0)])),
+            avg.exp.noz = mean(raw_counts[which(raw_counts > 0)]),
+            pct.exp = pct_calc(raw_counts),
+            sd.noz = sd(raw_counts[which(raw_counts > 0)])) %>%
+  ungroup(everything()) %>%
+  mutate(avg.exp = case_when(
+    pct.exp < 5 ~ 0,
+    pct.exp > 5 ~ avg.exp
+  ),
+  avg.exp.z.scaled = zs_calc(avg.exp.nol))
+cpr$avg.exp <- as.numeric(cpr$avg.exp)
+cpr$ranking <- rank(cpr$avg.exp)
+cpr$avg.exp.noz <- as.numeric(cpr$avg.exp.noz)
+cpr$ranking.noz <- rank(cpr$avg.exp.noz)
+cpr$sd.noz <- as.numeric(cpr$sd.noz)
+cpr$ranking.sd.noz <- rank(cpr$sd.noz)
+cpr$cross.rank <- cpr$ranking.noz * cpr$sd.noz
+cpr$cross.rank.2 <- cpr$ranking * cpr$sd.noz
+
+Plot <- cpr %>%
+  ggplot(aes(y = features.label, x = fullgroup, color = avg.exp.z.scaled, size = pct.exp)) + 
+  geom_point() + 
+  scale_size(range = c(0, 20)) +
+  scale_color_viridis_c(option = "plasma") + 
+  cowplot::theme_cowplot() + 
+  theme(axis.title = element_text(size = 20, face = "bold"),
+        legend.key.size=unit(1, "line"),
+        axis.text.x = element_text(angle = -45, vjust = 0.5, hjust=0.5, size=15)) + # changed -45 angle to 0
+  theme(axis.text.y = element_text(angle = 0, vjust = 0.5, hjust=0.5, size=15)) +
+  theme(panel.background = element_rect(fill = "white"),
+        plot.background = element_rect(fill = "white"))
+Plot
+
+
+#### Counts per million or counts per gene ####
+cpm_try <- all_cell_roster %>%
+  group_by(features.label, id, subgr) %>%
+  summarise(avg.exp = mean(raw_counts),
+            countspg = sum(raw_counts),
+            cpm = avg.exp * countspg / 10^6,
+            exp.p.c.m = avg.exp / countspg * 10^6,
+            pct.exp = pct_calc(raw_counts)) %>%
+  mutate(fullgroup = paste(id, subgr))
+
+# With counts per million
+Plot <-  cpm_try %>%
+  ggplot(aes(y = features.label, x = fullgroup, color = exp.p.c.m, size = pct.exp)) + 
+  geom_point() + 
+  scale_size(range = c(0, 20)) +
+  scale_color_viridis_c(option = "plasma") + 
+  cowplot::theme_cowplot() + 
+  theme(axis.title = element_text(size = 20, face = "bold"),
+        legend.key.size=unit(1, "line"),
+        axis.text.x = element_text(angle = -45, vjust = 0.5, hjust=0.5, size=15)) + # changed -45 angle to 0
+  theme(axis.text.y = element_text(angle = 0, vjust = 0.5, hjust=0.5, size=15)) +
+  theme(panel.background = element_rect(fill = "white"),
+        plot.background = element_rect(fill = "white"))
+Plot
+
+# Both countspg and exp.p.c.m do not adhere to previous scales

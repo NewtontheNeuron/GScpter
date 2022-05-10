@@ -434,8 +434,8 @@ if __name__ == "__main__":
     root = tk.Tk()                                          # the root of all GUI windows and widgets in tkinter
     root.title("Cluster Pool Comparison Tool")
 
-    root.tk.call("source", "guitheme/azure.tcl")            # applies the custom GUI theme Azure (only works for ttk widgets, not tk widgets)
-    root.tk.call("set_theme", "light")
+    #root.tk.call("source", "guitheme/azure.tcl")            # applies the custom GUI theme Azure (only works for ttk widgets, not tk widgets)
+    #sroot.tk.call("set_theme", "light")
 
     app = App(root, data)
     app.pack(fill="both", expand=True)

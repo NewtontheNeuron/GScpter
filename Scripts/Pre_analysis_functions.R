@@ -3,15 +3,6 @@
 # to extract information from seurat objects and process the information
 # tidy the information, and perform basic calculations.
 
-# library(Seurat) #* **
-# library(ggplot2) #~ **
-# library(dplyr) #~ **
-# library(Cairo) #* **
-# library(rstudioapi) #* **
-
-# #get the list of features from JSON
-# features <- returnFeatures()
-# project_name <- returnProjectName()
 
 createCellRoster <- function(clean_neuron_object){
   # Get the presentable genelabels by removing the 'rna_' tag
@@ -21,22 +12,23 @@ createCellRoster <- function(clean_neuron_object){
   groups <- returnClusterpool_names()
   subGroups <- returnClusterpool_subgroups()
   
+  # Next look for the first cluster pool within each collumn
+  all_clusters <- returnAllClusters()
+  
   # TODO: need to find a way to get the correct formating for the genes
   # for example GRIN1 vs. Grin1
   # Now merging meta data and active ident and finding where the clusters are stored
   # First merge @meta.data and @active.ident
-  meta_ident <<- as.data.frame(clean_neuron_object@meta.data) %>%
+  meta_ident <- as.data.frame(clean_neuron_object@meta.data) %>%
     mutate(cells = row.names(as.data.frame(clean_neuron_object@active.ident)),
-           id_plus = as.data.frame(clean_neuron_object@active.ident)[[1]])
-  # Next look for the first cluster pool within each collumn
-  all_clusters <- returnAllClusters()
+           id_plus = as.data.frame(clean_neuron_object@active.ident)[[1]],
+           cell.barcode = row.names(.))
   # Then get the names of the collumns that have at least one of the
   # clusters in the clusterpool
   clusters_location <- names(which.max(apply(
     meta_ident, 
     FUN = function (x) sum(x %in% all_clusters), 
-    MARGIN = 2))) # Just take any one of the culumns or names (there may be multiple)
-  # Now it can be used further down to get the index for the cells i.e. CellIndicies
+    MARGIN = 2)))
   # TODO: add the ability to introduce secondary identifiers
   # TODO: turn this into a function
 
@@ -50,14 +42,16 @@ createCellRoster <- function(clean_neuron_object){
 
       # First grab the indices of the features
       GeneIndicies <- which(unlist(clean_neuron_object@assays$RNA@data@Dimnames[1]) %in% features_no_key)
-      # Then grab the indicies of the cells for the spcefic Clusterpool
+      # Then grab the indices of the cells for the spcefic Clusterpool
       CellIndicies <- which(meta_ident[[clusters_location]] %in% Clusterpool)
       # Get the relevant data using the the indicies otained above
       raw_data <- GetAssayData(clean_neuron_object, assay = 'RNA', slot = 'data')[GeneIndicies, CellIndicies]
 
       # Dataframe with the cells and the associated clusters
+      # add all the extra variables that are selected in extra_pool
       clusters_n_cells <- meta_ident %>%
-        select(all_of(clusters_location), id_plus) %>%
+        select(cell.barcode = cells,
+               all_of(clusters_location), all_of(unlist(extra_pool[["top"]]))) %>%
         slice(CellIndicies)
       
       key <- paste(subGroup, group, sep = " ")
@@ -71,8 +65,9 @@ createCellRoster <- function(clean_neuron_object){
       # Pivot the data frame with the cells and raw counts in separte columns
       pivot_longer(cols = -features.label, names_to = 'cell.barcode', values_to = 'raw_counts') %>%
       # Add a column with the clusters
-      mutate('cluster' = clusters_n_cells[match(cell.barcode, row.names(clusters_n_cells)), 1],
-             'sample' = clusters_n_cells[match(cell.barcode, row.names(clusters_n_cells)), 2], .keep = "unused") %>%
+      full_join(clusters_n_cells, by = "cell.barcode") %>%
+      # TODO: what if there is something else named cluster?
+      rename("cluster" = all_of(clusters_location)) %>%
       # Add a column with the id and subGroup
       mutate('id' = group, 'subgr' = subGroup)
     }

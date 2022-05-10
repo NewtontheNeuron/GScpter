@@ -10,6 +10,12 @@
 .Rproj.user/
 .guitheme/
 Output/*
+Output/*/*
 Scripts/scrap.R
 Data/JSON
 Scripts/DotPlot_scrap_Mar_3.R
+Output/
+Scripts/Pre_analysis_functions.Rout
+Scripts/add_sex_label.R
+Scripts/jennifer_explore.R
+Scripts/testpy.R
