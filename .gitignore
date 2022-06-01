@@ -1,0 +1,10 @@
+.RData
+.Rhistory
+.Rproj.user/
+CPCT.code-workspace
+Data/
+Output/
+Scripts/.Rhistory
+Scripts/extra_analysis/
+Scripts/Pre_analysis_functions.Rout
+Scripts/testpy.R

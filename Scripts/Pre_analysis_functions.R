@@ -15,7 +15,7 @@ createCellRoster <- function(clean_neuron_object){
 
       raw_data <- GetAssayData(clean_neuron_object, assay = 'RNA', slot = 'data')[GeneIndicies, CellIndicies]
 
-      clusters_n_cells <- as.data.frame(unlist(clean_neuronObject@active.ident)[CellIndicies])
+      clusters_n_cells <- as.data.frame(unlist(clean_neuron_object@active.ident)[CellIndicies])
 
       key <- paste(subgroup, name, sep = " ")
 

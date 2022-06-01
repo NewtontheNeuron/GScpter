@@ -1,0 +1,44 @@
+/* Get a fancy font from Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wght@8..144,300&display=swap');
+
+body {
+    font-family: 'Roboto Flex', sans-serif;
+}
+
+/* Change header text to imported font */
+h2 {
+  
+}
+
+/* Make text visible on inputs */
+.shiny-input-container {
+  
+}
+
+/* Global tag styles */
+
+/* Create gene boxes */
+.gene_boxes {
+    background-color: lightsalmon;
+    border: 0.7px brown solid;
+    flex-flow: wrap;
+    display: inline-block;
+    border-radius: 10px;
+    padding: 10px;
+}
+
+/* Messages for loading and loaded files */
+.loading-file {
+    background-color: lightslategray;
+    border: 1px slateblue solid;
+    border-radius: 10px;
+    display: inline-block;
+    padding: 10px;
+}
+.loaded-file {
+    background-color: lightgreen;
+    border: 1px green solid;
+    border-radius: 10px;
+    display: inline-block;
+    padding: 10px;
+}
