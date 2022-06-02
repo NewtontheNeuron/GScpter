@@ -269,3 +269,48 @@ load_data <- function(fileLocation){
 
   return(clean_neuron_object)
 }
+
+# The functions bellow will be used to add/remove/configure grouping layers
+# This function adds a layer to the provided list of lists
+add_layer <- function(layer_list = list(top = list()), newLayerItems = NULL) {
+  # the new layer items should be a list and not nothing
+  if(is.null(newLayerItems) | !is.list(newLayerItems)){
+    return("You need to input a list of items using newLayerItems = ...")
+  }
+  layer_list <- append(layer_list, list(paste("layer", length(layer_list),
+                                              sep = "") = newLayerItems))
+  return(layer_list)
+}
+# This function removes a layer from the provided list of lists
+rm_layer <- function(layer_list = list(top = list()), layer_number = NULL){
+  if(is.null(layer_number)){
+    return(NULL)
+  }
+  layer_list <- within(layer_list, rm(paste("layer", layer_number, sep = "")))
+  names(layer_list) <- lapply(seq_along(layer_list),
+                              FUN = function(x) ifelse(names(layer_list)[[x]] != "top",
+                                                       paste("layer", x - 1, sep = ""), "top"))
+  return(layer_list)
+}
+# This function changes a specified layer
+change_layer <- function(layer_list = list(top = list()),
+                         layer_number = NULL,
+                         newLayerItems = NULL){
+  if(is.null(layer_number) | is.list(newLayerItems)){
+    return("You need to specify the layer number that you want to change and
+           the list of items that will replace it")
+  }
+  layer_list[[paste("layer", layer_number, sep = "")]] <- newLayerItems
+  return(layer_list)
+}
+# This function reorders the layer based on the type of reordering
+reorder_layer <- function(layer_list = list(top = list()),
+                          layer_number = NULL,
+                          type = c("top", "bottom", "up", "down")) {
+  if(is.null(layer_number)){
+    return(NULL)
+  }
+  if(type = "top"){
+    
+  }
+}
