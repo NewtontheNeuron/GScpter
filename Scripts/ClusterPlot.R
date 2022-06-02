@@ -13,7 +13,7 @@ createClusterPlot <- function(cpdata){
     stat_summary(fun = median, geom = "crossbar", # Probably a safe bet, or you could set a parameter in the function
                  position = position_dodge(width = 1)) +
     scale_color_viridis_d() +
-    scale_y_continuous(expand = c(0,0), limits = c(-1, 160)) + # human: had to change the limit
+    scale_y_continuous(expand = c(0,0), limits = c(-1, 5)) + # human: had to change the limit
     labs(x = "Gene", y = "Raw log-scaled expression", # solution rounded 5% above the highest value make a
          color = "Cluster", title = names(cpdata)) + # setLimit function
     cowplot::theme_cowplot() + 
@@ -31,7 +31,7 @@ mainCluP <- function(cell_roster){
   }
   
   # Now add them together
-  masterplot <- plot_arkv[[1]] + plot_arkv[[2]]# + plot_arkv[[3]] + plot_arkv[[4]] # human: had to reduce this to 2 not 4 plots
+  masterplot <- plot_arkv[[1]] + plot_arkv[[2]] + plot_arkv[[3]] + plot_arkv[[4]] # human: had to reduce this to 2 not 4 plots
   
   # Now save image
   save_image("ClusterPlot", masterplot, height = 3700, width = 6000)

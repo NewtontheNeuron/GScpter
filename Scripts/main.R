@@ -3,7 +3,7 @@
 #something like this
 #args <- c("NMDA_mouse_brain", "C:/Users/no/Documents/Neuroscience - MSc/Winter 2022/BIOL 5502/Rmd_proj/Seurat.ss.rda")
 #args <- c("human_sex_nmda", "../../Data/human_ariel_data/top_level_new_annotation.rda")
-args <- c("mouse_age_nmda", "NULL")
+args <- c("mouse", "NULL")
 #args <- commandArgs(trailingOnly = TRUE)
 print(paste ("this is the title project name entered: ", args[1]))
 print(paste ("this was the given directory:", args[2]))
