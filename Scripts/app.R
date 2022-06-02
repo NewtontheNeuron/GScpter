@@ -20,7 +20,7 @@ selectIn <- selectInput(inputId = "select", label = "Mouse or Human Data?", choi
 #text in
 textInGene <- selectizeInput(inputId = "geneText", label = "Gene:", choices = NULL)
 textInClusterpool <- textInput(inputId = "clusterpoolText", label = "Clusterpool:")
-textInSubgroup <- textInput(inputId = "subgroupText", label = "Subgroup:" )
+textInSubgroup <- textInput(inputId = "subgroupText", label = "Subgroup:")
 textInCluster <- textInput(inputId = "clusterText", label = "Cluster: ")
 
 # tree display and set
@@ -28,6 +28,24 @@ listClusterpool <- selectInput(inputId = "clusterpoolList", label = "Clusterpool
 listSubgroup <- selectInput(inputId = "subgroupList", label = "Subgroup", choices = NULL, multiple = TRUE, selectize = FALSE)
 clusterSelect <- checkboxGroupInput(inputId = "selectCluster", label = "Clusters:", choices = 1:12, inline = TRUE, width = "400px")
 myTree <- Node$new("pools")
+
+# Adding variables of grouping
+listofvariables <- selectInput(inputId = "listofvariables", label = "Variables:",
+                               choices = NULL, multiple = TRUE, selectize = FALSE)
+listoflevels <- selectInput(inputId = "listoflevels", label = "Levels:", choices = NULL,
+                            multiple = FALSE)
+# Add or Remove grouping layers
+addLayer <- actionButton(inputId = "addVariable", "Add layer(s)")
+removeLayer <- actionButton(inputId = "rmVariable", "Remove layer(s)")
+
+# recode variables
+recodeInput <- textInput(inputId = "recodeInput", label = NULL)
+recodeLevel <- actionButton(inputId = "recodeLevel", "Recode level")
+
+# list of grouping layers
+listoflayers <- selectInput(inputId = "listoflayers", label = "Grouping layers:",
+                            choices = NULL, multiple = TRUE, selectize = FALSE)
+
 
 #data file in
 options(shiny.maxRequestSize = 10 * 10^9)
@@ -93,7 +111,24 @@ ui <- fluidPage(
   # The row divider for step 3 of the process
   verticalLayout(
     h2("Step 3"),
-    p("Configure the more grouping levels")
+    p("Configure more layers of grouping"),
+    flowLayout(
+      verticalLayout(
+        listofvariables,
+        addLayer
+      ),
+      verticalLayout(
+        listoflevels,
+        fluidRow(
+          column(6, recodeInput),
+          column(6, recodeLevel)
+        )
+      ),
+      verticalLayout(
+        listoflayers,
+        removeLayer
+      )
+    )
   ),
   # The row divider for step 4 of the process
   h2("Finalize"),
@@ -116,11 +151,13 @@ server <- function(input, output, session) {
     # Running the function to load the file
     RDfile <<- load_data(input$file$datapath)
     genes <<- unlist(RDfile@assays$RNA@counts@Dimnames)
-    clusternames <<- unlist(RDfile@active.ident)
+    clusternames <<- unique(unlist(as.data.frame(RDfile@active.ident)[1]))
+    variables <<- names(RDfile@meta.data)
     updateSelectizeInput(session, 'geneText', choices = genes,
                          server = TRUE, # multiple = TRUE,
                          options = list(maxOptions = 7, placeholder = "Type in your gene..."))
     updateCheckboxGroupInput(session, "selectCluster", choices = clusternames)
+    updateSelectInput(session, "listofvariables", choices = variables)
     # Change the message
     #if(exists(x = RDfile)) {
     output$fileprogress <- renderUI({
@@ -202,6 +239,20 @@ server <- function(input, output, session) {
       mainPDP(ClusterPoolResults)
     }) 
   })
+  
+  # Step 3 add, remove variables to grouping layers and recode levels
+  # The variables section should be populated when the file is loaded
+  observeEvent(input$listofvariables, {
+    if(length(input$listofvariables) == 1) {
+      levels <- unique(RDfile@meta.data[[input$listofvariables]])
+      if(length(levels) < 100) {
+        updateSelectInput(session, "listoflevels", choices = levels)
+      }
+    } else {
+      updateSelectInput(session, "listoflevels", choices = NULL)
+    }
+  })
+  # TODO: create the backend for this part.
 
   
 }

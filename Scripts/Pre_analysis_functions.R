@@ -277,15 +277,22 @@ PctExpPar <- function (x) {
 
 #call this function to load an RDS data file into an object
 load_data <- function(fileLocation){
-
-  print(fileLocation)
   
-  if (str_detect(fileLocation, ".RDS")) {
+  if (fileLocation == "NULL"){
+    filename <- file.choose()
+    object <- readRDS(filename)
+  } else if (str_detect(fileLocation,
+                        regex("^.*.(rda|rdata)$", ignore_case = T))) {
+    myenv <- new.env()
+    load(fileLocation, envir = myenv)
+    object <- get0(ls(myenv)[1], envir = myenv)
+    rm(myenv)
+  } else if (str_detect(fileLocation, regex("^.*.(rds)$", ignore_case = T))){
     object <- readRDS(fileLocation)
   } else {
-    object = load(file = fileLocation)
+    return(NULL)
   }
-
+  
   return(object)
 }
 
