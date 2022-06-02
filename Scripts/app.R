@@ -253,6 +253,10 @@ server <- function(input, output, session) {
     }
   })
   # TODO: create the backend for this part.
+  # TODO: ? help hover box
+  # TODO: Need to know that something happens after you add clup or subgr
+  # TODO: Example of layering
+  # TODO: remove level
 
   
 }
