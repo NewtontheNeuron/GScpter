@@ -281,15 +281,21 @@ add_layer <- function(layer_list = list(top = list()), newLayerItems = NULL) {
                                               sep = "") = newLayerItems))
   return(layer_list)
 }
+# Utilized by the other functions
+# This function fixes the number order of the layers
+fix_layer_number <- function(layer_list = list(top = list())){
+  names(layer_list) <- lapply(seq_along(layer_list),
+                              FUN = function(x) ifelse(names(layer_list)[[x]] != "top",
+                                                       paste("layer", x - 1, sep = ""), "top"))
+  return(layer_list)
+}
 # This function removes a layer from the provided list of lists
 rm_layer <- function(layer_list = list(top = list()), layer_number = NULL){
   if(is.null(layer_number)){
     return(NULL)
   }
   layer_list <- within(layer_list, rm(paste("layer", layer_number, sep = "")))
-  names(layer_list) <- lapply(seq_along(layer_list),
-                              FUN = function(x) ifelse(names(layer_list)[[x]] != "top",
-                                                       paste("layer", x - 1, sep = ""), "top"))
+  layer_list <- fix_layer_number(layer_list)
   return(layer_list)
 }
 # This function changes a specified layer
@@ -310,7 +316,41 @@ reorder_layer <- function(layer_list = list(top = list()),
   if(is.null(layer_number)){
     return(NULL)
   }
-  if(type = "top"){
-    
+  layer_name <- paste("layer", layer_number, sep = "")
+  
+  # Get the above and bellow layers
+  split_layers <- function(){
+    layers_above <<- names(layer_list)[-c(1, which(names(layer_list) %in% c(layer_name, layer_up)),
+                                         (layer_number + 1):length(layer_list))]
+    layers_below <<- names(layer_list)[-c(1, which(names(layer_list) %in% c(layer_name, layer_up)), layers_above)]
   }
+  if(type == "top"){
+    layer_list <- layer_list[c("top",
+                               layer_name,
+                               names(layer_list)[-c(1, which(names(layer_list) %in% layer_name))]
+                               )]
+  } else if (type == "bottom") {
+    layer_list <- layer_list[c("top",
+                               names(layer_list)[-c(1, which(names(layer_list) %in% layer_name))],
+                               layer_name)]
+  } else if (type == "up" & layer_number > 1) {
+    layer_up <- paste("layer", layer_number - 1, sep = "")
+    split_layers()
+    layer_list <- layer_list[c("top",
+                               layers_above,
+                               layer_name,
+                               layer_up,
+                               layers_below)]
+  } else if (type == "down" & layer_number < length(layer_list)) {
+    layer_down <- paste("layer", layer_number + 1, sep = "")
+    split_layers()
+    layer_list <- layer_list[c("top",
+                               layers_above,
+                               layer_down,
+                               layer_name,
+                               layers_below)]
+  }
+  layer_list <- fix_layer_number(layer_list)
+  return(layer_list)
 }
+# 
