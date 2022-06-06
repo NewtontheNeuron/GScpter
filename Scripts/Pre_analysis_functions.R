@@ -277,8 +277,9 @@ add_layer <- function(layer_list = list(top = list()), newLayerItems = NULL) {
   if(is.null(newLayerItems) | !is.list(newLayerItems)){
     return("You need to input a list of items using newLayerItems = ...")
   }
-  layer_list <- append(layer_list, list(paste("layer", length(layer_list),
-                                              sep = "") = newLayerItems))
+  layer_name <- paste("layer", length(layer_list), sep = "")
+  new_list <- setNames(list(newLayerItems), layer_name)
+  layer_list <- append(layer_list, new_list)
   return(layer_list)
 }
 # Utilized by the other functions
@@ -320,9 +321,12 @@ reorder_layer <- function(layer_list = list(top = list()),
   
   # Get the above and bellow layers
   split_layers <- function(){
-    layers_above <<- names(layer_list)[-c(1, which(names(layer_list) %in% c(layer_name, layer_up)),
+    layers_switched <- which(names(layer_list) %in% c(layer_name, layer_m))
+    layers_above <- names(layer_list)[-c(1, layers_switched,
                                          (layer_number + 1):length(layer_list))]
-    layers_below <<- names(layer_list)[-c(1, which(names(layer_list) %in% c(layer_name, layer_up)), layers_above)]
+    layers_below <- names(layer_list)[-c(1, layers_switched,
+                                          which(names(layer_list) %in% layers_above))]
+    return(list(above = layers_above, below = layers_below))
   }
   if(type == "top"){
     layer_list <- layer_list[c("top",
@@ -334,23 +338,41 @@ reorder_layer <- function(layer_list = list(top = list()),
                                names(layer_list)[-c(1, which(names(layer_list) %in% layer_name))],
                                layer_name)]
   } else if (type == "up" & layer_number > 1) {
-    layer_up <- paste("layer", layer_number - 1, sep = "")
-    split_layers()
+    layer_m <- paste("layer", layer_number - 1, sep = "")
+    unused <- split_layers()
     layer_list <- layer_list[c("top",
-                               layers_above,
+                               unused$above,
                                layer_name,
-                               layer_up,
-                               layers_below)]
+                               layer_m,
+                               unused$below)]
   } else if (type == "down" & layer_number < length(layer_list)) {
-    layer_down <- paste("layer", layer_number + 1, sep = "")
-    split_layers()
+    layer_m <- paste("layer", layer_number + 1, sep = "")
+    unused <- split_layers()
     layer_list <- layer_list[c("top",
-                               layers_above,
-                               layer_down,
+                               unused$above,
+                               layer_m,
                                layer_name,
-                               layers_below)]
+                               unused$below)]
   }
   layer_list <- fix_layer_number(layer_list)
   return(layer_list)
 }
-# 
+# function for ignoring a level
+ignore_level <- function(listoflevels = c(), nameoflevel = "") {
+  listoflevels <- listoflevels[-which(listoflevels %in% nameoflevel)]
+  if(!exists(ignored_levels)){
+    ignored_levels <<- c()
+  }
+  ignored_levels <<- c(ignored_levels, nameoflevel)
+  return(listoflevels)
+}
+# function to reinstate levels
+reinstate_level <- function(listoflevels = c(), nameoflevel = "") {
+  listoflevels <- c(listoflevels, nameoflevel)
+  if(!exists(ignored_levels)){
+    ignored_levels <<- c()
+  }
+  ignored_levels <<- ignored_levels[-which(ignored_levels %in% nameoflevel)]
+}
+# TODO: function to reorder levels
+
