@@ -36,6 +36,7 @@ listoflevels <- selectInput(inputId = "listoflevels", label = "Levels:", choices
                             multiple = FALSE)
 # Add or Remove grouping layers
 addLayer <- actionButton(inputId = "addVariable", "Add layer(s)")
+changeLayer <- actionButton(inputId = "cngVariable", "Change layer with selected variables")
 removeLayer <- actionButton(inputId = "rmVariable", "Remove layer(s)")
 
 # recode variables
@@ -126,6 +127,7 @@ ui <- fluidPage(
       ),
       verticalLayout(
         listoflayers,
+        changeLayer,
         removeLayer
       )
     )
@@ -135,7 +137,20 @@ ui <- fluidPage(
   button
 )
 
+#### Functions ####
+# Function to update the layer box when things change
+updatelayerbox <- function(session){
+  display_l <<- lapply(seq_along(list_of_layers),
+                      function(x) paste(names(list_of_layers[x]), ":",
+                                        paste(unlist(list_of_layers[[x]]),
+                                              collapse = " ")))
+  display_l <<- display_l[-1]
+  updateSelectInput(session, "listoflayers", choices = unlist(display_l))
+}
+
 JSON_Object = {}
+
+#### Server ####
 #inputs are things that the user can change / interact with
 #output are things that a user can see like a plot 
 server <- function(input, output, session) {
@@ -158,6 +173,8 @@ server <- function(input, output, session) {
                          options = list(maxOptions = 7, placeholder = "Type in your gene..."))
     updateCheckboxGroupInput(session, "selectCluster", choices = clusternames)
     updateSelectInput(session, "listofvariables", choices = variables)
+    # Creating list of layers
+    create_listoflayers()
     # Change the message
     #if(exists(x = RDfile)) {
     output$fileprogress <- renderUI({
@@ -250,6 +267,39 @@ server <- function(input, output, session) {
       }
     } else {
       updateSelectInput(session, "listoflevels", choices = NULL)
+    }
+  })
+  
+  # Add a layer based on the selected variables
+  observeEvent(input$addVariable, {
+    if(length(input$listofvariables) > 0) {
+      str(input$listofvariables)
+      list_of_layers <<- add_layer(layer_list = list_of_layers,
+                                   newLayerItems = list(input$listofvariables))
+      updatelayerbox(session)
+    }
+  })
+  
+  # Remove a layer based on the selected layer
+  observeEvent(input$rmVariable, {
+    if(length(input$listoflayers) == 1) {
+      index <- which(display_l %in% input$listoflayers)
+      list_of_layers <<- rm_layer(layer_list = list_of_layers,
+                                  layer_number = index)
+
+      updatelayerbox(session)
+    }
+  })
+  # change a layer based on the selected variables
+  observeEvent(input$cngVariable, {
+    print(listoflayers)
+    print(listofvariables)
+    if(length(input$listoflayers) == 1 & length(input$listofvariables) > 0){
+      index <- which(display_l %in% input$listoflayers)
+      list_of_layers <<- change_layer(list_of_layers,
+                                      layer_number = index,
+                                      newLayerItems = list(input$listofvariables))
+      updatelayerbox(session)
     }
   })
   # TODO: create the backend for this part.
