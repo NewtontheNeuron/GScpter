@@ -334,12 +334,17 @@ rm_layer <- function(layer_list = list(top = list()), layer_number = NULL){
 change_layer <- function(layer_list = list(top = list()),
                          layer_number = NULL,
                          newLayerItems = NULL){
-  if(is.null(layer_number) | is.list(newLayerItems)){
+  if(is.null(layer_number) | !is.list(newLayerItems)){
     return("You need to specify the layer number that you want to change and
            the list of items that will replace it")
   }
-  layer_list[[paste("layer", layer_number, sep = "")]] <- newLayerItems
-  return(layer_list)
+  layer_name <- paste("layer", layer_number, sep = "")
+  cng_lr <- list()
+  cng_lr$indexl <- which(names(layer_list) == layer_name)
+  layer_list[[which(names(layer_list) == layer_name)]] <- newLayerItems
+  loger <- list("Change_layer function - paf.r - layer list")
+  cng_lr <- list(main = layer_list, log = loger)
+  return(cng_lr)
 }
 # This function reorders the layer based on the type of reordering
 reorder_layer <- function(layer_list = list(top = list()),

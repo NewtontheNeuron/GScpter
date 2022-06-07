@@ -171,7 +171,8 @@ server <- function(input, output, session) {
     updateSelectizeInput(session, 'geneText', choices = genes,
                          server = TRUE, # multiple = TRUE,
                          options = list(maxOptions = 7, placeholder = "Type in your gene..."))
-    updateCheckboxGroupInput(session, "selectCluster", choices = clusternames)
+    updateCheckboxGroupInput(session, "selectCluster", choices = clusternames,
+                             inline = TRUE)
     updateSelectInput(session, "listofvariables", choices = variables)
     # Creating list of layers
     create_listoflayers()
@@ -273,7 +274,7 @@ server <- function(input, output, session) {
   # Add a layer based on the selected variables
   observeEvent(input$addVariable, {
     if(length(input$listofvariables) > 0) {
-      str(input$listofvariables)
+      #str(input$listofvariables)
       list_of_layers <<- add_layer(layer_list = list_of_layers,
                                    newLayerItems = list(input$listofvariables))
       updatelayerbox(session)
@@ -292,13 +293,25 @@ server <- function(input, output, session) {
   })
   # change a layer based on the selected variables
   observeEvent(input$cngVariable, {
-    print(listoflayers)
-    print(listofvariables)
+    print("Change function - list of layers then variables")
+    print(input$listoflayers)
+    print(input$listofvariables)
     if(length(input$listoflayers) == 1 & length(input$listofvariables) > 0){
       index <- which(display_l %in% input$listoflayers)
-      list_of_layers <<- change_layer(list_of_layers,
-                                      layer_number = index,
-                                      newLayerItems = list(input$listofvariables))
+      print("Change function - index")
+      print(index)
+      print("Change function - display l")
+      print(display_l)
+      print(list(input$listofvariables))
+      cng_lr <- change_layer(list_of_layers,
+                             layer_number = index,
+                             newLayerItems = list(input$listofvariables))
+      print("Change function - index from changelayer paf.r")
+      print(cng_lr)
+      print("Change function - the list of layers")
+      print(list_of_layers)
+      list_of_layers <<- cng_lr$main
+      print(cng_lr$log)
       updatelayerbox(session)
     }
   })
@@ -307,6 +320,8 @@ server <- function(input, output, session) {
   # TODO: Need to know that something happens after you add clup or subgr
   # TODO: Example of layering
   # TODO: remove level
+  # TODO: the layers start over after hitting change layer
+  # TODO: Error when there is no cluster pools selected or present wcp not found
 
   
 }
