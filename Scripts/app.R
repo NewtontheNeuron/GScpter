@@ -13,6 +13,7 @@ source("Pre_analysis_functions.R")
 source("DotPlot.R")
 source("PooledDotPlot.R")
 
+#### Define elements ####
 #(inputId = "num", "Enter number of values:", min = 1, max = 100, value = 50)
 #select type of data
 selectIn <- selectInput(inputId = "select", label = "Mouse or Human Data?", choices = c("Mouse", "Human"))
@@ -33,7 +34,7 @@ myTree <- Node$new("pools")
 listofvariables <- selectInput(inputId = "listofvariables", label = "Variables:",
                                choices = NULL, multiple = TRUE, selectize = FALSE)
 listoflevels <- selectInput(inputId = "listoflevels", label = "Levels:", choices = NULL,
-                            multiple = FALSE)
+                            multiple = TRUE, selectize = FALSE)
 # Add or Remove grouping layers
 addLayer <- actionButton(inputId = "addVariable", "Add layer(s)")
 changeLayer <- actionButton(inputId = "cngVariable", "Change layer with selected variables")
@@ -47,6 +48,17 @@ recodeLevel <- actionButton(inputId = "recodeLevel", "Recode level")
 listoflayers <- selectInput(inputId = "listoflayers", label = "Grouping layers:",
                             choices = NULL, multiple = TRUE, selectize = FALSE)
 
+# layer movement buttons
+layer_to_top <- actionButton(inputId = "layertotop", label = "top")
+layer_to_bottom <- actionButton(inputId = "layertobottom", label = "bottom")
+layer_up <- actionButton(inputId = "layertoup", label = "up")
+layer_down <- actionButton(inputId = "layertodown", label = "down")
+
+# level movement buttons
+level_to_top <- actionButton(inputId = "leveltotop", label = "top")
+level_to_bottom <- actionButton(inputId = "leveltobottom", label = "bottom")
+level_up <- actionButton(inputId = "leveltoup", label = "up")
+level_down <- actionButton(inputId = "leveltodown", label = "down")
 
 #data file in
 options(shiny.maxRequestSize = 10 * 10^9)
@@ -119,14 +131,28 @@ ui <- fluidPage(
         addLayer
       ),
       verticalLayout(
-        listoflevels,
+        fluidRow(
+          column(7, listoflevels),
+          column(5,
+                 level_to_top,
+                 level_up,
+                 level_down,
+                 level_to_bottom)
+        ),
         fluidRow(
           column(6, recodeInput),
           column(6, recodeLevel)
         )
       ),
       verticalLayout(
-        listoflayers,
+        fluidRow(
+          column(7, listoflayers),
+          column(5,
+                 layer_to_top,
+                 layer_up,
+                 layer_down,
+                 layer_to_bottom)
+        ),
         changeLayer,
         removeLayer
       )
@@ -176,6 +202,8 @@ server <- function(input, output, session) {
     updateSelectInput(session, "listofvariables", choices = variables)
     # Creating list of layers
     create_listoflayers()
+    # Creating modified levels list
+    create_mod_lev_lyr()
     # Change the message
     #if(exists(x = RDfile)) {
     output$fileprogress <- renderUI({
@@ -187,7 +215,9 @@ server <- function(input, output, session) {
   #add gene to list
   observeEvent(input$geneButton, {
     myValues$genes <- c(myValues$genes, input$geneText)
-    geneOut <<- tagAppendChild(geneOut, div(class = "gene_boxes", myValues$genes[length(myValues$genes)]))
+    geneOut <<- tagAppendChild(geneOut,
+                               div(class = "gene_boxes",
+                                            myValues$genes[length(myValues$genes)]))
     output$genePrint <- renderUI(geneOut)
   })
   
@@ -203,7 +233,9 @@ server <- function(input, output, session) {
   observeEvent(input$subgroupButton, {
     myValues$subgroups <- c( myValues$subgroups, input$subgroupText)
     updateSelectInput(session, "subgroupList", choices = myValues$subgroups)
-    myTree$Do(function(node) assign(input$subgroupText, node$AddChild(input$subgroupText, clus = NA)), filterFun = function(x) x$level == 2)
+    myTree$Do(function(node) assign(input$subgroupText,
+                                    node$AddChild(input$subgroupText, clus = NA)),
+              filterFun = function(x) x$level == 2)
     print(myTree, "clus")
   })
   
@@ -217,9 +249,11 @@ server <- function(input, output, session) {
       if(length(wcp) != 1 | length(wsg) != 1){
         print("I cannot just get one thing. Do you want to remove them?")
       }
-      clusterstobe <- myTree$Get(filterFun = function(self) all(self$path == c("pools", wcp, wsg)), attribute = "clus")
+      clusterstobe <- myTree$Get(filterFun = function(self) all(self$path == c("pools", wcp, wsg)),
+                                 attribute = "clus")
       print(as.vector(clusterstobe))
-      updateCheckboxGroupInput(session, "selectCluster", selected = as.vector(clusterstobe))
+      updateCheckboxGroupInput(session, "selectCluster",
+                               selected = as.vector(clusterstobe))
     })
   })
   # Save the input
@@ -315,13 +349,67 @@ server <- function(input, output, session) {
       updatelayerbox(session)
     }
   })
-  # TODO: create the backend for this part.
+  
+  # Movement of a layer to the top, bottom, 1 increment up or down of the stack
+  observeEvent(input$layertotop, {
+    index <- which(display_l %in% input$listoflayers)
+    list_of_layers <<- reorder_layer(list_of_layers, index, "top")
+    updatelayerbox(session)
+  })
+  observeEvent(input$layertobottom, {
+    index <- which(display_l %in% input$listoflayers)
+    list_of_layers <<- reorder_layer(list_of_layers, index, "bottom")
+    updatelayerbox(session)
+  })
+  observeEvent(input$layertoup, {
+    index <- which(display_l %in% input$listoflayers)
+    list_of_layers <<- reorder_layer(list_of_layers, index, "up")
+    updatelayerbox(session)
+  })
+  observeEvent(input$layertodown, {
+    index <- which(display_l %in% input$listoflayers)
+    list_of_layers <<- reorder_layer(list_of_layers, index, "down")
+    updatelayerbox(session)
+  })
+  
+  # Movement of a level to the top, bottom, 1 increment up or down of the stack
+  observeEvent(input$leveltotop, {
+    levels <- as.list(levels(RDfile@meta.data[[input$listofvariables]]))
+    level <- input$listoflevels
+    variable <- input$listofvariables
+    modified_levels[variable] <<- reorder_level(levels, level, "top")
+    updateSelectInput(session, "listoflevels", choices = levels)
+  })
+  observeEvent(input$layertobottom, {
+    levels <- as.list(unique(RDfile@meta.data[[input$listofvariables]]))
+    level <- input$listoflevels
+    variable <- input$listofvariables
+    modified_levels[[variable]] <<- reorder_level(levels, level, "bottom")
+    updatelayerbox(session)
+  })
+  observeEvent(input$layertoup, {
+    levels <- as.list(unique(RDfile@meta.data[[input$listofvariables]]))
+    level <- input$listoflevels
+    variable <- input$listofvariables
+    modified_levels[[variable]] <<- reorder_level(levels, level, "up")
+    updatelayerbox(session)
+  })
+  observeEvent(input$layertodown, {
+    levels <- as.list(unique(RDfile@meta.data[[input$listofvariables]]))
+    level <- input$listoflevels
+    variable <- input$listofvariables
+    modified_levels[[variable]] <<- reorder_level(levels, level, "down")
+    updatelayerbox(session)
+  })
+  
+  # TODO: create the back-end for this part.
   # TODO: ? help hover box
   # TODO: Need to know that something happens after you add clup or subgr
   # TODO: Example of layering
   # TODO: remove level
   # TODO: the layers start over after hitting change layer
   # TODO: Error when there is no cluster pools selected or present wcp not found
+  # TODO: Crash on layer movement when there is no layer selected.
 
   
 }

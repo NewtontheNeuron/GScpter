@@ -301,6 +301,9 @@ load_data <- function(fileLocation){
 create_listoflayers <- function() {
   list_of_layers <<- list(top = list())
 }
+create_mod_lev_lyr <- function() {
+  modified_levels <<- list()
+}
 add_layer <- function(layer_list = list(top = list()), newLayerItems = NULL) {
   # the new layer items should be a list and not nothing
   if(is.null(newLayerItems) | !is.list(newLayerItems)){
@@ -392,6 +395,43 @@ reorder_layer <- function(layer_list = list(top = list()),
   }
   layer_list <- fix_layer_number(layer_list)
   return(layer_list)
+}
+# This function reorders the levels based on the type of reordering
+reorder_level <- function(levels = list(),
+                          level = NULL,
+                          type = c("top", "bottom", "up", "down")) {
+  if(is.null(level)){
+    return(NULL)
+  }
+  level_i <- which(levels %in% level)
+  
+  # Get the above and bellow layers
+  split_levels <- function(){
+    levels_switched <- which(names(layer_list) %in% c(layer_name, layer_m))
+    levels_above <- names(layer_list)[-c(1, levels_switched,
+                                         (layer_number + 1):length(layer_list))]
+    levels_below <- names(layer_list)[-c(1, levels_switched,
+                                         which(names(layer_list) %in% levels_above))]
+    return(list(above = levels_above, below = levels_below))
+  }
+  if(type == "top"){
+    levels <- levels[c(level, levels[-c(level_i)])]
+  } else if (type == "bottom") {
+    levels <- levels[c(levels[-c(level_i)], level)]
+  } else if (type == "up" & layer_number > 1) {
+    layer_m <- levels[level_i - 1]
+    unused <- split_layers()
+    levels <- levels[c(unused$above,
+                       level, level_m,
+                       unused$bellow)]
+  } else if (type == "down" & layer_number < length(layer_list)) {
+    layer_m <- levels[level_i + 1]
+    unused <- split_layers()
+    levels <- levels[c(unused$above,
+                       level_m, level,
+                       unused$bellow)]
+  }
+  return(levels)
 }
 # function for ignoring a level
 ignore_level <- function(listoflevels = c(), nameoflevel = "") {
