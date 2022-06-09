@@ -406,30 +406,28 @@ reorder_level <- function(levels = list(),
   level_i <- which(levels %in% level)
   
   # Get the above and bellow layers
-  split_levels <- function(){
-    levels_switched <- which(names(layer_list) %in% c(layer_name, layer_m))
-    levels_above <- names(layer_list)[-c(1, levels_switched,
-                                         (layer_number + 1):length(layer_list))]
-    levels_below <- names(layer_list)[-c(1, levels_switched,
-                                         which(names(layer_list) %in% levels_above))]
-    return(list(above = levels_above, below = levels_below))
-  }
+  #split_levels <- function(){
+  #  levels_switched <- which(levels %in% c(level, level_m))
+  #  levels_above <- 1:level_i
+  #  levels_below <- level_mi:length(levels)
+  #  return(list(above = levels_above, below = levels_below))
+  #}
   if(type == "top"){
-    levels <- levels[c(level, levels[-c(level_i)])]
+    levels <- levels[c(level_i, which(levels %in% levels[-level_i]))]
   } else if (type == "bottom") {
-    levels <- levels[c(levels[-c(level_i)], level)]
-  } else if (type == "up" & layer_number > 1) {
-    layer_m <- levels[level_i - 1]
-    unused <- split_layers()
-    levels <- levels[c(unused$above,
-                       level, level_m,
-                       unused$bellow)]
-  } else if (type == "down" & layer_number < length(layer_list)) {
-    layer_m <- levels[level_i + 1]
-    unused <- split_layers()
-    levels <- levels[c(unused$above,
-                       level_m, level,
-                       unused$bellow)]
+    levels <- levels[c(which(levels %in% levels[-level_i]), level_i)]
+  } else if (type == "up") {
+    level_mi <- level_i - 1
+    level_m <- levels[level_mi]
+    levels <- levels[c(1:(level_mi - 1),
+                       level_i, level_mi,
+                       (level_i + 1):length(levels))]
+  } else if (type == "down") {
+    level_mi <- level_i + 1
+    level_m <- levels[level_mi]
+    levels <- levels[c(1:(level_i - 1),
+                       level_mi, level_i,
+                       (level_mi + 1):length(levels))]
   }
   return(levels)
 }

@@ -377,29 +377,43 @@ server <- function(input, output, session) {
     levels <- as.list(levels(RDfile@meta.data[[input$listofvariables]]))
     level <- input$listoflevels
     variable <- input$listofvariables
-    modified_levels[variable] <<- reorder_level(levels, level, "top")
-    updateSelectInput(session, "listoflevels", choices = levels)
+    print("Movement of the layers levels and level")
+    print(levels)
+    print(level)
+    modified_levels[[variable]] <<- reorder_level(levels, level, "top")
+    print("modified var")
+    print(unlist(modified_levels[[variable]]))
+    updateSelectInput(session, "listoflevels",
+                      choices = unlist(modified_levels[[variable]]))
   })
-  observeEvent(input$layertobottom, {
-    levels <- as.list(unique(RDfile@meta.data[[input$listofvariables]]))
+  observeEvent(input$leveltobottom, {
+    levels <- as.list(levels(RDfile@meta.data[[input$listofvariables]]))
     level <- input$listoflevels
     variable <- input$listofvariables
+    print("Movement of the layers levels and level")
+    print(levels)
+    print(level)
     modified_levels[[variable]] <<- reorder_level(levels, level, "bottom")
-    updatelayerbox(session)
+    print("modified var")
+    print(unlist(modified_levels[[variable]]))
+    updateSelectInput(session, "listoflevels",
+                      choices = unlist(modified_levels[[variable]]))
   })
-  observeEvent(input$layertoup, {
-    levels <- as.list(unique(RDfile@meta.data[[input$listofvariables]]))
+  observeEvent(input$leveltoup, {
+    levels <- as.list(levels(RDfile@meta.data[[input$listofvariables]]))
     level <- input$listoflevels
     variable <- input$listofvariables
     modified_levels[[variable]] <<- reorder_level(levels, level, "up")
-    updatelayerbox(session)
+    updateSelectInput(session, "listoflevels",
+                      choices = unlist(modified_levels[[variable]]))
   })
-  observeEvent(input$layertodown, {
-    levels <- as.list(unique(RDfile@meta.data[[input$listofvariables]]))
+  observeEvent(input$leveltodown, {
+    levels <- as.list(levels(RDfile@meta.data[[input$listofvariables]]))
     level <- input$listoflevels
     variable <- input$listofvariables
     modified_levels[[variable]] <<- reorder_level(levels, level, "down")
-    updatelayerbox(session)
+    updateSelectInput(session, "listoflevels",
+                      choices = unlist(modified_levels[[variable]]))
   })
   
   # TODO: create the back-end for this part.
