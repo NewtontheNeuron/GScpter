@@ -3,10 +3,13 @@
 #something like this
 #args <- c("NMDA_mouse_brain", "C:/Users/no/Documents/Neuroscience - MSc/Winter 2022/BIOL 5502/Rmd_proj/Seurat.ss.rda")
 #args <- c("human_sex_nmda", "../../Data/human_ariel_data/top_level_new_annotation.rda")
-args <- c("mouse", "NULL")
+args <- c("nmda_sdh_ddh", "NULL")
 #args <- commandArgs(trailingOnly = TRUE)
 print(paste ("this is the title project name entered: ", args[1]))
 print(paste ("this was the given directory:", args[2]))
+
+# The Grin gene analysis
+args <- c("nmda_sdh_ddh", "../../Datasets/neurons_only_2021/clean_neuron_object.RDS")
 
 ### for kcni
 args <- c("combined", "~/Neuroscience - MSc/Summer 2022/kcni_summer_school/Data/mouse_human_practice.rds")
@@ -44,7 +47,7 @@ duration
 # For extra_pool top remove the cluster area
 extra_pool <- list()
 extra_pool[["top"]] <- list("dataset", "age", "final_cluster_assignment", "run", "nCount_RNA")
-extra_pool[["top"]] <- list("dataset", "age", "final_cluster_assignment", "run", "nCount_RNA")
+extra_pool[["1"]] <- list("id", "features.label", "subgr")
 #extra_pool[["1"]] <- list("class_label", "region_label")
 
 # For kcni
@@ -55,6 +58,7 @@ extra_pool[["top"]] <- list("donor_sex_label")
 
 # Everything relies on all_cell_roster and cell_roster
 all_cell_roster <- returnAllCellRoster(RDSfile)
+saveRDS(all_cell_roster, "../../Datasets/all_cell_rosters/all_cell_roster_grin.RDS")
 
 #call each script while passing the data as a value.
 
@@ -63,7 +67,7 @@ lbc <- createListbyCluster(RDSfile)
 mainDP(lbc)
 
 #pooled dotplot.R
-CPR <- createClusterPoolResults(RDSfile)
+CPR <- createClusterPoolResults("1", "z-score")
 mainPDP(CPR)
 
 # The cluste range plot

@@ -4,7 +4,7 @@
 #library(rjson)
 
 #get yaml/json data. Only works if current directory is changed.
-Data <- fromJSON(file = "../Data/JSON/kcni.json")
+Data <- fromJSON(file = paste("../Data/JSON/", args[1], ".json", sep = ""))
 
 #return list of features from JSON object.
 returnFeatures <- function(){

@@ -127,12 +127,14 @@ createListbyCluster <- function(clean_neuron_object){
   return(lbc)
 }
 
-createClusterPoolResults <- function(clean_neuron_object){
+createClusterPoolResults <- function(roster = all_cell_roster,
+                                     pool.level,
+                                     scale.method = "z-score"){
   # Using all_cell_roster to calcualte the average expression and percent expressed
   # for each cluster pool (id and subgr) and gene combination
-  CPR <- all_cell_roster %>%
+  CPR <- roster %>%
     # group by clusterpool (id and subgroup) gene combinations
-    group_by(id, subgr, features.label) %>%
+    group_by(across(unlist(extra_pool[[pool.level]]))) %>%
     # perform the following calculations within the groups and store the
     # neccessary information
     summarise(avg.exp = mean(expm1(raw_counts)),
@@ -141,8 +143,11 @@ createClusterPoolResults <- function(clean_neuron_object){
               avg.lower = avg.exp - avg.std.err,
               avg.upper = avg.exp + avg.std.err) %>%
     # Ungroup the data table and caluclate the appropriate scaling
-    ungroup(id, subgr, features.label) %>%
-    mutate(avg.exp.z.scaled = log10(avg.exp)) # human: median vs zs_scaled
+    ungroup(everything()) %>%
+    mutate(avg.exp.scaled = case_when(
+      scale.method == "z-score" ~ zs_calc(avg.exp),
+      scale.method == "log10" ~ log10(avg.exp)
+    )) # human: median vs zs_scaled
 
   return(CPR)
 }
