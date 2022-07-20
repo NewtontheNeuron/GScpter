@@ -8,6 +8,9 @@ args <- c("mouse", "NULL")
 print(paste ("this is the title project name entered: ", args[1]))
 print(paste ("this was the given directory:", args[2]))
 
+### for kcni
+args <- c("combined", "~/Neuroscience - MSc/Summer 2022/kcni_summer_school/Data/mouse_human_practice.rds")
+
 # Need to set dir
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 
@@ -20,6 +23,7 @@ source("Pre_analysis_functions.R")
 # TODO: source a script that sources scripts with all the plots?
 source("DotPlot.R")
 source("PooledDotPlot.R")
+source("ClusterPlot.R")
 #source("Quad_BarChart2.r")
 
 #load data
@@ -43,9 +47,14 @@ extra_pool[["top"]] <- list("dataset", "age", "final_cluster_assignment", "run",
 extra_pool[["top"]] <- list("dataset", "age", "final_cluster_assignment", "run", "nCount_RNA")
 #extra_pool[["1"]] <- list("class_label", "region_label")
 
+# For kcni
+colnames(RDSfile@meta.data)
+unique(RDSfile@meta.data$subclass_label)
+extra_pool <- list()
+extra_pool[["top"]] <- list("donor_sex_label")
+
 # Everything relies on all_cell_roster and cell_roster
 all_cell_roster <- returnAllCellRoster(RDSfile)
-rm(meta_ident)
 
 #call each script while passing the data as a value.
 
@@ -56,6 +65,9 @@ mainDP(lbc)
 #pooled dotplot.R
 CPR <- createClusterPoolResults(RDSfile)
 mainPDP(CPR)
+
+# The cluste range plot
+
 
 #quadbar_chart2.R
 #ListByCluster <- createListbyCluster(RDSfile)

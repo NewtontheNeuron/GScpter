@@ -113,7 +113,7 @@ createListbyCluster <- function(clean_neuron_object){
     # Ungroup and perform the appropriate scaling
     ungroup(cluster, features.label) %>%
     # This scaling turns to NA any thing 4 standard deviations above the mean
-    mutate(avg.exp.scaled = zs_calc(avg.exp)) # human: median vs zs_scaled
+    mutate(avg.exp.scaled = log10(avg.exp)) # human: median vs zs_scaled
 
   # lbc_new %>% ggplot(aes(x=cluster, y = log(avg.exp, base = 100), color = features.label)) + geom_point()
   # I had to exclude a very high outlier for Grin2a and shift to a log 10 scale.
@@ -142,7 +142,7 @@ createClusterPoolResults <- function(clean_neuron_object){
               avg.upper = avg.exp + avg.std.err) %>%
     # Ungroup the data table and caluclate the appropriate scaling
     ungroup(id, subgr, features.label) %>%
-    mutate(avg.exp.z.scaled = zs_calc(avg.exp)) # human: median vs zs_scaled
+    mutate(avg.exp.z.scaled = log10(avg.exp)) # human: median vs zs_scaled
 
   return(CPR)
 }
@@ -261,8 +261,9 @@ load_data <- function(fileLocation){
     # remove the environment
     rm(myenv)
   }
-  else {
-    clean_neuron_object <- readRDS(paste(fileLocation, "/clean_neuron_object.RDS", sep = ""))
+  else if (str_detect(fileLocation,
+                      regex("^.*.(rds)$", ignore_case = T))){
+    clean_neuron_object <- readRDS(fileLocation)
   }
 
   print("RDS file loaded!")
