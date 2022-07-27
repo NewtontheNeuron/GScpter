@@ -19,8 +19,7 @@ mainPDP <- function(CPR){
           legend.key.size=unit(1, "line"),
           axis.text.x = element_text(angle = -45, vjust = 0.5, hjust=0.5, size=15)) + # changed -45 angle to 0
     theme(axis.text.y = element_text(angle = 0, vjust = 0.5, hjust=0.5, size=15)) +
-    theme(panel.background = element_rect(fill = "white"),
-          plot.background = element_rect(fill = "white"))
+    theme(plot.background = element_rect(fill = "white"))
   Plot
   
   # Save the image

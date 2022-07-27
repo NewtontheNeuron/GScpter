@@ -24,7 +24,6 @@ createDotPlot <- function(lbc_filtered){
           legend.text = element_text(size = 17),
           legend.title = element_text(size = 20),
           axis.text.y = element_text(angle = 0, vjust = 0.5, hjust = 1, size = global_size),
-          panel.background = element_rect(fill = "white"),
           plot.background = element_rect(fill = "white"))
 }
 
