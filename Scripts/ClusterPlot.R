@@ -32,7 +32,7 @@ mainCluP <- function(cell_roster){
   }
   
   # Now add them together
-  masterplot <- plot_arkv[[1]] + plot_arkv[[2]] + plot_arkv[[3]] + plot_arkv[[4]] #+
+  masterplot <- plot_arkv[[1]] + plot_arkv[[2]] #+ plot_arkv[[3]] + plot_arkv[[4]] #+
     #plot_arkv[[5]]
   # human: had to reduce this to 2 not 4 plots
   

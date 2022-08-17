@@ -1,0 +1,31 @@
+{"features": ["rna_GRIN1", "rna_CNR1", "rna_CNR2"], 
+"project_name": "Jessica",
+"clusterpool_names": ["Dorsal horn"], 
+"subgroup_names": ["Excitatory", "Inhibitory"], 
+"clusterpools": {"Dorsal horn": {
+  "Excitatory": [
+      "Ex-Dorsal-1",
+      "Ex-Dorsal-2",
+      "Ex-Dorsal-3",
+      "Ex-Dorsal-4",
+      "Ex-Dorsal-5",
+      "Ex-Dorsal-6",
+      "Ex-Dorsal-7",
+      "Ex-Dorsal-8",
+      "Ex-Dorsal-9",
+      "Ex-Dorsal-10",
+      "Ex-Dorsal-11",
+      "Ex-Dorsal-12"],
+  "Inhibitory": [
+      "Inh-Dorsal-1",
+      "Inh-Dorsal-2",
+      "Inh-Dorsal-3",
+      "Inh-Dorsal-4",
+      "Inh-Dorsal-5",
+      "Inh-Dorsal-6",
+      "Inh-Dorsal-7",
+      "Inh-Dorsal-8",
+      "Inh-Dorsal-9",
+      "Inh-Dorsal-10"]
+  
+}}}

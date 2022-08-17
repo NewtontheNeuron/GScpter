@@ -16,9 +16,11 @@ args <- c("combined", "~/Neuroscience - MSc/Summer 2022/kcni_summer_school/Data/
 
 ### for marrium
 args <- c("marr_1_SDH_DDH_Excit_Inhib", "../../Datasets/neurons_only_2021/clean_neuron_object.RDS")
+args <- c("marr_human_DH_Excit_Inhib", "../../Datasets/human_spinalcord_2022/top_level_new_annotation.rda")
 
 ### for jessica
 args <- c("jess_SDH_DDH_Excit_Inhib", "../../Datasets/neurons_only_2021/clean_neuron_object.RDS")
+args <- c("jess_human_DH_Excit_Inhib", "../../Datasets/human_spinalcord_2022/top_level_new_annotation.rda")
 
 # Need to set dir
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
@@ -52,6 +54,13 @@ extra_pool[["top"]] <- list("dataset", "age", "final_cluster_assignment", "run",
 extra_pool[["1"]] <- list("id", "features.label", "subgr")
 #extra_pool[["1"]] <- list("class_label", "region_label")
 
+# Human dataset extrapool
+extra_pool <- list()
+extra_pool[["top"]] <- list("nCount_RNA", "nCount_SCT", "batches_combined",
+                            "HSC_Subcluster_Annotation", "new_annotation",
+                            "top_level_annotation")
+extra_pool[["1"]] <- list("subgr", "features.label")
+
 # For kcni
 colnames(RDfile@meta.data)
 unique(RDfile@meta.data$subclass_label)
@@ -60,16 +69,16 @@ extra_pool[["top"]] <- list("donor_sex_label")
 
 # Everything relies on all_cell_roster and cell_roster
 all_cell_roster <- returnAllCellRoster(RDfile)
-saveRDS(all_cell_roster, "../../Datasets/all_cell_rosters/all_cell_roster_jess.RDS")
+saveRDS(all_cell_roster, "../../Datasets/all_cell_rosters/all_cell_roster_human_jess.RDS")
 
 #call each script while passing the data as a value.
 
 #dotplot.R
-lbc <- createListbyCluster(scale.method = "z-score")
+lbc <- createListbyCluster(scale.method = "log10")
 mainDP(lbc)
 
 #pooled dotplot.R
-CPR <- createClusterPoolResults()
+CPR <- createClusterPoolResults(scale.method = "log10")
 mainPDP(CPR)
 
 # The cluste range plot
