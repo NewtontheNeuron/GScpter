@@ -4,7 +4,7 @@ mainPDP <- function(CPR){
   CPR$ClusterAndSubgroup <- paste(CPR$id, CPR$subgr) 
   Gene <- CPR$features.label
   Subgroup <- CPR$ClusterAndSubgroup
-  AvgExpScaled <- CPR$avg.exp.z.scaled
+  AvgExpScaled <- CPR$avg.exp.scaled
   markers <- Gene %>% unique()
   
   Plot <- CPR %>% 

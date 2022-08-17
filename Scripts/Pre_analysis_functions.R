@@ -100,7 +100,7 @@ returnAllCellRoster <- function(clean_neuron_object){
   return(all_cell_roster)
 }
 
-createListbyCluster <- function(clean_neuron_object){
+createListbyCluster <- function(scale.method = "z-score"){
   
   # Calculate average expression, percent expressed, and average expression scaled
   # for each cluster and gene combination
@@ -113,7 +113,11 @@ createListbyCluster <- function(clean_neuron_object){
     # Ungroup and perform the appropriate scaling
     ungroup(cluster, features.label) %>%
     # This scaling turns to NA any thing 4 standard deviations above the mean
-    mutate(avg.exp.scaled = log10(avg.exp)) # human: median vs zs_scaled
+    mutate(avg.exp.scaled = case_when(
+      scale.method == "z-score" ~ zs_calc(avg.exp),
+      scale.method == "log10" ~ log10(avg.exp),
+      scale.method == "log1p" ~ log1p(avg.exp)
+    )) # human: median vs zs_scaled
 
   # lbc_new %>% ggplot(aes(x=cluster, y = log(avg.exp, base = 100), color = features.label)) + geom_point()
   # I had to exclude a very high outlier for Grin2a and shift to a log 10 scale.
@@ -128,8 +132,8 @@ createListbyCluster <- function(clean_neuron_object){
 }
 
 createClusterPoolResults <- function(roster = all_cell_roster,
-                                     pool.level,
-                                     scale.method = "z-score"){
+                                     pool.level = "1",
+                                     scale.method = "z-score", ...){
   # Using all_cell_roster to calcualte the average expression and percent expressed
   # for each cluster pool (id and subgr) and gene combination
   CPR <- roster %>%
@@ -141,12 +145,14 @@ createClusterPoolResults <- function(roster = all_cell_roster,
               pct.exp = pct_calc(raw_counts),
               avg.std.err = SE(expm1(raw_counts)),
               avg.lower = avg.exp - avg.std.err,
-              avg.upper = avg.exp + avg.std.err) %>%
+              avg.upper = avg.exp + avg.std.err,
+              ...) %>%
     # Ungroup the data table and caluclate the appropriate scaling
     ungroup(everything()) %>%
     mutate(avg.exp.scaled = case_when(
       scale.method == "z-score" ~ zs_calc(avg.exp),
-      scale.method == "log10" ~ log10(avg.exp)
+      scale.method == "log10" ~ log10(avg.exp),
+      scale.method == "log1p" ~ log1p(avg.exp)
     )) # human: median vs zs_scaled
 
   return(CPR)

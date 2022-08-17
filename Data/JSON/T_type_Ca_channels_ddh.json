@@ -1,0 +1,8 @@
+{"features": 
+["rna_Cacna1g", "rna_Cacna1h", "rna_Cacna1i"], 
+"project_name": "T_type_Ca_channels", 
+"clusterpool_names": ["mouse"], 
+"subgroup_names": ["DDH"], 
+"clusterpools": {"mouse": 
+{ 
+"DDH": ["Excit-04", "Excit-05", "Excit-06", "Excit-09", "Excit-13", "Excit-19", "Excit-20", "Excit-21", "Excit-22", "Excit-23", "Excit-24", "Excit-25", "Excit-26", "Excit-27", "Excit-29", "Excit-30", "Excit-31", "Excit-32", "Excit-34", "Excit-35", "Excit-36", "Inhib-01", "Inhib-02", "Inhib-03", "Inhib-06", "Inhib-07", "Inhib-08", "Inhib-10", "Inhib-11", "Inhib-12", "Inhib-14", "Inhib-15", "Inhib-16", "Inhib-18", "Inhib-19", "Inhib-20", "Inhib-21"]}}}

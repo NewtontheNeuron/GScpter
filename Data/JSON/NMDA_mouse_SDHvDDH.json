@@ -1,0 +1,10 @@
+{"features": ["rna_Grin1", "rna_Grin2a", "rna_Grin2b", "rna_Grin2c", "rna_Grin2d", "rna_Grin3a", "rna_Grin3b"], 
+"project_name": "NMDA_mouse", "clusterpool_names": ["mouse"], 
+"subgroup_names": ["SDH", "DDH"], 
+"clusterpools": {"mouse": {
+  "SDH": 
+["Excit-1", "Excit-2", "Excit-3", "Excit-8", "Excit-9", "Excit-10", "Excit-12", "Excit-14", "Excit-15", "Excit-16", "Excit-18", "Inhib-3", "Inhib-4", "Inhib-5", "Inhib-9", "Inhib-11", "Inhib-12", "Inhib-13"], 
+"DDH": 
+["Excit-4", "Excit-5", "Excit-6", "Excit-9", "Excit-13", "Excit-19", "Excit-20", "Excit-21", "Excit-22", "Excit-23", "Excit-24", "Excit-25", "Excit-26", "Excit-27", "Excit-29", "Excit-30", "Excit-31", "Excit-32", "Excit-34", "Excit-35", "Excit-36", "Inhib-1", "Inhib-2", "Inhib-3", "Inhib-6", "Inhib-7", "Inhib-8", "Inhib-10", "Inhib-11", "Inhib-12", "Inhib-14", "Inhib-15", "Inhib-16", "Inhib-18", "Inhib-19", "Inhib-20", "Inhib-21"]
+  
+}}}

@@ -23,7 +23,7 @@ sathy
 
 # Now bring in all_cell_roster
 # filter to only sathyamurthy cells
-all_cell_roster <- readRDS("../../../Datasets/all_cell_rosters/all_cell_roster_grin.RDS")
+all_cell_roster <- readRDS("../../../Datasets/all_cell_rosters/all_cell_roster_jess.RDS")
 all_cell_roster <- as_tibble(all_cell_roster)
 all_cell_roster <- filter(.data = all_cell_roster, dataset == "Sathyamurthy")
 all_cell_roster
@@ -59,8 +59,8 @@ sathy_roster <- all_cell_roster %>%
                      "form4", "form9") ~ "male"
   ))
 sathy_roster
-saveRDS(sathy_roster, "../../../Datasets/all_cell_rosters/sathy_grin_acr.RDS")
-sathy_roster <- readRDS("../../../Datasets/all_cell_rosters/sathy_grin_acr.RDS")
+saveRDS(sathy_roster, "../../../Datasets/all_cell_rosters/sathy_jess_acr.RDS")
+sathy_roster <- readRDS("../../../Datasets/all_cell_rosters/sathy_jess_acr.RDS")
 
 # Create plots
 extra_pool <- list()
@@ -107,6 +107,7 @@ Plot <- CPR %>%
              color = avg.exp.scaled, size = pct.exp)) + 
   geom_point() +
   labs(size = '% Expressing', x = "Clusterpools", y = "Gene") +
+  ggtitle(wrapper("Sex differneces across dorsal horn", width = 30)) +
   scale_size(range = c(0, 20)) +
   scale_color_viridis_c(option = "plasma") + 
   cowplot::theme_cowplot() + 
@@ -194,3 +195,4 @@ Plot <- CPR %>%
         plot.background = element_rect(fill = "white"))
 Plot
 save_image("invdal_adult_sdh_ddh", Plot, height = 5000, width = 3000)
+
