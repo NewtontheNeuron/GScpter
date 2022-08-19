@@ -9,7 +9,8 @@ print(paste ("this is the title project name entered: ", args[1]))
 print(paste ("this was the given directory:", args[2]))
 
 # The Grin gene analysis
-args <- c("nmda_SDH_DDH_Excit_Inhib", "../../Datasets/neurons_only_2021/clean_neuron_object.RDS")
+args <- c("grin_only_SDH_DDH_Excit_Inhib", "../../Datasets/neurons_only_2021/clean_neuron_object.RDS")
+args <- c("grin_only_human_DH_Excit_Inhib", "../../Datasets/human_spinalcord_2022/top_level_new_annotation.rda")
 
 ### for kcni
 args <- c("combined", "~/Neuroscience - MSc/Summer 2022/kcni_summer_school/Data/mouse_human_practice.rds")
@@ -69,7 +70,8 @@ extra_pool[["top"]] <- list("donor_sex_label")
 
 # Everything relies on all_cell_roster and cell_roster
 all_cell_roster <- returnAllCellRoster(RDfile)
-saveRDS(all_cell_roster, "../../Datasets/all_cell_rosters/all_cell_roster_human_jess.RDS")
+saveRDS(all_cell_roster, "../../Datasets/all_cell_rosters/all_cell_roster_grin.RDS")
+all_cell_roster <- readRDS("../../Datasets/all_cell_rosters/all_cell_roster_human_grin_only.RDS")
 
 #call each script while passing the data as a value.
 

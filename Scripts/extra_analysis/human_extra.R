@@ -51,3 +51,14 @@ setwd(sprintf("../Output/%s/", name))
 png("human_z_nz_var_Aug_17_2022.png")
 grid.table(znoz)
 dev.off()
+
+
+# For IASP poster
+# Recode the cluster names as ED1 or ID1 etc.
+all_cell_roster <- all_cell_roster %>%
+  as_tibble() %>%
+  mutate(orig.name = cluster,
+         cluster = case_when(
+           grepl("Ex-", cluster) ~ str_replace(cluster, "Ex-Dorsal-", "ED"),
+           grepl("Inh-", cluster) ~ str_replace(cluster, "Inh-Dorsal-", "ID")
+         ))

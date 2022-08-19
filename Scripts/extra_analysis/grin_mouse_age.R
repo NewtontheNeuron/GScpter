@@ -244,3 +244,13 @@ setwd("../Output/Jessica/")
 png("cpr_z_nz_var_Aug_15_2022.png", type = "cairo")
 grid.table(znoz)
 dev.off()
+
+# For IASP poster
+# Recode the cluster names as ES1 or ID1 etc.
+all_cell_roster <- all_cell_roster %>%
+  as_tibble() %>%
+  mutate(orig.name = cluster,
+         cluster = case_when(
+           grepl("Excit-", cluster) ~ str_replace(cluster, "Excit-", "E"),
+           grepl("Inhib-", cluster) ~ str_replace(cluster, "Inhib-", "I"),
+         ))
