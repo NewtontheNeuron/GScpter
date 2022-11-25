@@ -23,6 +23,11 @@ args <- c("marr_human_DH_Excit_Inhib", "../../Datasets/human_spinalcord_2022/top
 args <- c("jess_SDH_DDH_Excit_Inhib", "../../Datasets/neurons_only_2021/clean_neuron_object.RDS")
 args <- c("jess_human_DH_Excit_Inhib", "../../Datasets/human_spinalcord_2022/top_level_new_annotation.rda")
 
+### for clare
+args <- c("clare_SDH_DDH_Excit_Inhib", "../../Datasets/neuron_and_glia_2022/final_meta_dataset.rds")
+# Note switched to final_meta_dataset with Excit-1 not Excit-01
+args <- c("clare_human_DH_Excit_Inhib", "../../Datasets/human_spinalcord_2022/top_level_new_annotation.rda")
+
 # Need to set dir
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 
@@ -53,6 +58,7 @@ RDfile <- load_data(args[2])
 extra_pool <- list()
 extra_pool[["top"]] <- list("dataset", "age", "final_cluster_assignment", "run", "nCount_RNA")
 extra_pool[["1"]] <- list("id", "features.label", "subgr")
+extra_pool[["2"]] <- list("id", "features.label")
 #extra_pool[["1"]] <- list("class_label", "region_label")
 
 # Human dataset extrapool
@@ -60,33 +66,38 @@ extra_pool <- list()
 extra_pool[["top"]] <- list("nCount_RNA", "nCount_SCT", "batches_combined",
                             "HSC_Subcluster_Annotation", "new_annotation",
                             "top_level_annotation")
-extra_pool[["1"]] <- list("subgr", "features.label")
-
-# For kcni
-colnames(RDfile@meta.data)
-unique(RDfile@meta.data$subclass_label)
-extra_pool <- list()
-extra_pool[["top"]] <- list("donor_sex_label")
+extra_pool[["1"]] <- list("id", "features.label")
+extra_pool[["2"]] <- list("features.label")
 
 # Everything relies on all_cell_roster and cell_roster
 all_cell_roster <- returnAllCellRoster(RDfile)
-saveRDS(all_cell_roster, "../../Datasets/all_cell_rosters/all_cell_roster_grin.RDS")
-all_cell_roster <- readRDS("../../Datasets/all_cell_rosters/all_cell_roster_human_grin_only.RDS")
+saveRDS(all_cell_roster, "../../Datasets/all_cell_rosters/all_cell_roster_human_jess.RDS")
+all_cell_roster <- readRDS("../../Datasets/all_cell_rosters/all_cell_roster_human_jess.RDS")
+all_cell_roster <- readRDS("../../Datasets/all_cell_rosters/all_cell_roster_jessica.RDS")
 
 #call each script while passing the data as a value.
 
 #dotplot.R
-lbc <- createListbyCluster(scale.method = "log10")
-mainDP(lbc)
+lbc <- createListbyCluster(scale.method = "z-score")
+mainDP(lbc, height = 2000, width = 6700, legend.position = "bottom",
+       legend.box = "horizontal", legend.title.angle = 0,
+       legend.margin = margin(l = 100))
 
 #pooled dotplot.R
-CPR <- createClusterPoolResults(scale.method = "log10")
-mainPDP(CPR)
+CPR <- createClusterPoolResults(scale.method = "z-score", pool.level = "2")
+mainPDP(CPR, height = 1500, width = 1500, factor.order = c("SDH", "DDH"))
 
 # The cluste range plot
 
 
-#quadbar_chart2.R
-#ListByCluster <- createListbyCluster(RDfile)
-mainQBC(CPR)
+##### For human
+lbc <- createListbyCluster(scale.method = "log10")
+mainDP(lbc, height = 2000, width = 6700, legend.position = "bottom",
+       legend.box = "horizontal", legend.title.angle = 0,
+       legend.margin = margin(l = 100))
+
+#pooled dotplot.R
+CPR <- createClusterPoolResults(scale.method = "log10")
+mainPDP(CPR, height = 1500, width = 1500)
+
 

@@ -12,9 +12,10 @@ createClusterPlot <- function(cpdata){
                 aes(color = cluster)) + # Using raw_counts will work with mouse as well and is
     stat_summary(fun = median, geom = "crossbar", # Probably a safe bet, or you could set a parameter in the function
                  position = position_dodge(width = 1)) +
-    #scale_color_viridis_d(option = "plasma") +
-    scale_fill_hue(h = c(180, 270)) +
-    scale_y_continuous(expand = c(0,0), limits = c(-1, 12)) + # human: had to change the limit
+    scale_color_viridis_d() +
+    #scale_fill_hue(h = c(180, 270)) +
+    scale_y_continuous(expand = c(0,0),
+                       limits = c(0, p5max(cpdata[[1]]$raw_counts))) + # human: had to change the limit
     labs(x = "Gene", y = "Raw log-scaled expression", # solution rounded 5% above the highest value make a
          color = "Cluster", title = names(cpdata)) + # setLimit function
     cowplot::theme_cowplot() + 
@@ -37,7 +38,7 @@ mainCluP <- function(cell_roster){
   # human: had to reduce this to 2 not 4 plots
   
   # Now save image
-  save_image("ClusterPlot", masterplot, height = 2500, width = 4100)
+  save_image("ClusterPlot", masterplot, height = 2500, width = 5000)
 }
 
 # Run main to get the plots

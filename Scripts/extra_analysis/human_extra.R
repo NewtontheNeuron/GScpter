@@ -1,7 +1,7 @@
 # This is a script for further analyses from the human dataset
 
 # Set a key
-name <- "Jessica"
+name <- "Clare"
 
 # Usefull functions
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
@@ -48,7 +48,7 @@ znoz <- all_cell_roster %>%
 
 library(gridExtra)
 setwd(sprintf("../Output/%s/", name))
-png("human_z_nz_var_Aug_17_2022.png")
+png("DescriptiveStatistics.png")
 grid.table(znoz)
 dev.off()
 
@@ -62,3 +62,4 @@ all_cell_roster <- all_cell_roster %>%
            grepl("Ex-", cluster) ~ str_replace(cluster, "Ex-Dorsal-", "ED"),
            grepl("Inh-", cluster) ~ str_replace(cluster, "Inh-Dorsal-", "ID")
          ))
+# TODO: restrict or enforce duplicates

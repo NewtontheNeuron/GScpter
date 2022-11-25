@@ -2,7 +2,7 @@
 # This is only necessary outside Rstudio or if loading the data for this first time.
 options(repos = list(CRAN="http://cran.rstudio.com/"))
 
-list.of.packages <- c("ggplot2", "Seurat", "dplyr", "tidyr", "stringr", "data.table", "cowplot", "Cairo", "rjson", "rstudioapi")
+list.of.packages <- c("ggplot2", "Seurat", "dplyr", "tidyr", "stringr", "data.table", "cowplot", "Cairo", "rjson", "rstudioapi", "forcats")
 new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
 if(length(new.packages)) install.packages(new.packages)
 

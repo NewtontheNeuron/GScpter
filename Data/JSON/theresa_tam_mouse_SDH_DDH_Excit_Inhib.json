@@ -1,6 +1,6 @@
 {
-    "features" : ["rna_Cnr1", "rna_Cnr2"],
-    "project_name" : "Jessica",
+    "features" : ["rna_Grin2b", "rna_Becn1", "rna_Ntrk2", "rna_Bdnf"],
+    "project_name" : "theresa_tam_mouse",
     "clusterpool_names": ["SDH","DDH"],
     "subgroup_names": ["Excitatory", "Inhibitory"],
     "clusterpools":

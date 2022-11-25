@@ -91,6 +91,11 @@ SE <- function(x) {
   sd(x) / sqrt(length(x))
 }
 
+# Function for getting 5% over the max of a set of values
+p5max <- function(x) {
+  round(max(x) * 1.05)
+}
+
 returnAllCellRoster <- function(clean_neuron_object){
   cell_roster <<- createCellRoster(clean_neuron_object)
 
@@ -215,7 +220,7 @@ getImageDimensions <- function(base_filename, height, width){
 }
 
 # Function for saving images with specific folder, filename, and date. 
-save_image <- function(base_filename, Plot, height = 1, width = 1, dpi = 300){
+save_image <- function(base_filename, Plot, height = 1, width = 1, dpi = 300, bg, device = "png"){
   
   #set working directory to output directory
   if (!(grepl( "Output", getwd(), fixed = TRUE))){
@@ -237,17 +242,18 @@ save_image <- function(base_filename, Plot, height = 1, width = 1, dpi = 300){
   #put all quad bar plots in another folder inside the project.
   if (substr(base_filename, 1,3) == "QB_"){
     dir.create(sprintf("%s/Quad_BarPlot", project_name), showWarnings = FALSE)
-    filename <- sprintf("%s/Quad_BarPlot/%s_%s.jpg", project_name, base_filename, curr_date)
+    filename <- sprintf("%s/Quad_BarPlot/%s_%s.%s", project_name, base_filename, curr_date, device)
   } else {
-    filename <- sprintf("%s/%s_%s.jpg", project_name, base_filename, curr_date)
+    filename <- sprintf("%s/%s_%s.%s", project_name, base_filename, curr_date, device)
   }
   
   #save plot to proper location as a jpg.
+  type <- ifelse(device == "emf", NA, "cairo")
 
-  ggsave(filename, plot = Plot, device = "jpg",
+  ggsave(filename, plot = Plot, device = device,
   height = dimensions[1],
   width = dimensions[2], units = "px",
-  type = "cairo", limitsize = FALSE, dpi = dpi) #, dpi = 400)
+  type = type, limitsize = FALSE, dpi = dpi)
 
   #set working directory to what it was before
   setwd("../Scripts" )

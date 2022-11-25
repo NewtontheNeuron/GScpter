@@ -49,7 +49,7 @@ length(which(haring$sex == "M"))
 all_cell_roster <- readRDS("../../../Datasets/all_cell_rosters/all_cell_roster_grin.RDS")
 
 haring_roster <- filter(.data = all_cell_roster, dataset == "Haring") %>%
-  as_tibble(haring_roster)
+  as_tibble()
 
 # The Accession column in the haring table is similar to the cell.barcode table
 # Are all or any of the cells present in both tables?
@@ -68,7 +68,7 @@ haring_roster
 # There is now an age x and age y from the two different table coding and conventions
 # You can now perform data science on the haring roster data frame and save it
 # for later use.
-saveRDS(haring_roster, "../../../Datasets/all_cell_rosters/haring_roster_grin.RDS")
+saveRDS(haring_roster, "../../../Datasets/all_cell_rosters/haring_roster_clare.RDS")
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 source("../loadLibraries.R")
 source("../Pre_analysis_functions.R")
@@ -108,7 +108,7 @@ Plot
 setwd("../")
 args <- c("NMDA_mouse_SDHvDDH", "../../Datasets/neurons_only_2021/clean_neuron_object.RDS")
 source("JSON_Handler.r")
-save_image("sex_ddh_sdh_postnatal", Plot, height = 2000, width = 2000)
+save_image("sex_ddh_sdh_postnatal", Plot, height = 2400, width = 2000)
 # No id sep
 extra_pool[["3"]] <- list("sex", "features.label")
 CPR <- createClusterPoolResults(haring_roster, "3", "z-score")
@@ -133,7 +133,7 @@ Plot <- CPR %>%
   theme(panel.background = element_rect(fill = "white"),
         plot.background = element_rect(fill = "white"))
 Plot
-save_image("sex_dh_postnatal", Plot, height = 2000, width = 1300)
+save_image("sex_dh_postnatal", Plot, height = 2400, width = 1300)
 
 # Cluster range plot attempt
 Plot <- haring_roster %>%

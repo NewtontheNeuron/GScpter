@@ -1,5 +1,5 @@
-{"features": ["rna_CNR1", "rna_CNR2"], 
-"project_name": "Jessica_human",
+{"features": ["rna_GRIN2B", "rna_BECN1", "rna_NTRK2", "rna_BDNF"], 
+"project_name": "theresa_tam_human",
 "clusterpool_names": ["Dorsal horn"], 
 "subgroup_names": ["Excitatory", "Inhibitory"], 
 "clusterpools": {"Dorsal horn": {

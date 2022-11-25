@@ -13,7 +13,7 @@ setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 # Read in the table containing the barcodes and their labels
 # Also separate the barcodes from the sex/subject label
 
-sathy <- read_delim(file = "../../../Datasets/Sathyamurthy/GSE103892_Sample_Cell_Cluster_Information.txt") %>%
+sathy <- read_delim(file = "../../../Datasets/sathyamurthy_raw_data/GSE103892_Sample_Cell_Cluster_Information.txt") %>%
   separate(col = sample_cellbarcode, into = c("sex", "base_barcode"),
            sep = "_")
 
@@ -23,7 +23,7 @@ sathy
 
 # Now bring in all_cell_roster
 # filter to only sathyamurthy cells
-all_cell_roster <- readRDS("../../../Datasets/all_cell_rosters/all_cell_roster_jess.RDS")
+all_cell_roster <- readRDS("../../../Datasets/all_cell_rosters/all_cell_roster_clare.RDS")
 all_cell_roster <- as_tibble(all_cell_roster)
 all_cell_roster <- filter(.data = all_cell_roster, dataset == "Sathyamurthy")
 all_cell_roster
@@ -59,8 +59,8 @@ sathy_roster <- all_cell_roster %>%
                      "form4", "form9") ~ "male"
   ))
 sathy_roster
-saveRDS(sathy_roster, "../../../Datasets/all_cell_rosters/sathy_jess_acr.RDS")
-sathy_roster <- readRDS("../../../Datasets/all_cell_rosters/sathy_jess_acr.RDS")
+saveRDS(sathy_roster, "../../../Datasets/all_cell_rosters/sathy_clare_acr.RDS")
+sathy_roster <- readRDS("../../../Datasets/all_cell_rosters/sathy_clare_acr.RDS")
 
 # Create plots
 extra_pool <- list()
@@ -93,9 +93,9 @@ Plot <- CPR %>%
         plot.background = element_rect(fill = "white"))
 Plot
 setwd("../")
-args <- c("NMDA_mouse_SDHvDDH", "../../Datasets/neurons_only_2021/clean_neuron_object.RDS")
+args <- c("DotPlot_Adult_SDH_DDH_male_female", "../../Datasets/neurons_only_2021/clean_neuron_object.RDS")
 source("JSON_Handler.r")
-save_image("sex_ddh_sdh_adult", Plot, height = 2000, width = 2000)
+save_image("DotPlot_Adult_SDH_DDH_male_female", Plot, height = 2400, width = 2000)
 # Plot only the sex differences for the entire dh
 extra_pool[["3"]] <- list("sex", "features.label")
 CPR <- createClusterPoolResults(sathy_roster %>%
@@ -118,7 +118,7 @@ Plot <- CPR %>%
   theme(panel.background = element_rect(fill = "white"),
         plot.background = element_rect(fill = "white"))
 Plot
-save_image("sex_dh_adult", Plot, height = 2000, width = 1300)
+save_image("DotPlot_Adult_male_female", Plot, height = 2400, width = 1300)
 
 # Cluster range plot attempt
 Plot <- sathy_roster %>%
@@ -139,7 +139,7 @@ Plot <- sathy_roster %>%
         axis.title = element_text(size = 15, face = "bold"),
         plot.background = element_rect(fill = "white"))
 Plot
-save_image("sex_adult_crplot", Plot, height = 3000, width = 5000)
+save_image("ClusterRangePlot_Adult_male_female", Plot, height = 3000, width = 5000)
 
 # Now look at the dotplot of dh again across individuals
 extra_pool[["4"]] <- list("sex", "individual", "features.label")
@@ -165,7 +165,7 @@ Plot <- CPR %>%
         panel.background = element_rect(fill = "white"),
         plot.background = element_rect(fill = "white"))
 Plot
-save_image("individual_dotplot_adult", Plot, height = 3000, width = 5000)
+save_image("Dotplot_individual_sample_adult", Plot, height = 3000, width = 5000)
 
 # Each individual is either male or female but we can also look at
 # the sdh vs ddh
@@ -194,5 +194,5 @@ Plot <- CPR %>%
         panel.background = element_rect(fill = "white"),
         plot.background = element_rect(fill = "white"))
 Plot
-save_image("invdal_adult_sdh_ddh", Plot, height = 5000, width = 3000)
+save_image("DotPlot_invidual_sample_adult_sdh_ddh", Plot, height = 5000, width = 3000)
 
