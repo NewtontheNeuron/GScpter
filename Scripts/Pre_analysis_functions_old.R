@@ -4,7 +4,7 @@
 # tidy the information, and perform basic calculations.
 
 
-returnAllCellRoster <- function(RDfile){
+createCellRoster <- function(clean_neuron_object){
   # Get the presentable genelabels by removing the 'rna_' tag
   features_no_key <- returnCleanLabelList()
   
@@ -12,16 +12,16 @@ returnAllCellRoster <- function(RDfile){
   groups <- returnClusterpool_names()
   subGroups <- returnClusterpool_subgroups()
   
-  # Next look for the first cluster pool within each column
+  # Next look for the first cluster pool within each collumn
   all_clusters <- returnAllClusters()
   
-  # TODO: need to find a way to get the correct formatting for the genes
+  # TODO: need to find a way to get the correct formating for the genes
   # for example GRIN1 vs. Grin1
   # Now merging meta data and active ident and finding where the clusters are stored
   # First merge @meta.data and @active.ident
-  meta_ident <- as.data.frame(RDfile@meta.data) %>%
-    mutate(cells = row.names(as.data.frame(RDfile@active.ident)),
-           id_plus = as.data.frame(RDfile@active.ident)[[1]],
+  meta_ident <- as.data.frame(clean_neuron_object@meta.data) %>%
+    mutate(cells = row.names(as.data.frame(clean_neuron_object@active.ident)),
+           id_plus = as.data.frame(clean_neuron_object@active.ident)[[1]],
            cell.barcode = row.names(.))
   # Then get the names of the collumns that have at least one of the
   # clusters in the clusterpool
@@ -32,53 +32,48 @@ returnAllCellRoster <- function(RDfile){
   # TODO: add the ability to introduce secondary identifiers
   # TODO: turn this into a function
 
-  # Stores information on the clusters and the associated groups
-  # TODO: find a json package friendly way of doing this
-  Clusterpool <- list()
+  # Create empty list and vector
+  cell_roster <- list()
+
   for (group in groups){
     for (subGroup in subGroups){
+
+      Clusterpool <- returnClusters(group, subGroup)
+
+      # First grab the indices of the features
+      GeneIndicies <- which(unlist(clean_neuron_object@assays$RNA@data@Dimnames[1]) %in% features_no_key)
+      # Then grab the indices of the cells for the spcefic Clusterpool
+      CellIndicies <- which(meta_ident[[clusters_location]] %in% Clusterpool)
+      # Get the relevant data using the the indicies otained above
+      raw_data <- GetAssayData(clean_neuron_object, assay = 'RNA', slot = 'data')[GeneIndicies, CellIndicies]
+
+      # Dataframe with the cells and the associated clusters
+      # add all the extra variables that are selected in extra_pool
+      clusters_n_cells <- meta_ident %>%
+        select(cell.barcode = cells,
+               all_of(clusters_location), all_of(unlist(extra_pool[["top"]]))) %>%
+        slice(CellIndicies)
+      
       key <- paste(subGroup, group, sep = " ")
-      # TODO: Space delineation not so good
-      Clusterpool[[key]] <- returnClusters(group, subGroup)
+
+      # Turn raw_data into a data frame
+      cell_roster[[key]] <- raw_data %>% # Using dplyr
+      # Change the object to a data frame
+      as.data.frame() %>% 
+      # Make the row names an actual column, necessary for an acurate pivot
+      mutate('features.label' = row.names(raw_data)) %>%
+      # Pivot the data frame with the cells and raw counts in separte columns
+      pivot_longer(cols = -features.label, names_to = 'cell.barcode', values_to = 'raw_counts') %>%
+      # Add a column with the clusters
+      full_join(clusters_n_cells, by = "cell.barcode") %>%
+      # TODO: what if there is something else named cluster?
+      rename("cluster" = all_of(clusters_location)) %>%
+      # Add a column with the id and subGroup
+      mutate('id' = group, 'subgr' = subGroup)
     }
   }
-  # First grab the indices of the features
-  GeneIndicies <- which(unlist(RDfile@assays$RNA@data@Dimnames[1]) %in% features_no_key)
-  # Then grab the indices of the cells for the spcefic Clusterpool
-  CellIndicies <- which(meta_ident[[clusters_location]] %in% unique(all_clusters))
-  # Get the relevant data using the the indicies otained above
-  raw_data <- GetAssayData(RDfile, assay = 'RNA', slot = 'data')[GeneIndicies, CellIndicies]
-
-  # Dataframe with the cells and the associated clusters
-  # add all the extra variables that are selected in extra_pool
-  clusters_n_cells <- meta_ident %>%
-    select(cell.barcode = cells,
-           all_of(clusters_location), all_of(unlist(extra_pool[["top"]]))) %>%
-    slice(CellIndicies) %>%
-    mutate(cats = lapply(new_cc$final_cluster_assignment,
-                         function (x) list.which(Clusterpool, x %in% .)) %>>%
-             lapply(function (x) names(Clusterpool)[x]),
-           id = lapply(cats, function (x) unique(str_split_i(x, " ", i = 2))),
-           subgr = lapply(cats, function (x) unique(str_split_i(x, " ", i = 1)))) %>%
-    select(-cats)
-  
-  # Turn raw_data into a data frame
-  all_cell_roster <- raw_data %>% # Using dplyr
-  # Change the object to a data frame
-  as.data.frame() %>% 
-  # Make the row names an actual column, necessary for an accurate pivot
-  mutate('features.label' = row.names(raw_data)) %>%
-  # Pivot the data frame with the cells and raw counts in separate columns
-  pivot_longer(cols = -features.label, names_to = 'cell.barcode', values_to = 'raw_counts') %>%
-  # Add a column with the clusters
-  full_join(clusters_n_cells, by = "cell.barcode") %>%
-  # TODO: what if there is something else named cluster?
-  rename("cluster" = all_of(clusters_location))
-  
-  return(all_cell_roster)
+  return(cell_roster)
 }
-# TODO: The next steps are to figure out how to retrieve the information for grouping
-# Perhaps create a centralized function for this.
 
 # TODO: These can be separated as utility functions.R
 # Create a function for calculating percent expressed
@@ -99,6 +94,15 @@ SE <- function(x) {
 # Function for getting 5% over the max of a set of values
 p5max <- function(x) {
   round(max(x) * 1.05)
+}
+
+returnAllCellRoster <- function(clean_neuron_object){
+  cell_roster <<- createCellRoster(clean_neuron_object)
+
+  # Now to make a master roster of the cells
+  all_cell_roster <- data.table::rbindlist(cell_roster)
+
+  return(all_cell_roster)
 }
 
 createListbyCluster <- function(scale.method = "z-score"){

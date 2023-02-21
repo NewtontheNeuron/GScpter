@@ -9,7 +9,7 @@ print(paste ("this is the title project name entered: ", args[1]))
 print(paste ("this was the given directory:", args[2]))
 
 # The Grin gene analysis
-args <- c("grin_only_SDH_DDH_Excit_Inhib", "../../Datasets/neurons_only_2021/clean_neuron_object.RDS")
+args <- c("grin_only_SDH_DDH_Excit_Inhib", "../../Datasets/neurons_and_glia_2022/final_meta_dataset.rds")
 args <- c("grin_only_human_DH_Excit_Inhib", "../../Datasets/human_spinalcord_2022/top_level_new_annotation.rda")
 
 ### for kcni
@@ -44,7 +44,10 @@ source("ClusterPlot.R")
 #source("Quad_BarChart2.r")
 
 #load data
+start <- Sys.time()
 RDfile <- load_data(args[2])
+end <- Sys.time()
+(duration <- end - start)
 # duration <- c(43.22078, 28.90538, 1126.886, 546.6604)
 # start <- c("2022-03-24 08:37:09 EDT", "2022-03-24 10:52:30 EDT", NA, "2022-03-25 08:02:31 EDT")
 # condition <- c("Early morning with no browser only MS OneNote", "Nothing running
