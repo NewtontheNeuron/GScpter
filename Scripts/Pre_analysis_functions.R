@@ -55,7 +55,7 @@ returnAllCellRoster <- function(RDfile){
     select(cell.barcode = cells,
            all_of(clusters_location), all_of(unlist(extra_pool[["top"]]))) %>%
     slice(CellIndicies) %>%
-    mutate(cats = lapply(new_cc$final_cluster_assignment,
+    mutate(cats = lapply(final_cluster_assignment,
                          function (x) list.which(Clusterpool, x %in% .)) %>>%
              lapply(function (x) names(Clusterpool)[x]),
            id = lapply(cats, function (x) unique(str_split_i(x, " ", i = 2))),
@@ -132,30 +132,60 @@ createListbyCluster <- function(scale.method = "z-score"){
   return(lbc)
 }
 
+# Find a way to check which column in roster has these values then apply and store the grouped indicies
+# into a list with the column name as the name of the list.
+group_over <- function(roster, pool.level) {
+  find_groups <- lapply(roster, function (x) list.any(x, length(.) > 1)) %>>%
+    list.which(TRUE %in% .)
+  
+  grouplist <- list()
+  for (lists in find_groups) {
+    grouplist[[names(roster[find_groups])]] <- roster[[find_groups]] %>>%
+      list.class(.) %>>%
+      list.map(. %>>% list.mapv(.i))
+  }
+  overgrouped <- which(extra_pool[[pool.level]] == names(roster[find_groups]))
+  group_points <- list(grouplist, overgrouped)
+  return(group_points)
+}
+
+# Then with that list of lists create a grouping function that does each part separately
+# Then combines them together.
 createClusterPoolResults <- function(roster = all_cell_roster,
-                                     pool.level = "1",
-                                     scale.method = "z-score", ...){
-  # Using all_cell_roster to calcualte the average expression and percent expressed
-  # for each cluster pool (id and subgr) and gene combination
-  CPR <- roster %>%
-    # group by clusterpool (id and subgroup) gene combinations
-    group_by(across(unlist(extra_pool[[pool.level]]))) %>%
-    # perform the following calculations within the groups and store the
-    # neccessary information
-    summarise(avg.exp = mean(expm1(raw_counts)),
-              pct.exp = pct_calc(raw_counts),
-              avg.std.err = SE(expm1(raw_counts)),
-              avg.lower = avg.exp - avg.std.err,
-              avg.upper = avg.exp + avg.std.err,
-              ...) %>%
-    # Ungroup the data table and caluclate the appropriate scaling
-    ungroup(everything()) %>%
+                pool.level = "1",
+                scale.method = "z-score", ...) {
+  
+  listofCPRs <- list()
+  group_points <- group_over(roster, pool.level)
+  grouplist <- group_points[[1]]
+  overgrouped <- group_points [[2]]
+  
+  idxcount <- 1
+  for(group in grouplist) {
+    for(part in group){
+      listofCPRs[[idxcount]] <- roster[part, ] %>%
+        group_by(across(unlist(extra_pool[[pool.level]][-overgrouped]))) %>%
+        summarise(avg.exp = mean(expm1(raw_counts)),
+                  pct.exp = pct_calc(raw_counts),
+                  avg.std.err = SE(expm1(raw_counts)),
+                  avg.lower = avg.exp - avg.std.err,
+                  avg.upper = avg.exp + avg.std.err,
+                  ...)
+      idxcount <- idxcount + 1
+    }
+  }
+  # TODO: Unit test if it will work well when both variables have list structures
+  # I might need to change group_over
+  # For now it should work for the one.
+  # TODO: Table is missing other descriptors
+  
+  CPR <- data.table::rbindlist(listofCPRs) %>%
     mutate(avg.exp.scaled = case_when(
       scale.method == "z-score" ~ zs_calc(avg.exp),
       scale.method == "log10" ~ log10(avg.exp),
-      scale.method == "log1p" ~ log1p(avg.exp)
-    )) # human: median vs zs_scaled
-
+      scale.method == "log1p" ~ log1p(avg.exp))
+      )
+  
   return(CPR)
 }
 

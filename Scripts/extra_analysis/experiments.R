@@ -28,6 +28,20 @@ str(people[[p]])
 (p <- list.which(people, "music" %in% Interests))
 str(people[p])
 
+# list any
+list.any(people, mean(as.numeric(Expertise)) >= 3)
+# list class (grouping)
+1:10 %>>%
+  list.class(. %% 2 == 0)
+str(list.class(people, Interests))
+str(people)
+people %>>%
+  list.class(Interests) %>>%
+  list.map(. %>>% list.mapv(.name))
+people %>>%
+  list.class(names(Expertise)) %>>%
+  list.map(. %>>% list.mapv(Name))
+
 # Now try it on my own stuff
 library(tibble)
 library(rlist)
@@ -38,3 +52,28 @@ list.search(q$value, . == 2)
 list.search(q$value, .[. == 2])
 list.search(q$value, . == 2, unlist = T)
 list.match(q$value, 2 %in% .)
+
+
+# Trying tha map method from the stack overflow:
+# https://stackoverflow.com/questions/42933058/summarizing-with-overlapping-groups-using-dplyr
+library(tidyverse)
+(test <- data.frame(year = rep(as.character(2014:2016), 2), value = 1:6))
+years.groups <- function(start.years, n) {
+  ll <- length(start.years)
+  start.years <- sort(start.years[-c((ll - (n - 2)):ll)])
+  map(as.numeric(as.character(start.years)), function(x) x:(x + (n - 1)))
+} # Out puts a list of the things to group
+
+roll.group <- function(vec) {
+  vec %>% map_df(~ test %>%
+                   filter(year %in% .x) %>%
+                   group_by(year = paste(year[which.min(year)], year[which.max(year)], sep = "-")) %>%
+                   summarise(value = sum(value)))
+}
+
+bind_rows(years.groups(unique(test$year), 2) %>%
+            roll.group(),
+          years.groups(unique(test$year), 3) %>%
+            roll.group(),
+          test %>% group_by(year) %>%
+            summarise(value = sum(value)))
