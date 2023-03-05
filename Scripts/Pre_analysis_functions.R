@@ -136,30 +136,10 @@ createListbyCluster <- function(scale.method = "z-score"){
 # into a list with the column name as the name of the list
 # The purpose of this function is to handle overlapping grouping variables
 # Then CPR() will handle the rest based on the overlap
-group_over <- function(roster, pool.level) {
-  find_groups <- lapply(roster, function (x) list.any(x, length(.) > 1)) %>>%
-    list.which(TRUE %in% .)
-  # all groups found here are to be grouped by because you specified
-  # it in your extra_pool
-  
-  # Therefore, all I need to do is to get the possible values for each
-  # overlapping group column,
-  
-  # and loop over and intersect them after that.
-  # You may assume for time sake that there can be only a maximum of 2 overlapping
-  # grouping variables.
-  grouplist <- list()
-  for (lists in find_groups) {
-    grouplist[[names(roster[find_groups])]] <- roster[[find_groups]] %>>%
-      list.class(.) %>>%
-      list.map(. %>>% list.mapv(.i))
-  }
-  overgrouped <- which(extra_pool[[pool.level]] == names(roster[find_groups]))
-  group_points <- list(grouplist, overgrouped)
-  return(group_points)
-}
 
-# Function for strategically expanding overlapping groups
+
+# Function for strategically expanding overlapping groups to create
+# to make the data more tidy.
 group_expand <- function (roster) {
   overgrouped <- list.which(roster, is.list(.) & .name %in%
                               unlist(extra_pool[[pool.level]]))
@@ -169,10 +149,6 @@ group_expand <- function (roster) {
   }
   return(roster)
 }
-
-# Check that the groups are splitting properly.
-roster <- all_cell_roster[49:57,]
-# It works perfectly
 
 # Then with that list of lists create a grouping function that does each part separately
 # Then combines them together.
@@ -195,8 +171,8 @@ createClusterPoolResults <- function(roster = all_cell_roster,
               pct.exp = pct_calc(raw_counts),
               avg.std.err = SE(expm1(raw_counts)),
               avg.lower = avg.exp - avg.std.err,
-              avg.upper = avg.exp + avg.std.err)
-              #...) %>%
+              avg.upper = avg.exp + avg.std.err,
+              ...) %>%
     # Ungroup the data table and caluclate the appropriate scaling
     ungroup(everything()) %>%
     mutate(avg.exp.scaled = case_when(
