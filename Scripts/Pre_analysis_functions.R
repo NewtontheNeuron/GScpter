@@ -133,11 +133,21 @@ createListbyCluster <- function(scale.method = "z-score"){
 }
 
 # Find a way to check which column in roster has these values then apply and store the grouped indicies
-# into a list with the column name as the name of the list.
+# into a list with the column name as the name of the list
+# The purpose of this function is to handle overlapping grouping variables
+# Then CPR() will handle the rest based on the overlap
 group_over <- function(roster, pool.level) {
   find_groups <- lapply(roster, function (x) list.any(x, length(.) > 1)) %>>%
     list.which(TRUE %in% .)
+  # all groups found here are to be grouped by because you specified
+  # it in your extra_pool
   
+  # Therefore, all I need to do is to get the possible values for each
+  # overlapping group column,
+  
+  # and loop over and intersect them after that.
+  # You may assume for time sake that there can be only a maximum of 2 overlapping
+  # grouping variables.
   grouplist <- list()
   for (lists in find_groups) {
     grouplist[[names(roster[find_groups])]] <- roster[[find_groups]] %>>%
@@ -149,45 +159,58 @@ group_over <- function(roster, pool.level) {
   return(group_points)
 }
 
+# Function for strategically expanding overlapping groups
+group_expand <- function (roster) {
+  overgrouped <- list.which(roster, is.list(.) & .name %in%
+                              unlist(extra_pool[[pool.level]]))
+  for (over in overgrouped) {
+    roster <- roster %>%
+      unnest_longer(colnames(roster[over]))
+  }
+  return(roster)
+}
+
+# Check that the groups are splitting properly.
+roster <- all_cell_roster[49:57,]
+# It works perfectly
+
 # Then with that list of lists create a grouping function that does each part separately
 # Then combines them together.
 createClusterPoolResults <- function(roster = all_cell_roster,
                 pool.level = "1",
                 scale.method = "z-score", ...) {
   
-  listofCPRs <- list()
-  group_points <- group_over(roster, pool.level)
-  grouplist <- group_points[[1]]
-  overgrouped <- group_points [[2]]
+  any_overgrouped <- list.any(roster[unlist(extra_pool[[pool.level]])], is.list(.))
+  # TODO have a specific testing process sheet for testing and development
+  if (any_overgrouped) {
+    roster <- group_expand(roster)
+  }
   
-  idxcount <- 1
-  for(group in grouplist) {
-    for(part in group){
-      listofCPRs[[idxcount]] <- roster[part, ] %>%
-        group_by(across(unlist(extra_pool[[pool.level]][-overgrouped]))) %>%
-        summarise(avg.exp = mean(expm1(raw_counts)),
-                  pct.exp = pct_calc(raw_counts),
-                  avg.std.err = SE(expm1(raw_counts)),
-                  avg.lower = avg.exp - avg.std.err,
-                  avg.upper = avg.exp + avg.std.err,
-                  ...)
-      idxcount <- idxcount + 1
-    }
+  CPR <- roster %>%
+    # group by clusterpool (id and subgroup) gene combinations
+    group_by(across(unlist(extra_pool[[pool.level]]))) %>%
+    # perform the following calculations within the groups and store the
+    # neccessary information
+    summarise(avg.exp = mean(expm1(raw_counts)),
+              pct.exp = pct_calc(raw_counts),
+              avg.std.err = SE(expm1(raw_counts)),
+              avg.lower = avg.exp - avg.std.err,
+              avg.upper = avg.exp + avg.std.err)
+              #...) %>%
+    # Ungroup the data table and caluclate the appropriate scaling
+    ungroup(everything()) %>%
+    mutate(avg.exp.scaled = case_when(
+      scale.method == "z-score" ~ zs_calc(avg.exp),
+      scale.method == "log10" ~ log10(avg.exp),
+      scale.method == "log1p" ~ log1p(avg.exp)
+    )) # human: median vs zs_scaled
+  
+  return(CPR)
   }
   # TODO: Unit test if it will work well when both variables have list structures
   # I might need to change group_over
   # For now it should work for the one.
   # TODO: Table is missing other descriptors
-  
-  CPR <- data.table::rbindlist(listofCPRs) %>%
-    mutate(avg.exp.scaled = case_when(
-      scale.method == "z-score" ~ zs_calc(avg.exp),
-      scale.method == "log10" ~ log10(avg.exp),
-      scale.method == "log1p" ~ log1p(avg.exp))
-      )
-  
-  return(CPR)
-}
 
 #function to set the width and height of plot saved as an image into global values
 getImageDimensions <- function(base_filename, height, width){

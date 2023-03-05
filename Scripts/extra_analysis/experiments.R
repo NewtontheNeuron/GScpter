@@ -77,3 +77,10 @@ bind_rows(years.groups(unique(test$year), 2) %>%
             roll.group(),
           test %>% group_by(year) %>%
             summarise(value = sum(value)))
+
+
+# Experimenting with lists as factors
+mydf<-data.frame(col1=c("a","b"),col2=c("f","j"))
+mydf$col1<-as.list(mydf$col1)
+mydf$col2<-as.list(mydf$col2)
+str(mydf)

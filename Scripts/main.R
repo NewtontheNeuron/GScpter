@@ -11,6 +11,8 @@ print(paste ("this was the given directory:", args[2]))
 # The Grin gene analysis
 args <- c("grin_only_SDH_DDH_Excit_Inhib", "../../Datasets/neurons_and_glia_2022/final_meta_dataset.rds")
 args <- c("grin_only_human_DH_Excit_Inhib", "../../Datasets/human_spinalcord_2022/top_level_new_annotation.rda")
+# Unit testing group over
+args <- c("grin_only_SDH_DDH_Excit_Inhib_for_unit_testing_groupover", "../../Datasets/neurons_and_glia_2022/final_meta_dataset.rds")
 
 ### for kcni
 args <- c("combined", "~/Neuroscience - MSc/Summer 2022/kcni_summer_school/Data/mouse_human_practice.rds")
@@ -62,6 +64,7 @@ extra_pool <- list()
 extra_pool[["top"]] <- list("dataset", "age", "final_cluster_assignment", "run", "nCount_RNA")
 extra_pool[["1"]] <- list("id", "features.label", "subgr")
 extra_pool[["2"]] <- list("id", "features.label")
+extra_pool[["3"]] <- list("features.label")
 #extra_pool[["1"]] <- list("class_label", "region_label")
 
 # Human dataset extrapool
@@ -72,7 +75,7 @@ extra_pool[["top"]] <- list("nCount_RNA", "nCount_SCT", "batches_combined",
 extra_pool[["1"]] <- list("id", "features.label")
 extra_pool[["2"]] <- list("features.label")
 
-# Everything relies on all_cell_roster and cell_roster
+# Everything relies on all_cell_roster
 all_cell_roster <- returnAllCellRoster(RDfile)
 saveRDS(all_cell_roster, "../../Datasets/all_cell_rosters/all_cell_roster_human_jess.RDS")
 all_cell_roster <- readRDS("../../Datasets/all_cell_rosters/all_cell_roster_human_jess.RDS")
