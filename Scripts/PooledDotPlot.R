@@ -1,37 +1,46 @@
-mainPDP <- function(CPR, transp = F, height = NA, width = NA,
-                    factor.order = c()){
-  global_size <- 20
-
-  CPR$ClusterAndSubgroup <- paste(CPR$id, CPR$subgr)
-  # TODO: this should be done at the Cluster pool results level
-
+mainPDP <- function(CPR, base.name = "PooledDotPlot", transp = F, height = NA, width = NA,
+                    factor.order = c(), dot.global.size = 20, add.label = F,
+                    legend.margin = margin(), rm.labs = F){
   
   Plot <- CPR %>%
-    mutate(ClusterAndSubgroup = ifelse(length(factor.order) > 0,
-                       fct_relevel(ClusterAndSubgroup, factor.order),
-                       ClusterAndSubgroup)) %>%
-    ggplot(aes(y = features.label, x = ClusterAndSubgroup, color = avg.exp.scaled, size = pct.exp)) + 
-    geom_point() +
+    #mutate(group.label = ifelse(length(factor.order) > 0,
+                       #fct_relevel(group.label, factor.order),
+                       #group.label)) %>%
+    mutate(group.label = fct_rev(group.label)) %>%
+    ggplot() + 
+    geom_point(aes(y = features.label, x = group.label, color = avg.exp.scaled, size = pct.exp)) +
+    {if (add.label) geom_label(aes(y = features.label, x = group.label, label = signif(avg.exp, digits = 2)))} +
     labs(x = "Group", y = "Gene", color = "Avg exp scaled", size = "% Expressing") +
     scale_size(range = c(0, 20)) +
     scale_x_discrete(labels = function(x) str_wrap(x, width = 8)) +
     scale_color_viridis_c(option = "plasma") + 
     cowplot::theme_cowplot() + 
-    theme(axis.title = element_text(size = global_size, face = "bold"),
+    theme(axis.title = element_text(size = dot.global.size, face = "bold"),
           axis.text.x = element_text(angle = 0, vjust = 0.5, hjust=0.5,
-                                     size=global_size, color = "black"),
+                                     size=dot.global.size, color = "black"),
           axis.text.y = element_text(angle = 0, vjust = 0.5, hjust=0.5,
-                                     size = global_size, color = "black"),
+                                     size = dot.global.size, color = "black"),
           legend.key.size = unit(1, "line"),
-          legend.text = element_text(size = global_size/1.75),
-          legend.title = element_text(size = global_size, angle = 90),
+          legend.text = element_text(size = dot.global.size/1.75),
+          legend.title = element_text(size = dot.global.size, angle = 90),
           legend.box = "horizontal",
           legend.spacing.x = unit(0.5, "line"),
+          legend.margin = legend.margin,
           plot.background = element_rect(fill = ifelse(transp == T, "transparent", "white")))
 
   Plot
   
+  # Remove labels
+  if(rm.labs) {
+    Plot <- Plot +
+      theme(
+        axis.title = element_blank(),
+        axis.text.x = element_blank(),
+        axis.text.y = element_blank()
+      )
+  }
+  
   # Save the image
-  save_image('PooledDotPlot', Plot, height = ifelse(!is.na(height), height, 2400),
+  save_image(base.name, Plot, height = ifelse(!is.na(height), height, 2400),
              width = ifelse(!is.na(width), width, 3000)) 
 }

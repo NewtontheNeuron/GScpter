@@ -43,11 +43,11 @@ returnAllCellRoster <- function(RDfile){
     }
   }
   # First grab the indices of the features
-  GeneIndicies <- which(unlist(RDfile@assays$RNA@data@Dimnames[1]) %in% features_no_key)
+  GeneIndicies <- which(unlist(RDfile@assays[[which(names(RDfile@assays) == assay)]]@data@Dimnames[1]) %in% features_no_key)
   # Then grab the indices of the cells for the spcefic Clusterpool
   CellIndicies <- which(meta_ident[[clusters_location]] %in% unique(all_clusters))
   # Get the relevant data using the the indicies otained above
-  raw_data <- GetAssayData(RDfile, assay = 'RNA', slot = 'data')[GeneIndicies, CellIndicies]
+  raw_data <- GetAssayData(RDfile, assay = assay, slot = slot)[GeneIndicies, CellIndicies]
 
   # Dataframe with the cells and the associated clusters
   # add all the extra variables that are selected in extra_pool
@@ -55,7 +55,7 @@ returnAllCellRoster <- function(RDfile){
     select(cell.barcode = cells,
            all_of(clusters_location), all_of(unlist(extra_pool[["top"]]))) %>%
     slice(CellIndicies) %>%
-    mutate(cats = lapply(final_cluster_assignment,
+    mutate(cats = lapply(.[[clusters_location]],
                          function (x) list.which(Clusterpool, x %in% .)) %>>%
              lapply(function (x) names(Clusterpool)[x]),
            id = lapply(cats, function (x) unique(str_split_i(x, " ", i = 2))),
@@ -91,6 +91,26 @@ zs_calc <- function (x) {
   (x - mean(x)) / sd(x)
 }
 
+# Counts per million scale
+# Change RNA to raw
+run_CPM <-  function (roster, scale.method, pre.exp = F) {
+  if (scale.method %in% c("CPM", "log1mCPM", "log1pCPM",
+                          "zsoflog1pCPM")) {
+    roster %>%
+      mutate(raw_counts = case_when(
+        pre.exp == F ~ (raw_counts / nCount_RNA) * 10^6,
+        pre.exp == T ~ expm1(raw_counts / nCount_RNA) * 10^6))
+    
+  } else if (scale.method == "countspertotal") {
+    
+    roster %>%
+      mutate(raw_counts = raw_counts * nCount_RNA / 10^6)
+    
+  } else {
+    roster
+  }
+}
+
 # Adding the standard error function
 SE <- function(x) {
   sd(x) / sqrt(length(x))
@@ -101,48 +121,49 @@ p5max <- function(x) {
   round(max(x) * 1.05)
 }
 
-createListbyCluster <- function(scale.method = "z-score"){
-  
-  # Calculate average expression, percent expressed, and average expression scaled
-  # for each cluster and gene combination
+# Function to wrap text
+wrapper <- function(x, ...) 
+{
+  paste(strwrap(x, ...), collapse = "\n")
+}
+
+# Calculate average expression, percent expressed, and average expression scaled
+# for each cluster and gene combination
+createListbyCluster <- function(scale.method = "z-score", pre.expm1 = T){
   lbc <- all_cell_roster %>%
+    run_CPM(scale.method) %>%
     # group by cluster and gene combinations
     group_by(cluster, features.label) %>%
-    # calculate the average expression and percent expressed
-    summarise(avg.exp = mean(expm1(raw_counts)),
-              pct.exp = pct_calc(raw_counts)) %>%
-    # Ungroup and perform the appropriate scaling
+    # calculate the metrics
+    summarise(avg.exp = ifelse(pre.expm1, mean(expm1(raw_counts)), mean(raw_counts)),
+              pct.exp = pct_calc(raw_counts),
+              med.exp = median(raw_counts),
+              .groups = "keep") %>%
     ungroup(cluster, features.label) %>%
-    # This scaling turns to NA any thing 4 standard deviations above the mean
     mutate(avg.exp.scaled = case_when(
       scale.method == "z-score" ~ zs_calc(avg.exp),
       scale.method == "log10" ~ log10(avg.exp),
-      scale.method == "log1p" ~ log1p(avg.exp)
-    )) # human: median vs zs_scaled
+      scale.method == "log1p" ~ log1p(avg.exp),
+      scale.method %in% c("CPM", "noscale") ~ avg.exp,
+      scale.method == "log1mCPM" ~ log10(avg.exp - 1),
+      scale.method == "log1pCPM" ~ log10(avg.exp + 1),
+      scale.method == "zsoflog1pCPM" ~ zs_calc(log10(avg.exp + 1))
+    ),
+    avg.exp.scaled = ifelse(is.infinite(avg.exp.scaled), NA, avg.exp.scaled))
 
-  # lbc_new %>% ggplot(aes(x=cluster, y = log(avg.exp, base = 100), color = features.label)) + geom_point()
-  # I had to exclude a very high outlier for Grin2a and shift to a log 10 scale.
-  # TODO: look into the scaling.
   # TODO: protocol for creating new graphs
-  # TODO: make the standard deviation calculation exclude the extremely large values
-
-  # TODO: Make PoolnShare (deprecated now CPR_new) function take a vector of clusterpool
-  # all instead of indivdual 2 scores + 2 clusterpool names. 
 
   return(lbc)
 }
 
-# Find a way to check which column in roster has these values then apply and store the grouped indicies
-# into a list with the column name as the name of the list
-# The purpose of this function is to handle overlapping grouping variables
-# Then CPR() will handle the rest based on the overlap
-
-
-# Function for strategically expanding overlapping groups to create
+# Function for strategically expanding overlapping groups
 # to make the data more tidy.
-group_expand <- function (roster) {
-  overgrouped <- list.which(roster, is.list(.) & .name %in%
-                              unlist(extra_pool[[pool.level]]))
+group_expand <- function (roster, pool.level = "1", overgrouped = NULL) {
+  if (is.null(overgrouped)) {
+    overgrouped <- list.which(roster, is.list(.) & .name %in%
+                                unlist(extra_pool[[pool.level]]))
+  }
+  
   for (over in overgrouped) {
     roster <- roster %>%
       unnest_longer(colnames(roster[over]))
@@ -150,45 +171,53 @@ group_expand <- function (roster) {
   return(roster)
 }
 
-# Then with that list of lists create a grouping function that does each part separately
-# Then combines them together.
+# Function that pastes from specific columns in a list of column names.
+pool_level_paste <- function(pool.result, pool.list) {
+  pool.list <- pool.list[-which(pool.list %in% "features.label")]
+  pool.result <- pool.result[, unlist(pool.list)]
+  group.label <- apply(pool.result, 1, paste, collapse = " ")
+  return(group.label)
+}
+
+# Function that groups the information for all_cell_roster at any level
+# and provides the averaged expression and percent expressed for that group
 createClusterPoolResults <- function(roster = all_cell_roster,
                 pool.level = "1",
-                scale.method = "z-score", ...) {
+                scale.method = "z-score",
+                pre.expm1 = T, ...) {
   
   any_overgrouped <- list.any(roster[unlist(extra_pool[[pool.level]])], is.list(.))
-  # TODO have a specific testing process sheet for testing and development
+  
   if (any_overgrouped) {
-    roster <- group_expand(roster)
+    roster <- group_expand(roster, pool.level)
   }
   
   CPR <- roster %>%
-    # group by clusterpool (id and subgroup) gene combinations
+    run_CPM(scale.method) %>%
     group_by(across(unlist(extra_pool[[pool.level]]))) %>%
-    # perform the following calculations within the groups and store the
-    # neccessary information
-    summarise(avg.exp = mean(expm1(raw_counts)),
+    summarise(avg.exp = ifelse(pre.expm1, mean(expm1(raw_counts)), mean(raw_counts)),
               pct.exp = pct_calc(raw_counts),
               avg.std.err = SE(expm1(raw_counts)),
               avg.lower = avg.exp - avg.std.err,
               avg.upper = avg.exp + avg.std.err,
+              .groups = "keep",
               ...) %>%
-    # Ungroup the data table and caluclate the appropriate scaling
     ungroup(everything()) %>%
     mutate(avg.exp.scaled = case_when(
       scale.method == "z-score" ~ zs_calc(avg.exp),
       scale.method == "log10" ~ log10(avg.exp),
-      scale.method == "log1p" ~ log1p(avg.exp)
-    )) # human: median vs zs_scaled
+      scale.method == "log1p" ~ log1p(avg.exp),
+      scale.method %in% c("CPM", "noscale") ~ avg.exp,
+      scale.method == "log1mCPM" ~ log10(avg.exp - 1),
+      scale.method == "log1pCPM" ~ log10(avg.exp + 1),
+      scale.method == "zsoflog1pCPM" ~ zs_calc(log10(avg.exp + 1))),
+      group.label = pool_level_paste(., extra_pool[[pool.level]]))
   
   return(CPR)
   }
-  # TODO: Unit test if it will work well when both variables have list structures
-  # I might need to change group_over
-  # For now it should work for the one.
   # TODO: Table is missing other descriptors
 
-#function to set the width and height of plot saved as an image into global values
+# Function to set the width and height of plot saved as an image into global values
 getImageDimensions <- function(base_filename, height, width){
 
   #get amount of data to fill dimensions.
@@ -245,17 +274,16 @@ getImageDimensions <- function(base_filename, height, width){
 }
 
 # Function for saving images with specific folder, filename, and date. 
-save_image <- function(base_filename, Plot, height = 1, width = 1, dpi = 300, bg, device = "png"){
+save_image <- function(base_filename, Plot, height = 1, width = 1,
+                       dpi = 300, bg, device = "png"){
   
   #set working directory to output directory
   if (!(grepl( "Output", getwd(), fixed = TRUE))){
     setwd("../Output" )
   }
-  # In any case set the working directory
-  #setwd("../Output")
 
   #get proper calculated dimensions
-  dimensions = getImageDimensions(base_filename, height, width)
+  dimensions <- getImageDimensions(base_filename, height, width)
   
   #get current date to put on graph title
   curr_date <- format(Sys.Date(),"%b_%d%_%Y" )
@@ -263,22 +291,17 @@ save_image <- function(base_filename, Plot, height = 1, width = 1, dpi = 300, bg
   #create folder in output directory with project name
   project_name <- returnProjectName()
   dir.create(project_name, showWarnings = FALSE)
-
-  #put all quad bar plots in another folder inside the project.
-  if (substr(base_filename, 1,3) == "QB_"){
-    dir.create(sprintf("%s/Quad_BarPlot", project_name), showWarnings = FALSE)
-    filename <- sprintf("%s/Quad_BarPlot/%s_%s.%s", project_name, base_filename, curr_date, device)
-  } else {
-    filename <- sprintf("%s/%s_%s.%s", project_name, base_filename, curr_date, device)
-  }
+  
+  #Set the file name
+  filename <- sprintf("%s/%s_%s.%s", project_name, base_filename, curr_date, device)
   
   #save plot to proper location as a jpg.
   type <- ifelse(device == "emf", NA, "cairo")
 
   ggsave(filename, plot = Plot, device = device,
-  height = dimensions[1],
-  width = dimensions[2], units = "px",
-  type = type, limitsize = FALSE, dpi = dpi)
+         height = dimensions[1],
+         width = dimensions[2], units = "px",
+         type = type, limitsize = FALSE, dpi = dpi)
 
   #set working directory to what it was before
   setwd("../Scripts" )
@@ -291,7 +314,7 @@ load_data <- function(fileLocation){
 
   if (fileLocation == "NULL"){
     filename <- file.choose()
-    clean_neuron_object <- readRDS(filename)
+    rdfile <- readRDS(filename)
   } else if (str_detect(fileLocation,
                         regex("^.*.(rda|rdata)$", ignore_case = T))) {
     # Start a new environment
@@ -299,18 +322,18 @@ load_data <- function(fileLocation){
     # Load the .RData or RDA into the environment
     load(fileLocation, envir = myenv)
     # set the first object in the environment to the proper name
-    clean_neuron_object <- get0(ls(myenv)[1], envir = myenv)
+    rdfile <- get0(ls(myenv)[1], envir = myenv)
     # remove the environment
     rm(myenv)
   }
   else if (str_detect(fileLocation,
                       regex("^.*.(rds)$", ignore_case = T))){
-    clean_neuron_object <- readRDS(fileLocation)
+    rdfile <- readRDS(fileLocation)
   }
 
   print("RDS file loaded!")
 
-  return(clean_neuron_object)
+  return(rdfile)
 }
 
 # The functions bellow will be used to add/remove/configure grouping layers

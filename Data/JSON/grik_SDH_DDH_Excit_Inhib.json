@@ -1,6 +1,6 @@
 {
-    "features" : ["rna_Cnr1", "rna_Cnr2"],
-    "project_name" : "Jessica",
+    "features" : ["rna_Grik1", "rna_Grik2", "rna_Grik3", "rna_Grik4", "rna_Grik5", "rna_Gria1", "rna_Gria2", "rna_Gria3", "rna_Gria4"],
+    "project_name" : "mouse_grik_gria",
     "clusterpool_names": ["SDH","DDH"],
     "subgroup_names": ["Excitatory", "Inhibitory"],
     "clusterpools":
