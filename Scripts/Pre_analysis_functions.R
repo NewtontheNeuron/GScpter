@@ -118,7 +118,7 @@ SE <- function(x) {
 
 # Function for getting 5% over the max of a set of values
 p5max <- function(x) {
-  round(max(x) * 1.05)
+  signif(max(x) * 1.05, digits = 2)
 }
 
 # Function to wrap text
@@ -211,7 +211,7 @@ createClusterPoolResults <- function(roster = all_cell_roster,
       scale.method == "log1mCPM" ~ log10(avg.exp - 1),
       scale.method == "log1pCPM" ~ log10(avg.exp + 1),
       scale.method == "zsoflog1pCPM" ~ zs_calc(log10(avg.exp + 1))),
-      group.label = pool_level_paste(., extra_pool[[pool.level]]))
+      group.label = as.factor(pool_level_paste(., extra_pool[[pool.level]])))
   
   return(CPR)
   }

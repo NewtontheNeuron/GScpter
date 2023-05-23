@@ -451,3 +451,6 @@ ggplot(data = mpg, aes(class, displ)) +
                             me = mean(.x),
                             sd = sd(.x))) +
   stat_summary(fun.y = get_points, geom="point")
+
+
+# C

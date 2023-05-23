@@ -1,17 +1,18 @@
+# This is a script that creates a dot plot from CPR or clusterpoolresults data
+
 mainPDP <- function(CPR, base.name = "PooledDotPlot", transp = F, height = NA, width = NA,
-                    factor.order = c(), dot.global.size = 20, add.label = F,
-                    legend.margin = margin(), rm.labs = F){
+                    factor.order = c(), dot.global.size = 36, add.label = F,
+                    legend.margin = margin(), rm.labs = F, max.dot.size = 20, ...){
   
   Plot <- CPR %>%
-    #mutate(group.label = ifelse(length(factor.order) > 0,
-                       #fct_relevel(group.label, factor.order),
-                       #group.label)) %>%
-    mutate(group.label = fct_rev(group.label)) %>%
+    #mutate(group.label = case_when(
+    #  factor.order != c() ~ fct_relevel(group.label, factor.order),
+    #  factor.order == c() ~ group.label)) %>%
     ggplot() + 
     geom_point(aes(y = features.label, x = group.label, color = avg.exp.scaled, size = pct.exp)) +
     {if (add.label) geom_label(aes(y = features.label, x = group.label, label = signif(avg.exp, digits = 2)))} +
     labs(x = "Group", y = "Gene", color = "Avg exp scaled", size = "% Expressing") +
-    scale_size(range = c(0, 20)) +
+    scale_size(range = c(0, max.dot.size)) +
     scale_x_discrete(labels = function(x) str_wrap(x, width = 8)) +
     scale_color_viridis_c(option = "plasma") + 
     cowplot::theme_cowplot() + 
@@ -26,7 +27,8 @@ mainPDP <- function(CPR, base.name = "PooledDotPlot", transp = F, height = NA, w
           legend.box = "horizontal",
           legend.spacing.x = unit(0.5, "line"),
           legend.margin = legend.margin,
-          plot.background = element_rect(fill = ifelse(transp == T, "transparent", "white")))
+          plot.background = element_rect(fill = ifelse(transp == T, "transparent", "white"))) +
+    theme(...)
 
   Plot
   
