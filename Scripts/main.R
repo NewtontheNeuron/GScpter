@@ -128,7 +128,17 @@ mainDP(lbc, height = 2200, width = 7050, legend.position = "right",
        max.dot.size = 15, legend.key.height = unit(1.7, "line"),
        legend.text = element_text(angle = 0, vjust = 0.5),
        legend.spacing.x = unit(0.2, "line"),
-       legend.box.just = "bottom")
+       legend.box.just = "bottom", saveorret = F) +
+  guides(color = guide_colorbar(barwidth = 0.5, barheight = 10,
+                                ticks = F, label.position = "left",
+                                label.theme = element_text(face = "bold", color = "green4"),
+                                title.position = "left", nbin = 3),
+         size = guide_legend(label.position = "left", title.position = "right",
+                             label.hjust = 1.5, label.vjust = 0,
+                             label.theme = element_text(color = "skyblue3", face = "bold",
+                                                        size = 20))) +
+  scale_color_viridis_c(breaks = c(-1, 0, 1), option = 13) +
+  scale_size(limits = c(0, 100), range = c(0, 15))
 mainDP(lbc, height = 2200, width = 6400, legend.position = "right",
        legend.box = "horizontal", legend.title.angle = 0, transp = T,
        legend.margin = margin(l = 0, t = - 15), base.name = "canacn2023/mouse_fdp_zsoflog1pCPM",
