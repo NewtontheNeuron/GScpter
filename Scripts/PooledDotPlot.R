@@ -1,8 +1,8 @@
 # This is a script that creates a dot plot from CPR or clusterpoolresults data
 
 mainPDP <- function(CPR, base.name = "PooledDotPlot", transp = F, height = NA, width = NA,
-                    factor.order = c(), dot.global.size = 36, add.label = F,
-                    legend.margin = margin(), rm.labs = F, max.dot.size = 20, ...){
+                    factor.order = c(), global_size = 36, add.label = F,
+                    legend.margin = margin(), rm.labs = F, max.dot.size = 20, yieldplot = F, ...){
   
   Plot <- CPR %>%
     #mutate(group.label = case_when(
@@ -16,14 +16,14 @@ mainPDP <- function(CPR, base.name = "PooledDotPlot", transp = F, height = NA, w
     scale_x_discrete(labels = function(x) str_wrap(x, width = 8)) +
     scale_color_viridis_c(option = "plasma") + 
     cowplot::theme_cowplot() + 
-    theme(axis.title = element_text(size = dot.global.size, face = "bold"),
+    theme(axis.title = element_text(size = global_size, face = "bold"),
           axis.text.x = element_text(angle = 0, vjust = 0.5, hjust=0.5,
-                                     size=dot.global.size, color = "black"),
+                                     size=global_size, color = "black"),
           axis.text.y = element_text(angle = 0, vjust = 0.5, hjust=0.5,
-                                     size = dot.global.size, color = "black"),
+                                     size = global_size, color = "black"),
           legend.key.size = unit(1, "line"),
-          legend.text = element_text(size = dot.global.size/1.75),
-          legend.title = element_text(size = dot.global.size, angle = 90),
+          legend.text = element_text(size = global_size/1.75),
+          legend.title = element_text(size = global_size, angle = 90),
           legend.box = "horizontal",
           legend.spacing.x = unit(0.5, "line"),
           legend.margin = legend.margin,
@@ -42,7 +42,7 @@ mainPDP <- function(CPR, base.name = "PooledDotPlot", transp = F, height = NA, w
       )
   }
   
-  # Save the image
-  save_image(base.name, Plot, height = ifelse(!is.na(height), height, 2400),
-             width = ifelse(!is.na(width), width, 3000)) 
+  ifelse(yieldplot, return(Plot),
+         save_image(base.name, Plot, height = ifelse(!is.na(height), height, 2400),
+                    width = ifelse(!is.na(width), width, 3000)))
 }

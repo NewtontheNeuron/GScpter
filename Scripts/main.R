@@ -1,13 +1,5 @@
 #TODO: need to take arguments for knowing what data file to use..
 
-#something like this
-#args <- c("NMDA_mouse_brain", "C:/Users/no/Documents/Neuroscience - MSc/Winter 2022/BIOL 5502/Rmd_proj/Seurat.ss.rda")
-args <- c("human_nmda_ex_inh", "../../Datasets/human_ariel_data/top_level_new_annotation.rda")
-args <- c("nmda_sdh_ddh", "NULL")
-#args <- commandArgs(trailingOnly = TRUE)
-print(paste ("this is the title project name entered: ", args[1]))
-print(paste ("this was the given directory:", args[2]))
-
 # The Grin gene analysis
 args <- c("grin_only_SDH_DDH_Excit_Inhib", "../../Datasets/neurons_and_glia_2022/final_meta_dataset.rds")
 args <- c("grin_only_human_DH_Excit_Inhib", "../../Datasets/human_spinalcord_2022/top_level_new_annotation.rda")
@@ -122,23 +114,27 @@ mainDP(lbc, height = 2100, width = 7400, legend.position = "bottom",
        legend.box = "horizontal", legend.title.angle = 0,
        legend.margin = margin(l = 0), base.name = "mouse_FullDotPlot_zsoflog1pCPM_nolabs",
        rm.labs = T)
-mainDP(lbc, height = 2200, width = 7050, legend.position = "right",
+
+gain <- mainDP(lbc, height = 2200, width = 7050, legend.position = "right",
        legend.box = "horizontal", legend.title.angle = 90, transp = T,
-       legend.margin = margin(l = 0, t = 50), base.name = "canacn2023/mouse_fdp_zsoflog1pCPM",
-       max.dot.size = 15, legend.key.height = unit(1.7, "line"),
-       legend.text = element_text(angle = 0, vjust = 0.5),
-       legend.spacing.x = unit(0.2, "line"),
-       legend.box.just = "bottom", saveorret = F) +
-  guides(color = guide_colorbar(barwidth = 0.5, barheight = 10,
-                                ticks = F, label.position = "left",
-                                label.theme = element_text(face = "bold", color = "green4"),
-                                title.position = "left", nbin = 3),
-         size = guide_legend(label.position = "left", title.position = "right",
-                             label.hjust = 1.5, label.vjust = 0,
-                             label.theme = element_text(color = "skyblue3", face = "bold",
-                                                        size = 20))) +
+       legend.margin = margin(l = 0, t = 0), base.name = "canacn2023/mouse_fdp_zsoflog1pCPM",
+       max.dot.size = 15, legend.box.margin = margin(l = 5),
+       legend.text = element_text(angle = 0, face = "bold"),
+       legend.spacing.x = unit(0.85, "line"), #title = element_text(margin = margin(l=300)),
+       legend.box.spacing = unit(1, "line"), global_size = 30,
+       legend.box.just = "top", saveorret = F,
+       axis.line = element_line(color = "black", linewidth = 1),
+       axis.text = element_text(face = "bold"), title = element_text(face = "bold")) +
+  guides(color = guide_colorbar(barwidth = 1.2, barheight = 9,
+                                ticks = T, label.position = "left",
+                                title.position = "top"),
+         size = guide_legend(label.position = "left", title.position = "top")) +
   scale_color_viridis_c(breaks = c(-1, 0, 1), option = 13) +
   scale_size(limits = c(0, 100), range = c(0, 15))
+ggsave("../Output/mouse_grin_only/canacn2023/mouse_fdp_zsoflog1pCPM_May_20_2023.png",
+       plot = gain, height = 2200,
+       width = 6800, device = "png", units = "px", dpi = 300, type = "cairo")
+
 mainDP(lbc, height = 2200, width = 6400, legend.position = "right",
        legend.box = "horizontal", legend.title.angle = 0, transp = T,
        legend.margin = margin(l = 0, t = - 15), base.name = "canacn2023/mouse_fdp_zsoflog1pCPM",
@@ -173,11 +169,101 @@ CPR <- createClusterPoolResults(scale.method = "zsoflog1pCPM", pool.level = "4",
                                 pre.expm1 = F)
 mainPDP(CPR, base.name = "Pooled_DH_EvI", height = 1500,
         width = 2000, factor.order = unlist(user_order[["4"]]))
-mainPDP(CPR, base.name = "canacn2023/PDP_DH_EvI", height = 2200,
+
+# Mouse and human: GRIN expressoin in excitatory and inhibitory neurons
+# of the dorsal horn
+args <- c("grin_only_SDH_DDH_Excit_Inhib",
+          "../../Datasets/neurons_and_glia_2022/final_meta_dataset.rds")
+source("JSON_Handler.r")
+all_cell_roster <- returnAllCellRoster(RDfile)
+CPR <- createClusterPoolResults(scale.method = "zsoflog1pCPM", pool.level = "4",
+                                pre.expm1 = F)
+power <- mainPDP(CPR, base.name = "PDP_DH_EvI", height = 2200,
         width = 2750, factor.order = unlist(user_order[["4"]]),
-        transp = T, max.dot.size = 15, legend.key.height = unit(2, "line"),
-        legend.text.align = 1, legend.spacing.y = unit(0, "line"),
-        legend.text = element_text(vjust = 0.5))
+        transp = T, max.dot.size = 15, yieldplot = T,
+        legend.key.height = unit(2, "line"),
+        legend.text.align = 1, legend.spacing.x = unit(0.85, "line"),
+        legend.box.spacing = unit(1, "line"), global_size = 30,
+        legend.box.just = "top",
+        legend.box.margin = margin(l = -30),
+        legend.text = element_text(angle = 0, face = "bold", vjust = 0.5),
+        axis.line = element_line(color = "black", linewidth = 1),
+        axis.text = element_text(face = "bold"),
+        title = element_text(face = "bold")) +
+  guides(color = guide_colorbar(barwidth = 1.2, barheight = 9,
+                                ticks = T, label.position = "left",
+                                title.position = "top"),
+         size = guide_legend(label.position = "left", title.position = "top")) +
+  scale_color_viridis_c(breaks = c(-1, 0, 1), option = 13) +
+  scale_size(limits = c(0, 100), range = c(0, 15))
+ggsave("../Output/mouse_grin_only/mouse_PDP_DH_EVI_zsoflog1pCPM_June_2_2023.png",
+       plot = power, height = 2200, width = 2550, device = "png", units = "px",
+       dpi = 300, type = "cairo")
+
+# Mouse: GRIN expression in excitatory and inhibitory neurons of the SDH
+mousefull <- all_cell_roster
+args <- c("grin_only_SDH_Excit_Inhib",
+          "../../Datasets/neurons_and_glia_2022/final_meta_dataset.rds")
+source("JSON_Handler.r")
+all_cell_roster <- returnAllCellRoster(RDfile)
+unique(all_cell_roster$id)
+CPR <- createClusterPoolResults(scale.method = "zsoflog1pCPM", pool.level = "4",
+                                pre.expm1 = F)
+CPR
+CPR$group.label <- paste("SDH", CPR$group.label, sep = " ")
+dare <- mainPDP(CPR, base.name = "PDP_SDH_EVI", height = 2200,
+                  width = 2750, transp = T, max.dot.size = 15, yieldplot = T,
+                  legend.key.height = unit(2, "line"),
+                  legend.text.align = 1, legend.spacing.x = unit(0.85, "line"),
+                  legend.box.spacing = unit(1, "line"), global_size = 30,
+                  legend.box.just = "top",
+                  legend.box.margin = margin(l = -30),
+                  legend.text = element_text(angle = 0, face = "bold", vjust = 0.5),
+                  axis.line = element_line(color = "black", linewidth = 1),
+                  axis.text = element_text(face = "bold"),
+                  title = element_text(face = "bold")) +
+  guides(color = guide_colorbar(barwidth = 1.2, barheight = 9,
+                                ticks = T, label.position = "left",
+                                title.position = "top"),
+         size = guide_legend(label.position = "left", title.position = "top")) +
+  scale_color_viridis_c(breaks = c(-1, 0, 1), option = 13) +
+  scale_size(limits = c(0, 100), range = c(0, 15))
+ggsave("../Output/mouse_grin_only/mouse_PDP_SDH_EVI_zsoflog1pCPM_June_2_2023.png",
+       plot = dare, height = 2200, width = 2550, device = "png", units = "px",
+       dpi = 300, type = "cairo")
+
+# Mouse and human: GRIN expression neurons of the dorsal horn
+args <- c("grin_only_SDH_DDH_Excit_Inhib",
+          "../../Datasets/neurons_and_glia_2022/final_meta_dataset.rds")
+source("JSON_Handler.r")
+all_cell_roster <- returnAllCellRoster(RDfile)
+all_cell_roster$overallgroup <- "Dorsal Horn"
+all_cell_roster
+extra_pool[["6"]] <- list("features.label", "overallgroup")
+CPR <- createClusterPoolResults(scale.method = "zsoflog1pCPM", pool.level = "6",
+                                pre.expm1 = F)
+CPR
+proven <- mainPDP(CPR, base.name = "PDP_DH", height = 2200,
+                  width = 1750, transp = T, max.dot.size = 15, yieldplot = T,
+                  legend.key.height = unit(2, "line"),
+                  legend.text.align = 1, legend.spacing.x = unit(0.85, "line"),
+                  legend.box.spacing = unit(1, "line"), global_size = 30,
+                  legend.box.just = "top",
+                  legend.box.margin = margin(l = -30),
+                  legend.text = element_text(angle = 0, face = "bold", vjust = 0.5),
+                  axis.line = element_line(color = "black", linewidth = 1),
+                  axis.text = element_text(face = "bold"),
+                  title = element_text(face = "bold")) +
+  guides(color = guide_colorbar(barwidth = 1.2, barheight = 9,
+                                ticks = T, label.position = "left",
+                                title.position = "top"),
+         size = guide_legend(label.position = "left", title.position = "top")) +
+  scale_color_viridis_c(breaks = c(-1, 0, 1), option = 13) +
+  scale_size(limits = c(0, 100), range = c(0, 15))
+ggsave("../Output/mouse_grin_only/mouse_PDP_DH_zsoflog1pCPM_June_2_2023.png",
+       plot = proven, height = 2200, width = 1550, device = "png", units = "px",
+       dpi = 300, type = "cairo")
+
 
 
 
@@ -222,13 +308,26 @@ mainDP(lbc, height = 2500, width = 6000, legend.position = "bottom",
 mainDP(lbc, height = 2000, width = 5800, legend.position = "bottom",
        legend.box = "horizontal", legend.title.angle = 0, base.name = "human_DotPlot_zsoflog1pCPM_nolabs",
        legend.margin = margin(l = 0), add.label = F, saveorret = T, rm.labs = T)
-mainDP(lbc, height = 2200, width = 4300, legend.position = "right",
+gain <- mainDP(lbc, height = 2200, width = 4300, legend.position = "right",
        legend.box = "horizontal", legend.title.angle = 90, transp = T,
-       legend.margin = margin(l = 0, t = 50), base.name = "canacn2023/human_fdp_zsoflog1pCPM",
-       max.dot.size = 15, legend.key.height = unit(1.5, "line"),
-       legend.text = element_text(angle = 0),
-       legend.spacing.x = unit(0.5, "line"),
-       legend.box.just = "top")
+       legend.margin = margin(l = 0, t = 0), base.name = "canacn2023/human_fdp_zsoflog1pCPM",
+       max.dot.size = 15, legend.box.margin = margin(l = 5),
+       legend.text = element_text(angle = 0, face = "bold"), global_size = 30,
+       legend.spacing.x = unit(0.85, "line"),
+       legend.box.just = "top", saveorret = F,
+       axis.line = element_line(color = "black", linewidth = 1),
+       axis.text = element_text(face = "bold"), title = element_text(face = "bold")) +
+  guides(color = guide_colorbar(barwidth = 1.2, barheight = 9,
+                                ticks = T, label.position = "left",
+                                title.position = "top"),
+         size = guide_legend(label.position = "left", title.position = "top"),
+         label.vjust = -1) +
+  scale_color_viridis_c(breaks = c(-1, 0, 1), option = 13) + # 13
+  scale_size(limits = c(0, 100), range = c(0, 15))
+ggsave("../Output/human_grin_only/canacn2023/human_fdp_zsoflog1pCPM_May_20_2023.png",
+       plot = gain, height = 2200,
+       width = 4100, device = "png", units = "px", dpi = 300, type = "cairo")
+
 mainDP(lbc, height = 2800, width = 3500, legend.position = "right",
        legend.box = "vertical", legend.title.angle = 0, transp = T,
        legend.margin = margin(l = 0, t = - 15), base.name = "canacn2023/human_fdp_zsoflog1pCPM",
@@ -239,8 +338,61 @@ mainDP(lbc, height = 2800, width = 3500, legend.position = "right",
 
 # TODO: Fix uncentered legends for jess
 
-#pooled dotplot.R
-all_cell_roster$id <- "Dorsal Horn"
+####Human EVI DH Pool####
+CPR <- createClusterPoolResults(scale.method = "zsoflog1pCPM", pool.level = "3",
+                                pre.expm1 = F)
+CPR
+verily <- mainPDP(CPR, base.name = "PDP_DH_EvI", height = 2200,
+                 width = 2750, factor.order = unlist(user_order[["4"]]),
+                 transp = T, max.dot.size = 15, yieldplot = T,
+                 legend.key.height = unit(2, "line"),
+                 legend.text.align = 1, legend.spacing.x = unit(0.85, "line"),
+                 legend.box.spacing = unit(1, "line"), global_size = 30,
+                 legend.box.just = "top",
+                 legend.box.margin = margin(l = -30),
+                 legend.text = element_text(angle = 0, face = "bold", vjust = 0.5),
+                 axis.line = element_line(color = "black", linewidth = 1),
+                 axis.text = element_text(face = "bold"),
+                 title = element_text(face = "bold")) +
+  guides(color = guide_colorbar(barwidth = 1.2, barheight = 9,
+                                ticks = T, label.position = "left",
+                                title.position = "top"),
+         size = guide_legend(label.position = "left", title.position = "top")) +
+  scale_color_viridis_c(breaks = c(-1, 0, 1), option = 13) +
+  scale_size(limits = c(0, 100), range = c(0, 15))
+ggsave("../Output/human_grin_only/human_PDP_DH_EVI_zsoflog1pCPM_June_2_2023.png",
+       plot = verily, height = 2200, width = 2550, device = "png", units = "px",
+       dpi = 300, type = "cairo")
+
+####Human Dorsal Horn Pool####
+all_cell_roster$overallgroup <- "Dorsal Horn"
+all_cell_roster
+extra_pool[["6"]] <- list("features.label", "overallgroup")
+CPR <- createClusterPoolResults(scale.method = "zsoflog1pCPM", pool.level = "6",
+                                pre.expm1 = F)
+CPR
+greats <- mainPDP(CPR, base.name = "PDP_DH", height = 2200,
+                  width = 1750, transp = T, max.dot.size = 15, yieldplot = T,
+                  legend.key.height = unit(2, "line"),
+                  legend.text.align = 1, legend.spacing.x = unit(0.85, "line"),
+                  legend.box.spacing = unit(1, "line"), global_size = 30,
+                  legend.box.just = "top",
+                  legend.box.margin = margin(l = -30),
+                  legend.text = element_text(angle = 0, face = "bold", vjust = 0.5),
+                  axis.line = element_line(color = "black", linewidth = 1),
+                  axis.text = element_text(face = "bold"),
+                  title = element_text(face = "bold")) +
+  guides(color = guide_colorbar(barwidth = 1.2, barheight = 9,
+                                ticks = T, label.position = "left",
+                                title.position = "top"),
+         size = guide_legend(label.position = "left", title.position = "top")) +
+  scale_color_viridis_c(breaks = c(-1, 0, 1), option = 13) +
+  scale_size(limits = c(0, 100), range = c(0, 15))
+ggsave("../Output/human_grin_only/human_PDP_DH_zsoflog1pCPM_June_2_2023.png",
+       plot = greats, height = 2200, width = 1550, device = "png", units = "px",
+       dpi = 300, type = "cairo")
+
+
 CPR <- createClusterPoolResults(scale.method = "zsoflog1pCPM", pool.level = "1")
 mainPDP(CPR, "human_PooledDorsalHorn_zsoflog1pCPM", height = 1500, width = 1500,
         legend.margin = margin(t = 55))
