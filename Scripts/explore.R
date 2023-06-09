@@ -425,3 +425,7 @@ Plot <-  cpm_try %>%
 Plot
 
 # Both countspg and exp.p.c.m do not adhere to previous scales
+
+sdnewwe <- function (x) {
+	sd(x) / 5 * 63
+}

@@ -39,10 +39,16 @@ createCellRoster <- function(clean_neuron_object){
     for (subGroup in subGroups){
 
       Clusterpool <- returnClusters(group, subGroup)
+      # TODO: test this with different scenarios whether the empty space is in the middle or beginning or end
+      if (length(Clusterpool) == 0) {
+        next
+      }
 
       # First grab the indices of the features
+      #TODO: the gene index would be the same so does not need to be in the loop
       GeneIndicies <- which(unlist(clean_neuron_object@assays$RNA@data@Dimnames[1]) %in% features_no_key)
       # Then grab the indices of the cells for the spcefic Clusterpool
+      # TODO: this is what changes.
       CellIndicies <- which(meta_ident[[clusters_location]] %in% Clusterpool)
       # Get the relevant data using the the indicies otained above
       raw_data <- GetAssayData(clean_neuron_object, assay = 'RNA', slot = 'data')[GeneIndicies, CellIndicies]

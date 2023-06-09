@@ -2,14 +2,15 @@ mainPDP <- function(CPR, transp = F, height = NA, width = NA,
                     factor.order = c()){
   global_size <- 20
 
-  CPR$ClusterAndSubgroup <- paste(CPR$id, CPR$subgr)
+  CPR$ClusterAndSubgroup <- CPR$id #paste(CPR$id, CPR$subgr)
   # TODO: this should be done at the Cluster pool results level
 
   
   Plot <- CPR %>%
-    mutate(ClusterAndSubgroup = ifelse(length(factor.order) > 0,
-                       fct_relevel(ClusterAndSubgroup, factor.order),
-                       ClusterAndSubgroup)) %>%
+    mutate(ClusterAndSubgroup =
+             fct_relevel(ClusterAndSubgroup, ifelse(length(factor.order) == 0,
+                                                    ClusterAndSubgroup,
+                                                    factor.order))) %>%
     ggplot(aes(y = features.label, x = ClusterAndSubgroup, color = avg.exp.scaled, size = pct.exp)) + 
     geom_point() +
     labs(x = "Group", y = "Gene", color = "Avg exp scaled", size = "% Expressing") +
