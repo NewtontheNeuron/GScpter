@@ -1,6 +1,6 @@
 {
-    "features" : ["rna_Grin1", "rna_Grin2a", "rna_Grin2b", "rna_Grin2c", "rna_Grin2d", "rna_Grin3a", "rna_Grin3b"],
-    "project_name" : "mouse_grin_only",
+    "features" : ["rna_Grik1", "rna_Grik2", "rna_Grik3", "rna_Grik4", "rna_Grik5", "rna_Gria1", "rna_Gria2", "rna_Gria3", "rna_Gria4"],
+    "project_name" : "mouse_grik_gria",
     "clusterpool_names": ["SDH","DDH"],
     "subgroup_names": ["Excitatory", "Inhibitory"],
     "clusterpools":

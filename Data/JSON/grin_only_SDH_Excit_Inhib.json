@@ -1,0 +1,22 @@
+{
+    "features" : ["rna_Grin1", "rna_Grin2a", "rna_Grin2b", "rna_Grin2c", "rna_Grin2d", "rna_Grin3a", "rna_Grin3b"],
+    "project_name" : "mouse_grin_only",
+    "clusterpool_names": ["SDH"],
+    "subgroup_names": ["Excitatory", "Inhibitory"],
+    "clusterpools":
+    {
+        "SDH":
+        {
+            "Excitatory":
+                [
+                "Excit-1", "Excit-2", "Excit-3", "Excit-8", "Excit-9",
+                "Excit-10", "Excit-12", "Excit-14", "Excit-15", "Excit-16", "Excit-18"
+                ],
+            "Inhibitory": 
+                [
+                "Inhib-3", "Inhib-4", "Inhib-5", "Inhib-9", "Inhib-11",
+                "Inhib-12", "Inhib-13"
+                ]
+        }
+    }
+}

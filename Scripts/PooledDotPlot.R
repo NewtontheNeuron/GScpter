@@ -1,10 +1,8 @@
-mainPDP <- function(CPR, transp = F, height = NA, width = NA,
-                    factor.order = c()){
-  global_size <- 20
+# This is a script that creates a dot plot from CPR or clusterpoolresults data
 
-  CPR$ClusterAndSubgroup <- CPR$id #paste(CPR$id, CPR$subgr)
-  # TODO: this should be done at the Cluster pool results level
-
+mainPDP <- function(CPR, base.name = "PooledDotPlot", transp = F, height = NA, width = NA,
+                    factor.order = c(), global_size = 36, add.label = F,
+                    legend.margin = margin(), rm.labs = F, max.dot.size = 20, yieldplot = F, ...){
   
   Plot <- CPR %>%
     mutate(ClusterAndSubgroup =
@@ -14,7 +12,7 @@ mainPDP <- function(CPR, transp = F, height = NA, width = NA,
     ggplot(aes(y = features.label, x = ClusterAndSubgroup, color = avg.exp.scaled, size = pct.exp)) + 
     geom_point() +
     labs(x = "Group", y = "Gene", color = "Avg exp scaled", size = "% Expressing") +
-    scale_size(range = c(0, 20)) +
+    scale_size(range = c(0, max.dot.size)) +
     scale_x_discrete(labels = function(x) str_wrap(x, width = 8)) +
     scale_color_viridis_c(option = "plasma") + 
     cowplot::theme_cowplot() + 
@@ -28,11 +26,23 @@ mainPDP <- function(CPR, transp = F, height = NA, width = NA,
           legend.title = element_text(size = global_size, angle = 90),
           legend.box = "horizontal",
           legend.spacing.x = unit(0.5, "line"),
-          plot.background = element_rect(fill = ifelse(transp == T, "transparent", "white")))
+          legend.margin = legend.margin,
+          plot.background = element_rect(fill = ifelse(transp == T, "transparent", "white"))) +
+    theme(...)
 
   Plot
   
-  # Save the image
-  save_image('PooledDotPlot', Plot, height = ifelse(!is.na(height), height, 2400),
-             width = ifelse(!is.na(width), width, 3000)) 
+  # Remove labels
+  if(rm.labs) {
+    Plot <- Plot +
+      theme(
+        axis.title = element_blank(),
+        axis.text.x = element_blank(),
+        axis.text.y = element_blank()
+      )
+  }
+  
+  ifelse(yieldplot, return(Plot),
+         save_image(base.name, Plot, height = ifelse(!is.na(height), height, 2400),
+                    width = ifelse(!is.na(width), width, 3000)))
 }
