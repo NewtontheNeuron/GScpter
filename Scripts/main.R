@@ -129,9 +129,9 @@ gain <- mainDP(lbc, height = 2200, width = 7050, legend.position = "right",
                                 ticks = T, label.position = "left",
                                 title.position = "top"),
          size = guide_legend(label.position = "left", title.position = "top")) +
-  scale_color_viridis_c(breaks = c(-1, 0, 1), option = 13) +
+  scale_color_viridis_c(breaks = c(-1, 0, 1), option = 5) +
   scale_size(limits = c(0, 100), range = c(0, 15))
-ggsave("../Output/mouse_grin_only/canacn2023/mouse_fdp_zsoflog1pCPM_May_20_2023.png",
+ggsave("../Output/mouse_grin_only/mouse_fdp_zsoflog1pCPM_SST_July_11_2023.png",
        plot = gain, height = 2200,
        width = 6800, device = "png", units = "px", dpi = 300, type = "cairo")
 
@@ -264,8 +264,25 @@ ggsave("../Output/mouse_grin_only/mouse_PDP_DH_zsoflog1pCPM_June_2_2023.png",
        plot = proven, height = 2200, width = 1550, device = "png", units = "px",
        dpi = 300, type = "cairo")
 
+#### Draw the table ####
+library(ggpubr)
+tab <- ggtexttable(all_cell_roster[110:117, c(1, 2, 3, 4, 5, 8, 9, 10)] %>%
+                     mutate(raw_counts = signif(raw_counts, 3),
+                            id = paste(id),
+                            subgr = paste(subgr)) %>%
+                     rename(Gene = features.label, `Cell barcode` = cell.barcode,
+                            `Raw counts` = raw_counts, Dataset = dataset, Region = id,
+                            `Cell type` = subgr, Cluster = cluster),
+                   rows = NULL, theme = ttheme("blank")) +
+  theme(panel.background = "transparent")
 
-
+tab <- tab %>%
+  tab_add_hline(at.row = 1, row.side = "top", linewidth = 4, linetype = 1) %>%
+  tab_add_hline(at.row = 2, row.side = "top", linewidth = 2, linetype = 1) %>%
+  tab_add_hline(at.row = 9, row.side = "bottom",
+                linewidth = 4, linetype = 1)
+ggsave("../Output/mouse_grin_only/acr_excerpt.png", plot = tab, device = "png",
+       type = "cairo", width = 3000, height = 800, units = "px", dpi = 300)
 
 
 # ---- Human SC ----
@@ -361,7 +378,7 @@ verily <- mainPDP(CPR, base.name = "PDP_DH_EvI", height = 2200,
   scale_color_viridis_c(breaks = c(-1, 0, 1), option = 13) +
   scale_size(limits = c(0, 100), range = c(0, 15))
 ggsave("../Output/human_grin_only/human_PDP_DH_EVI_zsoflog1pCPM_June_2_2023.png",
-       plot = verily, height = 2200, width = 2550, device = "png", units = "px",
+       plot = verily, height = 2200, width = 2650, device = "png", units = "px",
        dpi = 300, type = "cairo")
 
 ####Human Dorsal Horn Pool####

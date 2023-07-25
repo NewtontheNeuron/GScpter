@@ -454,3 +454,24 @@ ggplot(data = mpg, aes(class, displ)) +
 
 
 # C
+listofresults_Targets %>%
+  ggplot(aes(Region, two_dct)) +
+  coord_trans(y = "log2") +
+  scale_y_continuous(breaks = c(0.125, 0.25, 0.5, 1, 2, 4, 8)/100,
+                     labels = c(-8, -4, -2, 0, 2, 4, 8)) +
+  geom_point() +
+  geom_col(fill = "skyblue", color = "black", linewidth = 1) +
+  facet_grid(~Target)
+
+
+
+### Is Grin3a and Sst expression correlated?
+
+all_cell_roster %>%
+  filter(features.label %in% c("Grin3a", "Sst")) %>%
+  select(features.label, raw_counts, cluster, cell.barcode) %>%
+  pivot_wider(names_from = features.label,
+              values_from = raw_counts) %>%
+  ggplot(aes(x = Grin3a, y = Sst)) +
+  geom_point()
+
