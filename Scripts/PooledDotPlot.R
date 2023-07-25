@@ -5,12 +5,12 @@ mainPDP <- function(CPR, base.name = "PooledDotPlot", transp = F, height = NA, w
                     legend.margin = margin(), rm.labs = F, max.dot.size = 20, yieldplot = F, ...){
   
   Plot <- CPR %>%
-    #mutate(group.label = case_when(
-    #  factor.order != c() ~ fct_relevel(group.label, factor.order),
-    #  factor.order == c() ~ group.label)) %>%
-    ggplot() + 
-    geom_point(aes(y = features.label, x = group.label, color = avg.exp.scaled, size = pct.exp)) +
-    {if (add.label) geom_label(aes(y = features.label, x = group.label, label = signif(avg.exp, digits = 2)))} +
+    mutate(ClusterAndSubgroup =
+             fct_relevel(ClusterAndSubgroup, ifelse(length(factor.order) == 0,
+                                                    ClusterAndSubgroup,
+                                                    factor.order))) %>%
+    ggplot(aes(y = features.label, x = ClusterAndSubgroup, color = avg.exp.scaled, size = pct.exp)) + 
+    geom_point() +
     labs(x = "Group", y = "Gene", color = "Avg exp scaled", size = "% Expressing") +
     scale_size(range = c(0, max.dot.size)) +
     scale_x_discrete(labels = function(x) str_wrap(x, width = 8)) +

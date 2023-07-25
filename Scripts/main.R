@@ -3,6 +3,9 @@
 # The Grin gene analysis
 args <- c("grin_only_SDH_DDH_Excit_Inhib", "../../Datasets/neurons_and_glia_2022/final_meta_dataset.rds")
 args <- c("grin_only_human_DH_Excit_Inhib", "../../Datasets/human_spinalcord_2022/top_level_new_annotation.rda")
+# The new Grin gene analysis
+args <- c("grin_only_full_new", "../../Datasets/neuron_and_glia_2022/final_meta_dataset.rds")
+args <- c("grin_only_human_full_new", "../../Datasets/human_spinalcord_2022/top_level_new_annotation.rda")
 args <- c("grin_only_SDH_Excit_Inhib", "../../Datasets/neurons_and_glia_2022/final_meta_dataset.rds")
 # Unit testing group over
 args <- c("grin_only_SDH_DDH_Excit_Inhib_for_unit_testing_groupover", "../../Datasets/neurons_and_glia_2022/final_meta_dataset.rds")
@@ -75,7 +78,7 @@ extra_pool[["4"]] <- list("features.label", "batches_combined")
 
 #### All Cell Roster ####
 all_cell_roster <- returnAllCellRoster(RDfile)
-saveRDS(all_cell_roster, "../../Datasets/all_cell_rosters/all_cell_roster_human_jess.RDS")
+saveRDS(all_cell_roster, "../../Datasets/all_cell_rosters/all_cell_roster_grin_full.RDS")
 all_cell_roster <- readRDS("../../Datasets/all_cell_rosters/all_cell_roster_human_jess.RDS")
 all_cell_roster <- readRDS("../../Datasets/all_cell_rosters/all_cell_roster_jessica.RDS")
 
