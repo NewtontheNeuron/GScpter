@@ -197,9 +197,6 @@ createClusterPoolResults <- function(roster = all_cell_roster,
     group_by(across(unlist(extra_pool[[pool.level]]))) %>%
     summarise(avg.exp = ifelse(pre.expm1, mean(expm1(raw_counts)), mean(raw_counts)),
               pct.exp = pct_calc(raw_counts),
-              avg.std.err = SE(expm1(raw_counts)),
-              avg.lower = avg.exp - avg.std.err,
-              avg.upper = avg.exp + avg.std.err,
               .groups = "keep",
               ...) %>%
     ungroup(everything()) %>%

@@ -1,16 +1,13 @@
 # This is a script that creates a dot plot from CPR or clusterpoolresults data
 
 mainPDP <- function(CPR, base.name = "PooledDotPlot", transp = F, height = NA, width = NA,
-                    factor.order = c(), global_size = 36, add.label = F,
-                    legend.margin = margin(), rm.labs = F, max.dot.size = 20, yieldplot = F, ...){
+                    factor.order = c(), global_size = 30, add.label = F,
+                    legend.margin = margin(), rm.labs = "", max.dot.size = 15, yieldplot = F, ...){
   
   Plot <- CPR %>%
-    mutate(ClusterAndSubgroup =
-             fct_relevel(ClusterAndSubgroup, ifelse(length(factor.order) == 0,
-                                                    ClusterAndSubgroup,
-                                                    factor.order))) %>%
-    ggplot(aes(y = features.label, x = ClusterAndSubgroup, color = avg.exp.scaled, size = pct.exp)) + 
-    geom_point() +
+    ggplot() + 
+    geom_point(aes(y = features.label, x = group.label, color = avg.exp.scaled, size = pct.exp)) +
+    {if (add.label) geom_label(aes(y = features.label, x = group.label, label = signif(avg.exp, digits = 2)))} +
     labs(x = "Group", y = "Gene", color = "Avg exp scaled", size = "% Expressing") +
     scale_size(range = c(0, max.dot.size)) +
     scale_x_discrete(labels = function(x) str_wrap(x, width = 8)) +
@@ -32,16 +29,35 @@ mainPDP <- function(CPR, base.name = "PooledDotPlot", transp = F, height = NA, w
 
   Plot
   
+  
+  # Below are the fine tuning elements such as removing labels, changing legends
+  #
   # Remove labels
-  if(rm.labs) {
+  if(rm.labs == "xy") {
     Plot <- Plot +
       theme(
         axis.title = element_blank(),
         axis.text.x = element_blank(),
         axis.text.y = element_blank()
       )
+  } else if (rm.labs == "y") {
+    Plot <- Plot +
+      theme(
+        axis.title = element_blank(),
+        axis.text.y = element_blank()
+      )
   }
   
+  # Add guides
+  Plot <- Plot +
+    guides(color = guide_colorbar(barwidth = 1.2, barheight = 9, ticks = T,
+                                  label.position = "left", title.position = "top"),
+           size = guide_legend(label.position = "left", title.position = "top"))
+  
+  
+  # External responding statement at the end of the function to either save it or not
+  #
+  # Save image function
   ifelse(yieldplot, return(Plot),
          save_image(base.name, Plot, height = ifelse(!is.na(height), height, 2400),
                     width = ifelse(!is.na(width), width, 3000)))

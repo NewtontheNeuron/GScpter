@@ -17,10 +17,6 @@ args <- c("combined", "~/Neuroscience - MSc/Summer 2022/kcni_summer_school/Data/
 args <- c("marr_1_SDH_DDH_Excit_Inhib", "../../Datasets/neurons_and_glia_2022/final_meta_dataset.rds")
 args <- c("marr_human_DH_Excit_Inhib", "../../Datasets/human_spinalcord_2022/top_level_new_annotation.rda")
 
-### for jessica
-args <- c("jess_SDH_DDH_Excit_Inhib", "../../Datasets/neurons_and_glia_2022/final_meta_dataset.rds")
-args <- c("jess_human_DH_Excit_Inhib", "../../Datasets/human_spinalcord_2022/top_level_new_annotation.rda")
-
 ### for clare
 args <- c("clare_SDH_DDH_Excit_Inhib", "../../Datasets/neuron_and_glia_2022/final_meta_dataset.rds")
 # Note switched to final_meta_dataset with Excit-1 not Excit-01
@@ -96,17 +92,17 @@ all_cell_roster <- all_cell_roster %>%
          ))
 
 all_cell_roster$cluster <- factor(all_cell_roster$cluster,
-                                  levels = c("E1", "E2", "E3", "E4", "E5",
-                                             "E6", "E7", "E8", "E9", "E10", 
-                                             "E11", "E12", "E13", "E14", "E15",
-                                             "E16", "E17", "E18", "E19", "E20",
-                                             "E21", "E22", "E23", "E24", "E25", 
-                                             "E26", "E27", "E28", "E29", "E30",
-                                             "E31", "E32", "E33", "E34", "E35",
-                                             "E36", "I1", "I2", "I3", "I4", "I5",
-                                             "I6", "I7", "I8", "I9", "I10",
-                                             "I11", "I12", "I13", "I14", "I15",
-                                             "I16", "I17", "I18", "I19", "I20"))
+                                  levels = c("E1", "E14", "E16", "E18", "E2", "E3", 
+                                             "E8", "E9", "E10", "E12", "E15",
+                                             "E4", "E5", "E6", "E13",
+                                             "E19", "E20", "E21", "E22", "E23",
+                                             "E24", "E25", "E26", "E27", "E28",
+                                             "E29", "E30", "E31", "E32", "E33",
+                                             "E34", "E35", "E36",
+                                             "I5", "I9", "I3", "I4", "I11", "I12",
+                                             "I13", "I1", "I2", "I6", "I7", "I8",
+                                             "I10", "I14", "I15", "I16", "I17",
+                                             "I18", "I19", "I20", "I21"))
 
 #### dotplot.R ####
 lbc <- createListbyCluster(scale.method = "zsoflog1pCPM", pre.expm1 = F)
@@ -127,16 +123,17 @@ gain <- mainDP(lbc, height = 2200, width = 7050, legend.position = "right",
        legend.box.spacing = unit(1, "line"), global_size = 30,
        legend.box.just = "top", saveorret = F,
        axis.line = element_line(color = "black", linewidth = 1),
-       axis.text = element_text(face = "bold"), title = element_text(face = "bold")) +
+       axis.text = element_text(face = "bold"), title = element_text(face = "bold"),
+       axis.text.y = element_text(face = "bold.italic")) +
   guides(color = guide_colorbar(barwidth = 1.2, barheight = 9,
                                 ticks = T, label.position = "left",
                                 title.position = "top"),
          size = guide_legend(label.position = "left", title.position = "top")) +
   scale_color_viridis_c(breaks = c(-1, 0, 1), option = 5) +
   scale_size(limits = c(0, 100), range = c(0, 15))
-ggsave("../Output/mouse_grin_only/mouse_fdp_zsoflog1pCPM_SST_July_11_2023.png",
-       plot = gain, height = 2200,
-       width = 6800, device = "png", units = "px", dpi = 300, type = "cairo")
+ggsave("../Output/mouse_grin_only/defence2023/mouse_fdp_zsoflog1pCPM.png",
+       plot = gain, height = 4400,
+       width = 13600, device = "png", units = "px", dpi = 600, type = "cairo")
 
 mainDP(lbc, height = 2200, width = 6400, legend.position = "right",
        legend.box = "horizontal", legend.title.angle = 0, transp = T,
@@ -192,16 +189,17 @@ power <- mainPDP(CPR, base.name = "PDP_DH_EvI", height = 2200,
         legend.text = element_text(angle = 0, face = "bold", vjust = 0.5),
         axis.line = element_line(color = "black", linewidth = 1),
         axis.text = element_text(face = "bold"),
-        title = element_text(face = "bold")) +
+        title = element_text(face = "bold"),
+        axis.text.y = element_text(face = "bold.italic")) +
   guides(color = guide_colorbar(barwidth = 1.2, barheight = 9,
                                 ticks = T, label.position = "left",
                                 title.position = "top"),
          size = guide_legend(label.position = "left", title.position = "top")) +
-  scale_color_viridis_c(breaks = c(-1, 0, 1), option = 13) +
+  scale_color_viridis_c(breaks = c(-1, 0, 1), option = 5) +
   scale_size(limits = c(0, 100), range = c(0, 15))
-ggsave("../Output/mouse_grin_only/mouse_PDP_DH_EVI_zsoflog1pCPM_June_2_2023.png",
-       plot = power, height = 2200, width = 2550, device = "png", units = "px",
-       dpi = 300, type = "cairo")
+ggsave("../Output/mouse_grin_only/defence2023/mouse_PDP_DH_EVI_zsoflog1pCPM.png",
+       plot = power, height = 4400, width = 5100, device = "png", units = "px",
+       dpi = 600, type = "cairo")
 
 # Mouse: GRIN expression in excitatory and inhibitory neurons of the SDH
 mousefull <- all_cell_roster
@@ -215,25 +213,26 @@ CPR <- createClusterPoolResults(scale.method = "zsoflog1pCPM", pool.level = "4",
 CPR
 CPR$group.label <- paste("SDH", CPR$group.label, sep = " ")
 dare <- mainPDP(CPR, base.name = "PDP_SDH_EVI", height = 2200,
-                  width = 2750, transp = T, max.dot.size = 15, yieldplot = T,
-                  legend.key.height = unit(2, "line"),
-                  legend.text.align = 1, legend.spacing.x = unit(0.85, "line"),
-                  legend.box.spacing = unit(1, "line"), global_size = 30,
-                  legend.box.just = "top",
-                  legend.box.margin = margin(l = -30),
-                  legend.text = element_text(angle = 0, face = "bold", vjust = 0.5),
-                  axis.line = element_line(color = "black", linewidth = 1),
-                  axis.text = element_text(face = "bold"),
-                  title = element_text(face = "bold")) +
+                width = 2750, transp = T, max.dot.size = 15, yieldplot = T,
+                legend.key.height = unit(2, "line"),
+                legend.text.align = 1, legend.spacing.x = unit(0.85, "line"),
+                legend.box.spacing = unit(1, "line"), global_size = 30,
+                legend.box.just = "top",
+                legend.box.margin = margin(l = -30),
+                legend.text = element_text(angle = 0, face = "bold", vjust = 0.5),
+                axis.line = element_line(color = "black", linewidth = 1),
+                axis.text = element_text(face = "bold"),
+                title = element_text(face = "bold"),
+                axis.text.y = element_text(face = "bold.italic")) +
   guides(color = guide_colorbar(barwidth = 1.2, barheight = 9,
                                 ticks = T, label.position = "left",
                                 title.position = "top"),
          size = guide_legend(label.position = "left", title.position = "top")) +
-  scale_color_viridis_c(breaks = c(-1, 0, 1), option = 13) +
+  scale_color_viridis_c(breaks = c(-1, 0, 1), option = 5) +
   scale_size(limits = c(0, 100), range = c(0, 15))
-ggsave("../Output/mouse_grin_only/mouse_PDP_SDH_EVI_zsoflog1pCPM_June_2_2023.png",
-       plot = dare, height = 2200, width = 2550, device = "png", units = "px",
-       dpi = 300, type = "cairo")
+ggsave("../Output/mouse_grin_only/defence2023/mouse_PDP_SDH_EVI_zsoflog1pCPM.png",
+       plot = dare, height = 4400, width = 5100, device = "png", units = "px",
+       dpi = 600, type = "cairo")
 
 # Mouse and human: GRIN expression neurons of the dorsal horn
 args <- c("grin_only_SDH_DDH_Excit_Inhib",
@@ -256,16 +255,17 @@ proven <- mainPDP(CPR, base.name = "PDP_DH", height = 2200,
                   legend.text = element_text(angle = 0, face = "bold", vjust = 0.5),
                   axis.line = element_line(color = "black", linewidth = 1),
                   axis.text = element_text(face = "bold"),
-                  title = element_text(face = "bold")) +
+                  title = element_text(face = "bold"),
+                  axis.text.y = element_text(face = "bold.italic")) +
   guides(color = guide_colorbar(barwidth = 1.2, barheight = 9,
                                 ticks = T, label.position = "left",
                                 title.position = "top"),
          size = guide_legend(label.position = "left", title.position = "top")) +
-  scale_color_viridis_c(breaks = c(-1, 0, 1), option = 13) +
+  scale_color_viridis_c(breaks = c(-1, 0, 1), option = 5) +
   scale_size(limits = c(0, 100), range = c(0, 15))
-ggsave("../Output/mouse_grin_only/mouse_PDP_DH_zsoflog1pCPM_June_2_2023.png",
-       plot = proven, height = 2200, width = 1550, device = "png", units = "px",
-       dpi = 300, type = "cairo")
+ggsave("../Output/mouse_grin_only/defence2023/mouse_PDP_DH_zsoflog1pCPM.png",
+       plot = proven, height = 4400, width = 3100, device = "png", units = "px",
+       dpi = 600, type = "cairo")
 
 #### Draw the table ####
 library(ggpubr)
@@ -336,17 +336,18 @@ gain <- mainDP(lbc, height = 2200, width = 4300, legend.position = "right",
        legend.spacing.x = unit(0.85, "line"),
        legend.box.just = "top", saveorret = F,
        axis.line = element_line(color = "black", linewidth = 1),
-       axis.text = element_text(face = "bold"), title = element_text(face = "bold")) +
+       axis.text = element_text(face = "bold"), title = element_text(face = "bold"),
+       axis.text.y = element_text(face = "bold.italic")) +
   guides(color = guide_colorbar(barwidth = 1.2, barheight = 9,
                                 ticks = T, label.position = "left",
                                 title.position = "top"),
          size = guide_legend(label.position = "left", title.position = "top"),
          label.vjust = -1) +
-  scale_color_viridis_c(breaks = c(-1, 0, 1), option = 13) + # 13
+  scale_color_viridis_c(breaks = c(-1, 0, 1), option = 5) + # 13
   scale_size(limits = c(0, 100), range = c(0, 15))
-ggsave("../Output/human_grin_only/canacn2023/human_fdp_zsoflog1pCPM_May_20_2023.png",
-       plot = gain, height = 2200,
-       width = 4100, device = "png", units = "px", dpi = 300, type = "cairo")
+ggsave("../Output/human_grin_only/defence2023/human_fdp_zsoflog1pCPM.png",
+       plot = gain, height = 4400,
+       width = 8200, device = "png", units = "px", dpi = 600, type = "cairo")
 
 mainDP(lbc, height = 2800, width = 3500, legend.position = "right",
        legend.box = "vertical", legend.title.angle = 0, transp = T,
@@ -373,16 +374,17 @@ verily <- mainPDP(CPR, base.name = "PDP_DH_EvI", height = 2200,
                  legend.text = element_text(angle = 0, face = "bold", vjust = 0.5),
                  axis.line = element_line(color = "black", linewidth = 1),
                  axis.text = element_text(face = "bold"),
-                 title = element_text(face = "bold")) +
+                 title = element_text(face = "bold"),
+                 axis.text.y = element_text(face = "bold.italic")) +
   guides(color = guide_colorbar(barwidth = 1.2, barheight = 9,
                                 ticks = T, label.position = "left",
                                 title.position = "top"),
          size = guide_legend(label.position = "left", title.position = "top")) +
-  scale_color_viridis_c(breaks = c(-1, 0, 1), option = 13) +
+  scale_color_viridis_c(breaks = c(-1, 0, 1), option = 5) +
   scale_size(limits = c(0, 100), range = c(0, 15))
-ggsave("../Output/human_grin_only/human_PDP_DH_EVI_zsoflog1pCPM_June_2_2023.png",
-       plot = verily, height = 2200, width = 2650, device = "png", units = "px",
-       dpi = 300, type = "cairo")
+ggsave("../Output/human_grin_only/defence2023/human_PDP_DH_EVI_zsoflog1pCPM.png",
+       plot = verily, height = 4400, width = 5300, device = "png", units = "px",
+       dpi = 600, type = "cairo")
 
 ####Human Dorsal Horn Pool####
 all_cell_roster$overallgroup <- "Dorsal Horn"
@@ -401,16 +403,17 @@ greats <- mainPDP(CPR, base.name = "PDP_DH", height = 2200,
                   legend.text = element_text(angle = 0, face = "bold", vjust = 0.5),
                   axis.line = element_line(color = "black", linewidth = 1),
                   axis.text = element_text(face = "bold"),
-                  title = element_text(face = "bold")) +
+                  title = element_text(face = "bold"),
+                  axis.text.y = element_text(face = "bold.italic")) +
   guides(color = guide_colorbar(barwidth = 1.2, barheight = 9,
                                 ticks = T, label.position = "left",
                                 title.position = "top"),
          size = guide_legend(label.position = "left", title.position = "top")) +
-  scale_color_viridis_c(breaks = c(-1, 0, 1), option = 13) +
+  scale_color_viridis_c(breaks = c(-1, 0, 1), option = 5) +
   scale_size(limits = c(0, 100), range = c(0, 15))
-ggsave("../Output/human_grin_only/human_PDP_DH_zsoflog1pCPM_June_2_2023.png",
-       plot = greats, height = 2200, width = 1550, device = "png", units = "px",
-       dpi = 300, type = "cairo")
+ggsave("../Output/human_grin_only/defence2023/human_PDP_DH_zsoflog1pCPM.png",
+       plot = greats, height = 4400, width = 3100, device = "png", units = "px",
+       dpi = 600, type = "cairo")
 
 
 CPR <- createClusterPoolResults(scale.method = "zsoflog1pCPM", pool.level = "1")

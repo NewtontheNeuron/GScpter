@@ -454,16 +454,52 @@ ggplot(data = mpg, aes(class, displ)) +
 
 
 # C
+Avgs <- listofresults_Targets %>%
+  group_by(Region, Sex, Target) %>%
+  summarise(mean.val = mean(two_dct))
+
 listofresults_Targets %>%
   ggplot(aes(Region, two_dct)) +
+  geom_hline(yintercept = c(0.03125, 0.0625, 0.125, 0.25, 0.5, 1, 2, 4, 8)/100,
+             linewidth = 1, linetype = "dashed", alpha = 0.1) +
+  #coord_trans(y = "log2") +
+  # Labels would reflect the fold difference from tubulin
+  scale_y_continuous(breaks = c(0.03125, 0.0625, 0.125, 0.25, 0.5, 1, 2, 4, 8, 100)/100,
+                     labels = c(3200, 1600, 800, 400, 200, 100, 50, 25, 12.5, 1),
+                     trans = "log2", limits = c(0.0001, 1), expand = c(0.0001, 0.01)) +
+  scale_x_discrete(position = "top") +
+  labs(y = "Fold decrease from tubulin-β4a") +
+  stat_summary(aes(fill = Sex), geom = "col", fun = "mean", #size = 12.5, #shape = "-",
+               position = position_dodge2(width = 1), color = "black",
+               linewidth = 1.5) +
+  stat_summary(aes(ymax = after_stat(y), group = Sex), geom = "errorbar", fun.data = "mean_se",
+               position = position_dodge(width = 1), width = 0.5,
+               linewidth = 1, color = "black") +
+  stat_summary(aes(group = Sex), fun = "identity", geom = "point",
+               shape = 21, size = 2.5, stroke = 0.8, color = "black",
+               position = position_dodge(width = 1), fill = "white") +
+  scale_fill_manual(values = c("royalblue4", "dodgerblue3")) +
+  facet_grid(~Target, switch = "x") +
+  theme_rat + theme(axis.text.x = element_text(angle = 90, vjust = 0.5)) +
+  theme(plot.background = element_rect(fill = "transparent"),
+        panel.background = element_rect(fill = "transparent")) -> inprog
+ggsave("canacn2023/rat_grid_regular_sex_logtrans.png", plot = inprog, height = 3000, device = "png",
+       width = 6200, units = "px", dpi = 600, type = "cairo")
+
+
+
+
+Avgs %>%
+  ggplot(aes(Region, mean.val, color = Sex)) +
+  geom_hline(yintercept = c(0.125, 0.25, 0.5, 1, 2, 4, 8)/100,
+             linewidth = 1, linetype = "dashed") +
   coord_trans(y = "log2") +
   scale_y_continuous(breaks = c(0.125, 0.25, 0.5, 1, 2, 4, 8)/100,
-                     labels = c(-8, -4, -2, 0, 2, 4, 8)) +
-  geom_point() +
-  geom_col(fill = "skyblue", color = "black", linewidth = 1) +
-  facet_grid(~Target)
-
-
+                     labels = c(800, 400, 200, 100, 50, 25, 12.5)) +
+  labs(y = "Fold decrease from tubulin-β4a") +
+  geom_point(position = position_dodge(width = 1)) +
+  facet_grid(~Target) +
+  theme_rat
 
 ### Is Grin3a and Sst expression correlated?
 
@@ -474,4 +510,28 @@ all_cell_roster %>%
               values_from = raw_counts) %>%
   ggplot(aes(x = Grin3a, y = Sst)) +
   geom_point()
+
+
+### SDH:DDH experiment ###
+SDR %>%
+  ggplot(aes(Target, sdhddhratio - 1)) +
+  stat_summary(aes(fill = Sex, group = Sex),
+               geom = "col", fun = "mean", width = 0.85, color = "black",
+               linewidth = 1, position = position_dodge(width = 0.85)) +
+  stat_summary(aes(group = Sex, ymin = after_stat(y)), geom = "errorbar", fun.data = "mean_se",
+               width = 0.25, position = position_dodge(width = 0.85),
+               linewidth = 1) +
+  geom_point(aes(group = Sex), shape = 21, fill = "white",stroke = 0.8,
+             size = 2.5, position = position_dodge(width = 0.85)) +
+  geom_hline(yintercept = 0, linewidth = 1, linetype = "solid") +
+  labs(y = str_wrap("SDH:DDH expression ratio", width = 20)) +
+  scale_fill_brewer(palette = "RdPu", direction = -1) +
+  scale_y_continuous(expand = expansion(mult = c(0.05, 0.05)),
+                     breaks = c(-1, -0.5, 0, 0.5, 1, 2, 3, 4),
+                     labels = c(-2, -1.5, 1, 1.5, 2, 3, 4, 5)) +
+  theme_rat +
+  theme(legend.position = c(0.7, 0.85),
+        axis.text.x = element_text(angle = 0, size = 32*0.6),
+        plot.background = element_rect(fill = "transparent"),
+        panel.background = element_rect(fill = "transparent"))
 

@@ -1,7 +1,7 @@
 {
     "features" : ["rna_Htr1a", "rna_Htr1b", "rna_Htr1d", "rna_Htr1f", "rna_Htr2a", "rna_Htr2b", "rna_Htr2c", "rna_Htr3a",
                     "rna_Htr3b", "rna_Htr4", "rna_Htr5a", "rna_Htr5b", "rna_Htr6", "rna_Htr7", "rna_Cnr1", "rna_Cnr2"],
-    "project_name" : "Clare",
+    "project_name" : "Clare mouse",
     "clusterpool_names": ["SDH","DDH"],
     "subgroup_names": ["Excitatory", "Inhibitory"],
     "clusterpools":

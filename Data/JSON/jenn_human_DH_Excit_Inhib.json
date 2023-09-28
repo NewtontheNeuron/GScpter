@@ -1,5 +1,5 @@
 {"features": ["rna_GRIN1", "rna_GRIN2A", "rna_GRIN2B", "rna_GRIN2C", "rna_GRIN2D"], 
-"project_name": "human_nmda_ex_inh",
+"project_name": "jennifer_human",
 "clusterpool_names": ["Dorsal horn"], 
 "subgroup_names": ["Excitatory", "Inhibitory"], 
 "clusterpools": {"Dorsal horn": {

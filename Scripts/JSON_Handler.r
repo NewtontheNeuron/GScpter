@@ -2,9 +2,11 @@
 #setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 
 #library(rjson)
-
+# Add try for if the data is not found
 #get yaml/json data. Only works if current directory is changed.
-Data <- fromJSON(file = paste("../Data/JSON/", args[1], ".json", sep = ""))
+loadconfig <- function(fileaddres) {
+  Data <<- fromJSON(file = paste("../Data/JSON/", fileaddres, ".json", sep = ""))
+}
 
 #return list of features from JSON object.
 returnFeatures <- function(){
