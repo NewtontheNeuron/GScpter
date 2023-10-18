@@ -1,11 +1,32 @@
-#set working directory to the one this file is currently in
-#setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+# JSON_Handler.r contains functions pertained to gathering information from
+# config files
 
-#library(rjson)
-# Add try for if the data is not found
-#get yaml/json data. Only works if current directory is changed.
-loadconfig <- function(fileaddres) {
-  Data <<- fromJSON(file = paste("../Data/JSON/", fileaddres, ".json", sep = ""))
+
+loadconfig <- function(fileaddres = ".") {
+  
+  if (file.exists(paste(fileaddres, ".json", sep = ""))) {
+    
+    Data <<- fromJSON(file = paste(fileaddres, ".json", sep = ""))
+    
+  } else if (!file.exists(fileaddres)) {
+    
+    projectaddress <- paste("../Data/JSON/", fileaddres, ".json", sep = "")
+    
+    if (!file.exists(projectaddress)) {
+      
+      return("Please double check that the file or file address is spelt properly.")
+      
+    } else {
+      
+      Data <<- fromJSON(file = projectaddress)
+      
+    }
+    
+  } else {
+    
+    Data <<- fromJSON(file = fileaddres)
+    
+  }
 }
 
 #return list of features from JSON object.
