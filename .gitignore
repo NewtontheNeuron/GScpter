@@ -8,5 +8,4 @@
 .RDataTmp
 .DS_Store
 .Rproj.user/
-Output/*
 Output/*/*
