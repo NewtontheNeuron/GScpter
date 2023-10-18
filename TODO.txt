@@ -1,9 +1,0 @@
-1. set the name combinations based on the pool.level
-2. For the dotplot the height depends on the number genes
-3. Design output tables
-4. (redundancy) Create all_cell_roster then break it up to cell_roster on demand
-5. (error) If save image breaks then return to the appropriate directory
-5. Add ... for adding in theme elements to dotplots or other plots or create a function that is like adjust theme that outputs the theme element to be added.
-6. Error handling for improper theme arguments.
-7. Save changes to graph aesthetics in the configuration file or a separte configuration file.
-8. All_cell_roster error when no subgroup provided.
