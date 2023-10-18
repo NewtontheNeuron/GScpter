@@ -305,7 +305,7 @@ save_image <- function(base_filename, Plot, height = 1, width = 1,
 }
 
 #call this function to load an RDS data file into an object
-load_data <- function(fileLocation){
+load_data <- function(fileLocation = "."){
 
   print("Loading data into R...")
 
