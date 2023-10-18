@@ -1,35 +1,64 @@
-library(rstudioapi)
+# This is a script that creates a dot plot from CPR or clusterpoolresults data
 
-#set working directory to the one this file is currently in
-setwd(dirname(getActiveDocumentContext()$path))
+mainPDP <- function(CPR, base.name = "PooledDotPlot", transp = F, height = NA, width = NA,
+                    factor.order = c(), global_size = 30, add.label = F,
+                    legend.margin = margin(), rm.labs = "", max.dot.size = 15, yieldplot = F, ...){
+  
+  Plot <- CPR %>%
+    ggplot() + 
+    geom_point(aes(y = features.label, x = group.label, color = avg.exp.scaled, size = pct.exp)) +
+    {if (add.label) geom_label(aes(y = features.label, x = group.label, label = signif(avg.exp, digits = 2)))} +
+    labs(x = "Group", y = "Gene", color = "Avg exp scaled", size = "% Expressing") +
+    scale_size(range = c(0, max.dot.size)) +
+    scale_x_discrete(labels = function(x) str_wrap(x, width = 8)) +
+    scale_color_viridis_c(option = "plasma") + 
+    cowplot::theme_cowplot() + 
+    theme(axis.title = element_text(size = global_size, face = "bold"),
+          axis.text.x = element_text(angle = 0, vjust = 0.5, hjust=0.5,
+                                     size=global_size, color = "black"),
+          axis.text.y = element_text(angle = 0, vjust = 0.5, hjust=0.5,
+                                     size = global_size, color = "black"),
+          legend.key.size = unit(1, "line"),
+          legend.text = element_text(size = global_size/1.75),
+          legend.title = element_text(size = global_size, angle = 90),
+          legend.box = "horizontal",
+          legend.spacing.x = unit(0.5, "line"),
+          legend.margin = legend.margin,
+          plot.background = element_rect(fill = ifelse(transp == T, "transparent", "white"))) +
+    theme(...)
 
-source("Pre_analysis_functions.R")
-
-#function not returning anything.
-ClusterPoolResults <- returnClusterpoolResult()
-
-# Plot the pooled dotplot
-Gene <- ClusterPoolResults$features.label
-Cluster <- ClusterPoolResults$id
-AvgExpScaled <- ClusterPoolResults$avg.exp.re.scaled
-markers <- Gene %>% unique()
-
-Plot <- ClusterPoolResults %>% 
-  filter(features.label %in% markers) %>% 
-    mutate(`% Expressing` = ClusterPoolResults$pct.exp) %>% 
-      ggplot(aes(y=Gene, x = Cluster, color = AvgExpScaled, size = `% Expressing`)) + 
-        geom_point() + 
-        scale_size(range = c(0, 20)) +
-        scale_color_viridis_c(option = "plasma") + 
-        cowplot::theme_cowplot() + 
-        theme(axis.title = element_text(size=20,face="bold"), legend.key.size=unit(1, "line")) +
-        theme(axis.text.x = element_text(angle = 0, vjust = 0.5, hjust=0.5, size=15)) +
-        theme(axis.text.y = element_text(angle = 0, vjust = 0.5, hjust=0.5, size=15))
-Plot
-
-# Save the image
-# You will have to resize the Rstudio box
-# or set the preferred width and height
-# >>>> input required >>>>
-
-save_image('PooledDotPlot',Plot, width = 5000, height = 2500)
+  Plot
+  
+  
+  # Below are the fine tuning elements such as removing labels, changing legends
+  #
+  # Remove labels
+  if(rm.labs == "xy") {
+    Plot <- Plot +
+      theme(
+        axis.title = element_blank(),
+        axis.text.x = element_blank(),
+        axis.text.y = element_blank()
+      )
+  } else if (rm.labs == "y") {
+    Plot <- Plot +
+      theme(
+        axis.title = element_blank(),
+        axis.text.y = element_blank()
+      )
+  }
+  
+  # Add guides
+  Plot <- Plot +
+    guides(color = guide_colorbar(barwidth = 1.2, barheight = 9, ticks = T,
+                                  label.position = "left", title.position = "top"),
+           size = guide_legend(label.position = "left", title.position = "top"))
+  
+  
+  # External responding statement at the end of the function to either save it or not
+  #
+  # Save image function
+  ifelse(yieldplot, return(Plot),
+         save_image(base.name, Plot, height = ifelse(!is.na(height), height, 2400),
+                    width = ifelse(!is.na(width), width, 3000)))
+}

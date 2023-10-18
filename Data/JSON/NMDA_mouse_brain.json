@@ -1,0 +1,11 @@
+{"features": ["rna_Grin1", "rna_Grin2a", "rna_Grin2b", "rna_Grin2c", "rna_Grin2d", "rna_Grin3a", "rna_Grin3b"], 
+"project_name": "NMDA_mouse_brain",
+"clusterpool_names": ["mouse"], 
+"subgroup_names": ["Anterier cingulate cortex", "Hippocampus"], 
+"clusterpools": {"mouse": {
+  "Anterier cingulate cortex": 
+["ACA"], 
+"Hippocampus": 
+["HIP"]
+  
+}}}

@@ -1,0 +1,33 @@
+{
+    "features" : ["rna_GRIN2C", "rna_GFAP", "rna_SST", "rna_VIP", "rna_AQP4", "rna_ALDH1L1"],
+    "project_name" : "kcni",
+    "clusterpool_names": ["Cells"],
+    "subgroup_names": ["Astroglial", "Microglia", "Oligodendroglial", "Endothelial",
+    "SST-Neuron"],
+    "clusterpools":
+    {
+        "Cells":
+        {
+            "Astroglial":
+                [
+                  "Astro", "Astrocyte", "Pericyte"
+                ],
+            "Microglia": 
+                [
+                  "Microglia", "Micro-PVM"
+                ],
+            "Oligodendroglial":
+                [
+                  "Oligodendrocyte", "Oligo", "OPC"
+                ],
+            "Endothelial":
+                [
+                  "Endo", "Endothelial"
+                ],
+            "SST-Neuron":
+                [
+                  "Sst", "SST", "Sst Chod1"
+                ]
+        }
+    }
+}

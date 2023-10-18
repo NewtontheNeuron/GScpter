@@ -1,6 +1,11 @@
-.Rproj.user
+*.code-workspace
+.vscode
 .Rhistory
 .RData
 .Ruserdata
+~$*
+*.code-workspace
 .RDataTmp
-DDH/
+.DS_Store
+.Rproj.user/
+Output/*/*

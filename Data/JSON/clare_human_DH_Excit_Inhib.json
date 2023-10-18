@@ -1,0 +1,33 @@
+{"features": ["rna_HTR1A", "rna_HTR1B", "rna_HTR1D", "rna_HTR1E", "rna_HTR1F", "rna_HTR2A",
+                "rna_HTR2B", "rna_HTR2C", "rna_HTR3A", "rna_HTR3B", "rna_HTR3C", "rna_HTR3D", "rna_HTR3E",
+                "rna_HTR4", "rna_HTR5A", "rna_HTR5BP", "rna_HTR6", "rna_HTR7", "rna_CNR1", "rna_CNR2"], 
+"project_name": "Clare_human",
+"clusterpool_names": ["Dorsal horn"], 
+"subgroup_names": ["Excitatory", "Inhibitory"], 
+"clusterpools": {"Dorsal horn": {
+  "Excitatory": [
+      "Ex-Dorsal-1",
+      "Ex-Dorsal-2",
+      "Ex-Dorsal-3",
+      "Ex-Dorsal-4",
+      "Ex-Dorsal-5",
+      "Ex-Dorsal-6",
+      "Ex-Dorsal-7",
+      "Ex-Dorsal-8",
+      "Ex-Dorsal-9",
+      "Ex-Dorsal-10",
+      "Ex-Dorsal-11",
+      "Ex-Dorsal-12"],
+  "Inhibitory": [
+      "Inh-Dorsal-1",
+      "Inh-Dorsal-2",
+      "Inh-Dorsal-3",
+      "Inh-Dorsal-4",
+      "Inh-Dorsal-5",
+      "Inh-Dorsal-6",
+      "Inh-Dorsal-7",
+      "Inh-Dorsal-8",
+      "Inh-Dorsal-9",
+      "Inh-Dorsal-10"]
+  
+}}}

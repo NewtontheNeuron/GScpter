@@ -1,6 +1,14 @@
 {
     "features" : ["rna_Grin1", "rna_Grin2a", "rna_Grin2b", "rna_Grin2c", "rna_Grin2d", "rna_Grin3a", "rna_Grin3b"],
-    "project_name" : "SDH_vs_DDH",
+    "project_name" : "SDH",
+    "clusterpool_names": ["inhibitory", "excitatory"],
+    "subgroup_names": ["SDH"],
+    "filenames": 
+    {
+        "pooled" : "x",
+        "unpooled" : "z",
+        "barplot" : "h"
+    },
     "clusterpools":
     {
         "excitatory":
