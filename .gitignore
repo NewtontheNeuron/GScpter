@@ -8,11 +8,5 @@
 .RDataTmp
 .DS_Store
 .Rproj.user/
-.guitheme/
 Output/*
 Output/*/*
-Scripts/scrap.R
-Scripts/DotPlot_scrap_Mar_3.R
-Scripts/Pre_analysis_functions.Rout
-Scripts/add_sex_label.R
-Scripts/testpy.R
