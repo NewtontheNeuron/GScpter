@@ -1,2 +1,2 @@
 # GScpter
-This is the clean version of the code without all of the extra analyses. For the extra analyses please view the `NewtonDev` branch.
+GScpter is a low-code modular analysis tool that is useful for subsetting and grouping single cell RNA sequencing data. It was developed by Newton Martin (`@NewtontheNeuron`) with the help of Justin Bellavance and Simon VanDerLoo.
