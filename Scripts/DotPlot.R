@@ -5,7 +5,7 @@
 # It is similar to the DotPlot done by Seurat
 # The DotPlots are split by subgroup
 
-mainDP <- function(lbc, transp = F, width = NA, height = NA,
+mainDP <- function(lbc, transp = F, width = NA, height = NA, dpi = 300,
                    legend.position = "right", legend.box = "horizontal",
                    legend.title.angle = 90, legend.box.margin = margin(l = 5, t = 80),
                    base.name = "DotPlot", global_size = 30, add.label = F,
@@ -94,7 +94,7 @@ mainDP <- function(lbc, transp = F, width = NA, height = NA,
          save_image(base.name, Plot,
                     height = ifelse(!is.na(height),height, 2700),
                     width = ifelse(!is.na(width), width, 7200),
-                    device = "png"),
+                    device = "png", dpi = dpi),
          return(Plot))
   
 }

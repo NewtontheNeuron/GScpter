@@ -121,6 +121,11 @@ p5max <- function(x) {
   signif(max(x) * 1.05, digits = 2)
 }
 
+# Function output formating
+outnameform <- function(name) {
+  paste("../Output/", Data$project_name, "/", name, sep = "")
+}
+
 # Function to wrap text
 wrapper <- function(x, ...) 
 {
