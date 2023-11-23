@@ -1,0 +1,32 @@
+body {
+    line-height: 200%;
+}
+
+.json {
+    background-color: rgb(239, 239, 239);
+    border: 1px solid rgb(2, 2, 36);
+    border-radius: 0.125em;
+    margin-left: 10%;
+    margin-right: 10%;
+}
+
+.hljs {
+    color: rgb(77, 77, 77);
+}
+
+.hljs_string {
+    color: rgb(209, 38, 38);
+}
+
+pre ~ p, ol + p{
+    color: rgb(0, 0, 0);
+    font-weight: bold;
+    font-size: larger;
+    text-align: center;
+}
+
+.tab-content {
+    background-color: rgb(249, 249, 249);
+    padding: 5%;
+}
+
